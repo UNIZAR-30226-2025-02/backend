@@ -118,8 +118,13 @@ io.on('connection', (socket) => {
 
         if (move) {
             
-            // Comprobar si el juego ha terminado
-            if (game.game_over()) {
+            // Comprobar si el juego ha terminado por jaque mate
+            if (game.in_checkmate()) {
+                game.game_over();
+                io.to(gameId).emit("checkmate", "Jaque mate");
+            }
+            // Comprobar si el juego ha terminado por alguna posible cosa
+            else if (game.game_over()) {
                 io.to(gameId).emit("gameOver", "Juego terminado");
             //Si no ha terminado se envia el nuevo estado del juego
             }else {
@@ -136,13 +141,6 @@ io.on('connection', (socket) => {
         console.log('Cliente desconectado');
     });
 });
-
-
-//logica de jaquemate para que la partida termine
-if (game.in_checkmate()) {
-    game.game_over();
-    io.to(gameId).emit("checkmate", "Jaque mate");
-}
 
 
 //generar un id aleatorio para las partidas
