@@ -117,7 +117,15 @@ io.on('connection', (socket) => {
         const move = game.move({ from, to });
 
         if (move) {
-            io.to(gameId).emit('moveMade', game.board());
+            
+            // Comprobar si el juego ha terminado
+            if (game.game_over()) {
+                io.to(gameId).emit("gameOver", "Juego terminado");
+            //Si no ha terminado se envia el nuevo estado del juego
+            }else {
+                io.to(gameId).emit('moveMade', game.board());
+            }
+
         } else {
             socket.emit('error', 'Movimiento inválido');
         }
@@ -130,9 +138,10 @@ io.on('connection', (socket) => {
 });
 
 
-//logica de finalizacion de partidas
+//logica de jaquemate para que la partida termine
 if (game.in_checkmate()) {
-    io.to(gameId).emit("gameOver", "Jaquemate");
+    game.game_over();
+    io.to(gameId).emit("checkmate", "Jaque mate");
 }
 
 
