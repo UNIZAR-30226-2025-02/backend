@@ -18,8 +18,11 @@
   },
   "homepage": "https://github.com/UNIZAR-30226-2025-02/backend#readme",
   "dependencies": {
+    "chess.js": "^1.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "http": "^0.0.1-security",
+    "socket.io": "^4.8.1"
   }
 }
