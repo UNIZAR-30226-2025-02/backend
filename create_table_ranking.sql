@@ -1,5 +1,5 @@
 -- Tabla: Ranking
-CREATE TABLE Ranking (
+CREATE TABLE if NOT EXISTS Ranking (
     id SERIAL PRIMARY KEY,
     id_usuario INT REFERENCES Usuario(id) ON DELETE CASCADE,
     modo TEXT NOT NULL,

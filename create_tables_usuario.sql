@@ -1,5 +1,5 @@
 -- Tabla: Usuario
-CREATE TABLE Usuario (
+CREATE TABLE if NOT EXISTS Usuario (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FotoPerfil BYTEA,

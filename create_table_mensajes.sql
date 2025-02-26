@@ -1,5 +1,5 @@
 -- Tabla: Mensajes
-CREATE TABLE Mensajes (
+CREATE TABLE if NOT EXISTS Mensajes (
     id_mensaje SERIAL PRIMARY KEY,
     id_partida INT REFERENCES Partidas(id_partida) ON DELETE CASCADE,
     id_usuario INT REFERENCES Usuarios(id_usuario) ON DELETE CASCADE,
