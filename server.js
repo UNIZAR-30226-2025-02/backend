@@ -2,22 +2,42 @@
 // PRIMERAS PRUEEBAS DEL SERVIDOR CON NODEJS Y EXPRESS
 
 //******PRIMERAS LINEAS DEL SERVIDOR  *********/
+
 const express = require('express');
 const cors = require('cors');
-
+const dotenv = require('dotenv');
 const socket = require('socket.io');
 const http = require('http');
+const client = require('@libsql/client');
+const fs = require('fs').promises;
 const {Chess} = require('chess.js');
 
 require('dotenv').config();
 
 const app = express();
+const db = client.createClient({
+    url: process.env.DATABASE_URL,
+    authToken: process.env.DATABASE_AUTH_TOKEN
+});
+
 app.use(cors());
 app.use(express.json());
 
 // Crea el servidor manualmente para poder utilizar WebSockets
 const server = http.createServer(app);
 const io = socket(server);
+
+async function createDatabaseTables() {
+    try {
+      const sql = await fs.readFile('create_tables.sql', 'utf8');
+      const result = await db.execute(``);	
+      console.log(result);
+    } catch (err) {
+      console.error(err);
+    }
+}
+  
+createDatabaseTables();
 
 // Ruta de prueba
 app.get("/", (req, res) => {
@@ -29,7 +49,7 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
 
 
