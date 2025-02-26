@@ -30,7 +30,8 @@ const io = socket(server);
 async function createDatabaseTables() {
     try {
       const sql = await fs.readFile('create_tables.sql', 'utf8');
-      const result = await db.execute(``);	
+      console.log(sql);
+      const result = await db.execute(sql);	
       console.log(result);
     } catch (err) {
       console.error(err);
