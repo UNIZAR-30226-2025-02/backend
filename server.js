@@ -7,6 +7,7 @@ import { createClient } from '@libsql/client';
 import fs from 'fs/promises';
 import { Chess } from 'chess.js';
 import { db } from './db/db.js'; // Conexión con la base de datos
+import { usuario } from './db/schemas/usuario.js';
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,15 @@ app.use(express.json());
 // Crear el servidor manualmente para poder utilizar WebSockets
 const server = http.createServer(app);
 const io = new socketServer(server);
+
+/*await db.insert(usuario).values({
+    FotoPerfil: 'none',
+    NombreUser: 'jorge21',
+    NombreCompleto: 'Jorge',
+    Apellidos: 'Ruiz Gonzalez',
+    Correo: 'jorge21@prueba.mail',
+    Contrasena: '1234'
+});*/
 
 // Ruta de prueba
 app.get("/", (req, res) => {

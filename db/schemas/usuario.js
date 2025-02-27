@@ -5,7 +5,7 @@ export const usuario = sqliteTable('Usuario', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
+  created_at: integer('created_at', { mode: 'timestamp_ms' }).defaultNow(),
   FotoPerfil: text('FotoPerfil'),
   NombreUser: text('NombreUser').notNull().unique(),
   NombreCompleto: text('NombreCompleto'),
