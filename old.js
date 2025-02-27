@@ -148,3 +148,12 @@ io.on('connection', (socket) => {
 const generateRandomId = () => {
     return Math.random().toString(36).substring(2, 9);
 }
+
+/*await db.insert(usuario).values({
+    FotoPerfil: 'none',
+    NombreUser: 'jorge21',
+    NombreCompleto: 'Jorge',
+    Apellidos: 'Ruiz Gonzalez',
+    Correo: 'jorge21@prueba.mail',
+    Contrasena: '1234'
+});*/
