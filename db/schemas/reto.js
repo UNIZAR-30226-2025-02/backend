@@ -9,8 +9,8 @@ export const reto = sqliteTable('Reto', {
     created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
     Retador: integer('Retador'),
     Retado: integer('Retado'),
-    Activo: boolean('Activo').default(true),
-    Pendiente: boolean('Pendiente').default(true)
+    Activo: integer('Activo').default(1),
+    Pendiente: integer('Pendiente').default(1)
 })
 
 export const usersSelectSchema = createSelectSchema(reto).partial()
