@@ -1,7 +1,7 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
-export const user = sqliteTable('Usuario', {
+export const usuario = sqliteTable('Usuario', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -27,5 +27,5 @@ export const user = sqliteTable('Usuario', {
 
 })
 
-export const usersSelectSchema = createSelectSchema(user).partial()
-export const usersInsertSchema = createInsertSchema(user).partial()
+export const usersSelectSchema = createSelectSchema(usuario).partial()
+export const usersInsertSchema = createInsertSchema(usuario).partial()

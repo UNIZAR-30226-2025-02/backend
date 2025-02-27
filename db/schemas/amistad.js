@@ -2,7 +2,7 @@ import { timestamptz } from 'drizzle-orm/gel-core'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
-export const amsitad = sqliteTable('Amistad', {
+export const amistad = sqliteTable('Amistad', {
     id: text('id')
         .primaryKey()
         .$defaultFn(() => crypto.randomUUID()),
@@ -13,5 +13,5 @@ export const amsitad = sqliteTable('Amistad', {
     Retos: integer('Retos')
 })
 
-export const usersSelectSchema = createSelectSchema(amsitad).partial()
-export const usersInsertSchema = createInsertSchema(amsitad).partial()
+export const usersSelectSchema = createSelectSchema(amistad).partial()
+export const usersInsertSchema = createInsertSchema(amistad).partial()
