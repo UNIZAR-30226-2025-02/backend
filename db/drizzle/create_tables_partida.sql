@@ -1,5 +1,5 @@
--- Tabla: Partidas
-CREATE TABLE if NOT EXISTS Partidas (
+-- Tabla: Partida
+CREATE TABLE if NOT EXISTS Partida (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     JugadorW INT REFERENCES Usuario(id),
