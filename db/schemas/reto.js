@@ -14,8 +14,8 @@ export const reto = sqliteTable('Reto', {
     Retado: uuid('Retado').references(() => usuario.id).notNull(),
     Activo: integer('Activo').default(1),
     Pendiente: integer('Pendiente').default(1),
-    Modo: text('Modo')
-
+    Modo: text('Modo'),
+    Amistad: uuid('Amistad').references(() => amistad.id).notNull()
 })
 
 export const usersSelectSchema = createSelectSchema(reto).partial()
