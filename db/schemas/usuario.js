@@ -1,11 +1,14 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
+const z = require('zod')
+const crypto = require('crypto')
+
 export const usuario = sqliteTable('Usuario', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  created_at: integer('created_at', { mode: 'timestamp_ms' }).defaultNow(),
+  created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
   FotoPerfil: text('FotoPerfil'),
   NombreUser: text('NombreUser').notNull().unique(),
   NombreCompleto: text('NombreCompleto'),
@@ -27,5 +30,12 @@ export const usuario = sqliteTable('Usuario', {
 
 })
 
-export const usersSelectSchema = createSelectSchema(usuario).partial()
-export const usersInsertSchema = createInsertSchema(usuario).partial()
+// Uso de zod internamente para validar los datos
+// export const usersSelectSchema = createSelectSchema(usuario).partial()
+// export const usersInsertSchema = createInsertSchema(usuario).partial()
+
+
+export class UserRepository {
+  static create({ NombreUser, NombreCompleto, Apellidos, Correo, Contrasena, Edad }) { }
+
+}
