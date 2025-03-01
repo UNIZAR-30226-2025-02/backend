@@ -1,9 +1,11 @@
 import { timestamptz } from 'drizzle-orm/gel-core'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { uuid } from 'drizzle-orm/gel-meta'
+import { crypto } from 'drizzle-orm/gel-meta'
 
 export const ranking = sqliteTable('Ranking', {
-    id: text('id')
+    id: uuid('id')
         .primaryKey()
         .$defaultFn(() => crypto.randomUUID()),
     created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
