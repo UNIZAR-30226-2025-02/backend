@@ -19,14 +19,3 @@ const PORT = app.get('port')
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
-
-/*
-await db.insert(usuario).values({
-    FotoPerfil: 'none',
-    NombreUser: 'abababa',
-    NombreCompleto: 'Jorge',
-    Apellidos: 'Ruiz Gonzalez',
-    Correo: 'abaabba@prueba.mail',
-    Contrasena: '1234'
-});
-*/
