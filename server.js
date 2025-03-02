@@ -1,9 +1,7 @@
-import dotenv from './dotenvconfig.js'
 import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
-import { db } from './db/db.js';
-import { mensaje } from './db/schemas/mensaje.js';
+import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -35,28 +33,30 @@ function newConnection (socket) {
         console.log("Usuario desconectado")
     })
 
-    // Nuevo mensaje recibido por el chat
-    socket.on('chat-msg', (msg) => {
-        console.log("Mensaje recibido de " + msg.user_id + ": " + msg.message + " en partida: " + 
-                    + msg.game_id)
-        saveMessage(msg); 
-    })
+    // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
+    socket.on('send-message', async (data) => {
+        await saveMessage(data);
+    });
+
+    // Eliminación de mensaje por parte de uno de los jugadores (y notificación al resto)
+    socket.on('delete-message', async (data) => {
+        await deleteMessage(data);
+    });
+    
+    // Petición para recuperar toda la conversación entre los jugadores de una partida
+    socket.on('fetch-msgs', async (data) => {
+        const messages = await fetchMessages(data);
+        //socket.emit('chat-history', messages);
+        console.log(messages)
+    });
+
+    socket.on('new-message', async (data) => {
+        console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
+    });
+
+    socket.on('message-deleted', async (data) => {
+        console.log("Mensaje eliminado!" + JSON.stringify(data))
+    });
 }
 
 io.on('connection', newConnection);
-
-
-// ESTO NO IRÁ AQUIIII
-
-async function saveMessage(msg) {
-    try {
-        await db.insert(mensaje).values({
-            Id_partida: msg.game_id,
-            Id_usuario: msg.user_id,
-            Mensaje:    msg.message
-        });
-        console.log("Mensaje almacenado en la base de datos");
-    } catch (error) {
-        console.error("Error al almacenar el mensaje en la base de datos:", error);
-    }
-}
