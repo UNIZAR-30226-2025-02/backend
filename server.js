@@ -39,20 +39,24 @@ function newConnection (socket) {
     socket.on('chat-msg', (msg) => {
         console.log("Mensaje recibido de " + msg.user_id + ": " + msg.message + " en partida: " + 
                     + msg.game_id)
-        async function saveMessage(msg) {
-            try {
-                await db.insert(mensaje).values({
-                    Id_partida: msg.game_id,
-                    Id_usuario: msg.user_id,
-                    Mensaje:    msg.message
-                });
-                console.log("Mensaje almacenado en la base de datos");
-            } catch (error) {
-                console.error("Error al almacenar el mensaje en la base de datos:", error);
-            }
-        }
         saveMessage(msg); 
     })
 }
 
 io.on('connection', newConnection);
+
+
+// ESTO NO IRÁ AQUIIII
+
+async function saveMessage(msg) {
+    try {
+        await db.insert(mensaje).values({
+            Id_partida: msg.game_id,
+            Id_usuario: msg.user_id,
+            Mensaje:    msg.message
+        });
+        console.log("Mensaje almacenado en la base de datos");
+    } catch (error) {
+        console.error("Error al almacenar el mensaje en la base de datos:", error);
+    }
+}
