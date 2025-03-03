@@ -1,6 +1,5 @@
-import dotenv from 'dotenv';
+import './dotenvconfig.js';
 import { defineConfig } from 'drizzle-kit';
-dotenv.config();
 
 export default defineConfig({
   out: './db/drizzle',
