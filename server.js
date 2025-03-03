@@ -2,7 +2,6 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { handleChatEvents } from './chat/handler/chatHandlers.js';
-import { handleGameRoomEvents } from './gameRooms/handler/gameRoomHandlers.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
