@@ -53,3 +53,17 @@ export async function deleteMessage(data) {
         console.error("Error al eliminar el mensaje:", error);
     }
 }
+
+/*
+ * Recibe una notificación de que ha habido un nuevo mensaje en la partida
+ */
+export async function notifyNewMessage(data) {
+    console.log("Nuevo mensaje recibido!" + JSON.stringify(data));
+}
+
+/*
+ * Recibe una notificación de que se ha eliminado un mensaje de la partida
+ */
+export async function notifyMessageDeleted(data) {
+    console.log("Mensaje eliminado!" + JSON.stringify(data));
+}
