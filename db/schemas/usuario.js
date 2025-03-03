@@ -1,16 +1,22 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { uuid } from 'drizzle-orm/gel-meta'
+import { crypto } from 'drizzle-orm/gel-meta'
+
+
+const z = require('zod')
+const crypto = require('crypto')
 
 export const usuario = sqliteTable('Usuario', {
-  id: text('id')
+  id: uuid('id')
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  created_at: integer('created_at', { mode: 'timestamp_ms' }).defaultNow(),
+  created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
   FotoPerfil: text('FotoPerfil'),
-  NombreUser: text('NombreUser').notNull().unique(),
+  NombreUser: text('NombreUser').unique().notNull(),
   NombreCompleto: text('NombreCompleto'),
   Apellidos: text('Apellidos'),
-  Correo: text('Correo').unique(),
+  Correo: text('Correo').unique().notNull(),
   Edad: integer('Edad'),
   Contrasena: text('Contrasena').notNull(),
   EstadoPartida: text('EstadoPartida'),
@@ -27,5 +33,12 @@ export const usuario = sqliteTable('Usuario', {
 
 })
 
-export const usersSelectSchema = createSelectSchema(usuario).partial()
-export const usersInsertSchema = createInsertSchema(usuario).partial()
+// Uso de zod internamente para validar los datos
+// export const usersSelectSchema = createSelectSchema(usuario).partial()
+// export const usersInsertSchema = createInsertSchema(usuario).partial()
+
+
+export class UserRepository {
+  static create({ NombreUser, NombreCompleto, Apellidos, Correo, Contrasena, Edad }) { }
+
+}

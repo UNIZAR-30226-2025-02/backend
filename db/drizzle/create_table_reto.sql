@@ -5,5 +5,5 @@ CREATE TABLE if NOT EXISTS Reto (
     Retador INT REFERENCES Usuario(id),
     Retado INT REFERENCES Usuario(id),
     Activo BOOLEAN DEFAULT TRUE,
-    Pendiente BOOLEAN DEFAULT TRUE
-);
+    Pendiente BOOLEAN DEFAULT TRUE,
+    Modo TEXT);
