@@ -1,4 +1,3 @@
-import './dotenvconfig.js';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({

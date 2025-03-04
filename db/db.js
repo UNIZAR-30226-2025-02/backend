@@ -1,4 +1,4 @@
-import dotenv from 'dotenv'
+import '../dotenv-config.js'
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
 import { amistad } from './schemas/amistad.js'
@@ -8,9 +8,6 @@ import { partida } from './schemas/partida.js'
 import { ranking } from './schemas/ranking.js'
 import { reto } from './schemas/reto.js'
 import { usuario } from './schemas/usuario.js'   
-
-// Carga las variables de entorno 
-dotenv.config()
 
 const client = createClient({
   url: process.env.DATABASE_URL,
