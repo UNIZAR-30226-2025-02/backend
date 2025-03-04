@@ -2,7 +2,7 @@ import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
-import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
+import { chatHandler } from './chat/handler/chatHandler.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -33,31 +33,7 @@ function newConnection (socket) {
     socket.on('disconnect', () => {
         console.log("Usuario desconectado")
     })
-
-    // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
-    socket.on('send-message', async (data) => {
-        await saveMessage(data);
-    });
-
-    // Eliminación de mensaje por parte de uno de los jugadores (y notificación al resto)
-    socket.on('delete-message', async (data) => {
-        await deleteMessage(data);
-    });
-    
-    // Petición para recuperar toda la conversación entre los jugadores de una partida
-    socket.on('fetch-msgs', async (data) => {
-        const messages = await fetchMessages(data);
-        //socket.emit('chat-history', messages);
-        console.log(messages)
-    });
-
-    socket.on('new-message', async (data) => {
-        console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
-    });
-
-    socket.on('message-deleted', async (data) => {
-        console.log("Mensaje eliminado!" + JSON.stringify(data))
-    });
+    chatHandler(socket);
 }
 
 io.on('connection', newConnection);

@@ -44,10 +44,10 @@ export async function fetchMessages(data) {
 export async function deleteMessage(data) {
     try {
         console.log("Eliminando mensaje seleccionado de la base de datos...")
-        const message = await db.delete(mensaje).where(eq(mensaje.Id_mensaje, data.message_id));
+        await db.delete(mensaje).where(eq(mensaje.Id_mensaje, data.message_id));
         // Notificar al resto de integrantes de la sala correspondiente a la partida (el otro
         // jugador o espectadores) sobre el mensaje eliminado
-        console.log(message);
+        
         // io.to(data.game_id).emit('message-deleted', data);
     } catch (error) {
         console.error("Error al eliminar el mensaje:", error);
