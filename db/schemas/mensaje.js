@@ -3,13 +3,14 @@ import { timestamp } from 'drizzle-orm/gel-core'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
-export const mensaje = sqliteTable('Mensaje', {
-    Id_mensaje: text('id_mensaje')
-        .primaryKey()
-        .$defaultFn(() => crypto.randomUUID()),
-    fecha_envio: timestamp('fecha_envio').default(sql`CURRENT_TIMESTAMP`),
+
+
+export const mensaje = sqliteTable('mensaje', {
+    Id_mensaje: integer('id_mensaje').primaryKey(),
+    fecha_envio: timestamp('fecha_envio').default(sql`cast(strftime('%s', 'now') as int) * 1000`),
     Id_partida: integer('id_partida'),
     Id_usuario: integer('id_usuario'),
+
     Mensaje: text('mensaje').notNull()
 })
 

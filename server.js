@@ -8,13 +8,13 @@ import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/cha
 export const server = http.createServer(app);
 export const io = new Server(server, {
     cors: {
-      origin: '*'
+        origin: '*'
     },
     connectionStateRecovery: {
-      // the backup duration of the sessions and the packets
-      maxDisconnectionDuration: 2 * 60 * 1000,
-      // whether to skip middlewares upon successful recovery
-      skipMiddlewares: false
+        // the backup duration of the sessions and the packets
+        maxDisconnectionDuration: 2 * 60 * 1000,
+        // whether to skip middlewares upon successful recovery
+        skipMiddlewares: false
     }
 })
 
@@ -24,7 +24,7 @@ server.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
 
-function newConnection (socket) {
+function newConnection(socket) {
     // Nueva conexión vía webSocket
     console.log("Usuario conectado")
 
@@ -43,7 +43,7 @@ function newConnection (socket) {
     socket.on('delete-message', async (data) => {
         await deleteMessage(data);
     });
-    
+
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
         const messages = await fetchMessages(data);

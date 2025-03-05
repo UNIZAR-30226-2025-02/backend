@@ -1,15 +1,16 @@
 import { timestamptz } from 'drizzle-orm/gel-core'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { sql } from "drizzle-orm";
 
-export const ranking = sqliteTable('Ranking', {
-    id: text('id')
-        .primaryKey()
-        .$defaultFn(() => crypto.randomUUID()),
-    created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
+
+
+export const ranking = sqliteTable('ranking', {
+    id: integer('id').primaryKey(),
+    created_at: integer('created_at', { mode: 'timestamp_ms' }).default(sql`cast(strftime('%s', 'now') as int) * 1000`),
     Modo: text('modo').notNull(),
-    Puntuacion: integer('puntuacion').notNull().default(0),
-    Posicion: integer('posicion').notNull().default(0)
+    Puntuacion: integer('puntuacion').notNull(),
+    Posicion: integer('posicion').notNull()
 })
 
 export const usersSelectSchema = createSelectSchema(ranking).partial()

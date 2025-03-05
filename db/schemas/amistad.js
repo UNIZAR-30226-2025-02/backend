@@ -1,14 +1,16 @@
 import { timestamptz } from 'drizzle-orm/gel-core'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { sql } from "drizzle-orm";
 
-export const amistad = sqliteTable('Amistad', {
-    id: text('id')
-        .primaryKey()
-        .$defaultFn(() => crypto.randomUUID()),
-    created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
-    Jugador1: integer('Jugador1'),
-    Jugador2: integer('Jugador2'),
+
+import { usuario } from './usuario.js'
+
+export const amistad = sqliteTable('amistad', {
+    id: integer('id').primaryKey(),
+    created_at: integer('created_at', { mode: 'timestamp_ms' }).default(sql`cast(strftime('%s', 'now') as int) * 1000`),
+    Jugador1: integer('Jugador1').references(() => usuario.id).notNull(),
+    Jugador2: integer('Jugador2').references(() => usuario.id).notNull(),
     HistorialAmistad: text('HistorialAmistad'),
     Retos: integer('Retos')
 })
