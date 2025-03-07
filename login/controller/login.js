@@ -48,7 +48,7 @@ export async function crearUsuario(req, res) {
         res.send({ mensaje: 'Usuario creado correctamente' });
     } catch (error) {
         console.log(error.message);
-        res.status(400).send(error.message);
+        res.status(400).send("Error al crear el usuario");
     }
 }
 
@@ -83,6 +83,8 @@ export async function login(req, res) {
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, req.body.NombreUser));
         const { Contrasena, ...publicUser } = user;
+        // Establecer en user el estado de sesión
+        user.estadoUser = 'logged';
         res.send(publicUser);
     } catch (error) {
         res.status(500).send('Error al loguear el usuario');
@@ -96,7 +98,7 @@ export async function logout(req, res) {
             return;
         }
 
-        await db.update(usuario).set({ EstadoSesion: 'deslogueado' }).where(eq(usuario.NombreUser, req.body.NombreUser));
+        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, req.body.NombreUser));
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
         res.status(500).send('Error al desloguear el usuario');
@@ -118,6 +120,18 @@ export async function editUser(req, res) {
             return;
         }
 
+        // Buscar el usuario a editar
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, req.body.NombreUser));
+        if (usuarios.length === 0) {
+            res.status(400).send('Usuario no encontrado');
+            return;
+        }
+        const user = usuarios[0];
+
+        if (user.estadoUser === 'unlogged') {
+            res.status(400).send('Usuario no logueado. Inicie sesión para editar su perfil');
+            return;
+        }
         const hashedPassword = await bcrypt.hash(req.body.Contrasena, 10);
 
         await db.update(usuario)
@@ -127,9 +141,12 @@ export async function editUser(req, res) {
                 Apellidos: req.body.Apellidos,
                 Contrasena: hashedPassword
             })
-            .where(eq(usuario.NombreUser, req.body.NombreUser));
-
-        res.send({ mensaje: 'Usuario editado correctamente' });
+            .where(eq(usuario.NombreUser, req.body.NombreUser))
+        user.FotoPerfil = req.body.FotoPerfil || 'none';
+        user.NombreCompleto = req.body.NombreCompleto;
+        user.Apellidos = req.body.Apellidos;
+        const { Contrasena, ...publicUser } = user;
+        res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
         res.status(500).send('Error al editar el usuario');
     }
