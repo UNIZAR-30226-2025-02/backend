@@ -1,5 +1,5 @@
 import { db } from '../../db/db.js';
-import { usuario } from '../../db/schemas/usuario.js';
+import { usuario } from '../../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
