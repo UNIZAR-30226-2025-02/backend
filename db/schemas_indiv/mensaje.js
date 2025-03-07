@@ -7,7 +7,7 @@ import { usuario } from './usuario.js'
 
 export const mensaje = sqliteTable('mensaje', {
     Id_mensaje: integer('id_mensaje').primaryKey(),
-    fecha_envio: timestamp('fecha_envio').default(sql`cast(strftime('%s', 'now') as int) * 1000`),
+    fecha_envio: timestamp('fecha_envio', { mode: 'timestamp_ms' }).default(sql`cast(strftime('%s', 'now') as int) * 1000`),
     Id_partida: integer('id_partida').references(() => usuario.id).notNull(),
     Id_usuario: integer('id_usuario').references(() => usuario.id).notNull(),
 

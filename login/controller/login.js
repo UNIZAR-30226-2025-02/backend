@@ -123,3 +123,5 @@ export async function editUser(req, res) {
         res.status(500).send('Error al editar el usuario');
     }
 }
+
+

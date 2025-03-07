@@ -29,8 +29,8 @@ export const usuario = sqliteTable('usuario', {
 })
 
 // Uso de zod internamente para validar los datos
-// export const usersSelectSchema = createSelectSchema(usuario).partial()
-// export const usersInsertSchema = createInsertSchema(usuario).partial()
+export const usersSelectSchema = createSelectSchema(usuario).partial()
+export const usersInsertSchema = createInsertSchema(usuario).partial()
 
 
 export class UserRepository {

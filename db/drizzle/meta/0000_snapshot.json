@@ -1,39 +1,39 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bf3904d6-4389-47a4-a00a-dd307da17530",
+  "id": "d0fbec25-5369-4480-8b58-9d3d82e1038e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "Amistad": {
-      "name": "Amistad",
+    "amistad": {
+      "name": "amistad",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "Jugador1": {
           "name": "Jugador1",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "Jugador2": {
           "name": "Jugador2",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "HistorialAmistad": {
@@ -52,28 +52,55 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "amistad_Jugador1_usuario_id_fk": {
+          "name": "amistad_Jugador1_usuario_id_fk",
+          "tableFrom": "amistad",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "Jugador1"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "amistad_Jugador2_usuario_id_fk": {
+          "name": "amistad_Jugador2_usuario_id_fk",
+          "tableFrom": "amistad",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "Jugador2"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Apertura": {
-      "name": "Apertura",
+    "apertura": {
+      "name": "apertura",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "Nombre_Aper": {
           "name": "Nombre_Aper",
@@ -91,8 +118,8 @@
         }
       },
       "indexes": {
-        "Apertura_Nombre_Aper_unique": {
-          "name": "Apertura_Nombre_Aper_unique",
+        "apertura_Nombre_Aper_unique": {
+          "name": "apertura_Nombre_Aper_unique",
           "columns": [
             "Nombre_Aper"
           ],
@@ -104,36 +131,36 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Mensaje": {
-      "name": "Mensaje",
+    "mensaje": {
+      "name": "mensaje",
       "columns": {
         "id_mensaje": {
           "name": "id_mensaje",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "fecha_envio": {
           "name": "fecha_envio",
-          "type": "datetime",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "id_partida": {
           "name": "id_partida",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "id_usuario": {
           "name": "id_usuario",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "mensaje": {
@@ -145,41 +172,68 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "mensaje_id_partida_usuario_id_fk": {
+          "name": "mensaje_id_partida_usuario_id_fk",
+          "tableFrom": "mensaje",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "id_partida"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "mensaje_id_usuario_usuario_id_fk": {
+          "name": "mensaje_id_usuario_usuario_id_fk",
+          "tableFrom": "mensaje",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "id_usuario"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Partida": {
-      "name": "Partida",
+    "partida": {
+      "name": "partida",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "JugadorW": {
           "name": "JugadorW",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "JugadorB": {
           "name": "JugadorB",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "Modo": {
@@ -193,7 +247,7 @@
           "name": "Ganador",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "PGN": {
@@ -219,51 +273,89 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "partida_JugadorW_usuario_id_fk": {
+          "name": "partida_JugadorW_usuario_id_fk",
+          "tableFrom": "partida",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "JugadorW"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "partida_JugadorB_usuario_id_fk": {
+          "name": "partida_JugadorB_usuario_id_fk",
+          "tableFrom": "partida",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "JugadorB"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "partida_Ganador_usuario_id_fk": {
+          "name": "partida_Ganador_usuario_id_fk",
+          "tableFrom": "partida",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "Ganador"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Ranking": {
-      "name": "Ranking",
+    "ranking": {
+      "name": "ranking",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
-        "modo": {
-          "name": "modo",
+        "Modo": {
+          "name": "Modo",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "puntuacion": {
-          "name": "puntuacion",
+        "Puntuacion": {
+          "name": "Puntuacion",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
-        "posicion": {
-          "name": "posicion",
+        "Posicion": {
+          "name": "Posicion",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -272,36 +364,36 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Reto": {
-      "name": "Reto",
+    "reto": {
+      "name": "reto",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'now()'"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "Retador": {
           "name": "Retador",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "Retado": {
           "name": "Retado",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "Activo": {
@@ -319,31 +411,85 @@
           "notNull": false,
           "autoincrement": false,
           "default": 1
+        },
+        "Modo": {
+          "name": "Modo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Amistad": {
+          "name": "Amistad",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "reto_Retador_usuario_id_fk": {
+          "name": "reto_Retador_usuario_id_fk",
+          "tableFrom": "reto",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "Retador"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "reto_Retado_usuario_id_fk": {
+          "name": "reto_Retado_usuario_id_fk",
+          "tableFrom": "reto",
+          "tableTo": "usuario",
+          "columnsFrom": [
+            "Retado"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "reto_Amistad_amistad_id_fk": {
+          "name": "reto_Amistad_amistad_id_fk",
+          "tableFrom": "reto",
+          "tableTo": "amistad",
+          "columnsFrom": [
+            "Amistad"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Usuario": {
-      "name": "Usuario",
+    "usuario": {
+      "name": "usuario",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(cast((julianday('now') - 2440587.5)*86400000 as integer))"
+          "default": "'CURRENT_TIMESTAMP'"
         },
         "FotoPerfil": {
           "name": "FotoPerfil",
@@ -356,7 +502,7 @@
           "name": "NombreUser",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "NombreCompleto": {
@@ -452,15 +598,15 @@
         }
       },
       "indexes": {
-        "Usuario_NombreUser_unique": {
-          "name": "Usuario_NombreUser_unique",
+        "usuario_NombreUser_unique": {
+          "name": "usuario_NombreUser_unique",
           "columns": [
             "NombreUser"
           ],
           "isUnique": true
         },
-        "Usuario_Correo_unique": {
-          "name": "Usuario_Correo_unique",
+        "usuario_Correo_unique": {
+          "name": "usuario_Correo_unique",
           "columns": [
             "Correo"
           ],
