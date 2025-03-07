@@ -58,6 +58,21 @@ function newConnection (socket) {
     socket.on('message-deleted', async (data) => {
         console.log("Mensaje eliminado!" + JSON.stringify(data))
     });
+
+    //peticion para crear una nueva partida
+    socket.on('create-game', async (data) => {
+        console.log("Nueva partida creada!" + JSON.stringify(data))
+    });
+
+    //peticion para unirse a una partida
+    socket.on('join-game', async (data) => {
+        console.log("Unido a partida!" + JSON.stringify(data))
+    });
+    //peticion para salir de una partida
+    socket.on('leave-game', async (data) => {
+        console.log("Salida de partida!" + JSON.stringify(data))
+    });
+    
 }
 
 io.on('connection', newConnection);
