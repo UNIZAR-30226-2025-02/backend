@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
+import { createNewGame } from './rooms/rooms.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -61,7 +62,10 @@ function newConnection (socket) {
 
     //peticion para crear una nueva partida
     socket.on('create-game', async (data) => {
+
+        await createNewGame(data);
         console.log("Nueva partida creada!" + JSON.stringify(data))
+        
     });
 
     //peticion para unirse a una partida
@@ -72,7 +76,7 @@ function newConnection (socket) {
     socket.on('leave-game', async (data) => {
         console.log("Salida de partida!" + JSON.stringify(data))
     });
-    
+
 }
 
 io.on('connection', newConnection);

@@ -1,12 +1,14 @@
-import { timestamptz } from 'drizzle-orm/gel-core'
+
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { timestamp } from 'drizzle-orm/gel-core'
+import { sql } from 'drizzle-orm'
 
 export const partida = sqliteTable('Partida', {
     id: text('id')
         .primaryKey()
         .$defaultFn(() => crypto.randomUUID()),
-    created_at: integer('created_at', { mode: 'timestamp_ms' }).default('now()'),
+    created_at: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
     JugadorW: integer('JugadorW'),
     JugadorB: integer('JugadorB'),
     Modo: text('Modo'),

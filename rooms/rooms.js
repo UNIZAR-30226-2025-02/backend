@@ -1,24 +1,27 @@
-import { db } from '../../db/db.js';
-import { partida } from '../../db/schemas/partida.js';
-import { usuario } from '../../db/schemas/usuario.js';
+import { db } from '../db/db.js';
+import { partida } from '../db/schemas/partida.js';
+import { usuario } from '../db/schemas/usuario.js';
 import { Chess } from 'chess.js';
-import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
+//import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
-ActiveXObjects = {};
+let ActiveXObjects = {};
 
 /********FUNCIONES AUXILIARES**********/
 
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
  */
-export async function createNewGame(idJugador,mode) {
+export async function createNewGame(data) {
+    const idJugador = data.idJugador;
+    const mode = data.mode; 
     try {
         // Crear un nuevo objeto de partida
         const chess = new Chess();
 
         // Generar un ID único para la nueva partida
-        const gameId = uuidv4();
+        const gameId = crypto.randomUUID();
+        console.log("ID de la partida:", gameId);
 
         //Generamos un numero aleatorio entre 0 y 1 para determinar el color del jugador
         const randomColor = Math.random() < 0.5 ? 'white' : 'black';
@@ -26,13 +29,15 @@ export async function createNewGame(idJugador,mode) {
         // Crear una nueva partida en la base de datos
         await db.insert(partida).values({
             id: gameId,
-            //Se mete el jugador que ha creado la partida en el color que le ha tocado
-            JugadorW: randomColor === 'white' ? idJugador : null,
-            JugadorB: randomColor === 'black' ? idJugador : null,
+            //created_at: Date.now(), // Fecha en timestamp
+            JugadorW: randomColor === 'white' ? Number(idJugador) : null,
+            JugadorB: randomColor === 'black' ? Number(idJugador) : null,
             //Modo seleccionado por el jugador
             Modo: mode,
-            PGN: chess.pgn(),
-            Ganador: null
+            PGN: '',
+            Ganador: null,
+            Variacion_JW: 0, // Valor por defecto
+            Variacion_JB: 0  // Valor por defecto
         });
         console.log("Nueva partida creada con ID:", gameId);
         // Almacenar la partida activa en memoria
@@ -114,11 +119,14 @@ export async function manejarMovimiento(idPartida, movimiento) {
         socket.to(idPartida).emit('moveMade', {move, board: game.board()});
 
         //Actualizar el PGN en la base de datos
+        //MIRAR SI ESTO SE HACE SOLO CUANDO ES GAME OVER O NO
+        //esto en principio no hace falta porque el PGN se actualiza automaticamente al hacer un movimiento
+        /*
         db.update(partida)
             .set({ PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
-        
+        */
         //Comprobar si la partida ha terminado
         if (game.game_over()) {
             const winner = game.turn() === 'w' ? activeGames[gameId].players[1] : activeGames[gameId].players[0];
