@@ -1,27 +1,26 @@
 import { db } from '../../db/db.js';
 import { usuario } from '../../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
-import crypto from 'node:crypto';
+import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
+
 
 export async function crearUsuario(req, res) {
     try {
         if (!req.body.NombreUser || !req.body.NombreCompleto || !req.body.Apellidos || !req.body.Correo || !req.body.Contrasena) {
             throw new Error('Faltan campos');
         }
-
         // Verificar si el usuario ya existe
         const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, req.body.NombreUser));
         if (usuarioExistente.length > 0) {
             throw new Error('El usuario ya existe');
         }
-
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, req.body.Correo));
         if (correoExistente.length > 0) {
             throw new Error('El correo ya está en uso');
         }
-
         if (req.body.Contrasena.length < 4) {
             throw new Error('La contraseña debe tener al menos 4 caracteres');
         }
@@ -32,17 +31,20 @@ export async function crearUsuario(req, res) {
         // Hashear la contraseña antes de almacenarla
         const hashedPassword = await bcrypt.hash(req.body.Contrasena, 10);
         // Crear un identificador único para el usuario
-        const id = crypto.randomBytes(16).toString('hex');
+        const id = uuidv4();
+        // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
             id: id,
-            FotoPerfil: 'none',
+            FotoPerfil: "none",
             NombreUser: req.body.NombreUser,
             NombreCompleto: req.body.NombreCompleto,
             Apellidos: req.body.Apellidos,
             Correo: req.body.Correo,
-            Contrasena: hashedPassword
+            Contrasena: hashedPassword,
+            estadoUser: "unlogged",
+            correoVerificado: "no",
+            created_at: new Date().toISOString()
         });
-
         res.send({ mensaje: 'Usuario creado correctamente' });
     } catch (error) {
         console.log(error.message);
@@ -72,9 +74,14 @@ export async function login(req, res) {
             return;
         }
 
-        // Actualizar el estado de sesión
-        await db.update(usuario).set({ EstadoSesion: 'logueado' }).where(eq(usuario.NombreUser, req.body.NombreUser));
+        // Comprobar si el correo del usuario ha sido verificado
+        // if (user.correoVerificado === 'no') {
+        //     res.status(400).send('Correo no verificado');
+        //     return;
+        // }
 
+        // Actualizar el estado de sesión
+        await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, req.body.NombreUser));
         const { Contrasena, ...publicUser } = user;
         res.send(publicUser);
     } catch (error) {
@@ -84,6 +91,11 @@ export async function login(req, res) {
 
 export async function logout(req, res) {
     try {
+        if (!req.body.NombreUser) {
+            res.status(400).send('Faltan campos');
+            return;
+        }
+
         await db.update(usuario).set({ EstadoSesion: 'deslogueado' }).where(eq(usuario.NombreUser, req.body.NombreUser));
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
@@ -93,7 +105,7 @@ export async function logout(req, res) {
 
 export async function editUser(req, res) {
     try {
-        if (!req.body.NombreUser || !req.body.NombreCompleto || !req.body.Apellidos || !req.body.Correo || !req.body.Contrasena) {
+        if (!req.body.NombreUser || !req.body.NombreCompleto || !req.body.Apellidos || !req.body.Contrasena) {
             res.status(400).send('Faltan campos');
             return;
         }
@@ -113,7 +125,6 @@ export async function editUser(req, res) {
                 FotoPerfil: req.body.FotoPerfil || 'none',
                 NombreCompleto: req.body.NombreCompleto,
                 Apellidos: req.body.Apellidos,
-                Correo: req.body.Correo,
                 Contrasena: hashedPassword
             })
             .where(eq(usuario.NombreUser, req.body.NombreUser));

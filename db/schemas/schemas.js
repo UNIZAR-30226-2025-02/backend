@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 
 // USUARIO
 export const usuario = sqliteTable('usuario', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     FotoPerfil: text('FotoPerfil'),
     NombreUser: text('NombreUser').unique(),
@@ -23,9 +23,8 @@ export const usuario = sqliteTable('usuario', {
     Punt_3_2: integer('Punt_3_2'),
     Punt_5_10: integer('Punt_5_10'),
 
-    // salt: text('salt').notNull(),
-    // emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
-
+    correoVerificado: text('correoVerificado'),
+    estadoUser: text('estadoUser')
 })
 
 // Uso de zod internamente para validar los datos
@@ -34,7 +33,7 @@ export const userInsertSchema = createInsertSchema(usuario).partial()
 
 // AMISTAD
 export const amistad = sqliteTable('amistad', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     Jugador1: integer('Jugador1').references(() => usuario.id).notNull(),
     Jugador2: integer('Jugador2').references(() => usuario.id).notNull(),
@@ -47,7 +46,7 @@ export const amistadInsertSchema = createInsertSchema(amistad).partial()
 
 // RETO
 export const reto = sqliteTable('reto', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     Retador: integer('Retador').references(() => usuario.id).notNull(),
     Retado: integer('Retado').references(() => usuario.id).notNull(),
@@ -62,7 +61,7 @@ export const retoInsertSchema = createInsertSchema(reto).partial()
 
 // PARTIDA
 export const partida = sqliteTable('partida', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     JugadorW: integer('JugadorW').references(() => usuario.id).notNull(),
     JugadorB: integer('JugadorB').references(() => usuario.id).notNull(),
@@ -78,7 +77,7 @@ export const partidaInsertSchema = createInsertSchema(partida).partial()
 
 // RANKING
 export const ranking = sqliteTable('ranking', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     Modo: text('Modo').notNull(),
     Puntuacion: integer('Puntuacion').notNull(),
@@ -90,7 +89,7 @@ export const rankingInsertSchema = createInsertSchema(ranking).partial()
 
 // MENSAJE
 export const mensaje = sqliteTable('mensaje', {
-    Id_mensaje: integer('id_mensaje').primaryKey(),
+    Id_mensaje: text('id_mensaje').primaryKey(),
     fecha_envio: text('fecha_envio').default(sql`'CURRENT_TIMESTAMP'`),
     Id_partida: integer('id_partida').references(() => usuario.id).notNull(),
     Id_usuario: integer('id_usuario').references(() => usuario.id).notNull(),
@@ -103,7 +102,7 @@ export const mensajeInsertSchema = createInsertSchema(mensaje).partial()
 
 // APERTURA
 export const apertura = sqliteTable('apertura', {
-    id: integer('id').primaryKey(),
+    id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
     Nombre_Aper: text('Nombre_Aper').notNull().unique(),
     PGN: text('PGN'),
