@@ -3,12 +3,16 @@ import http from 'http';
 import { app } from './app.js';
 import { db } from '../../db/db.js';
 import { usuario } from '../../db/schemas/usuario.js';
-import { crearUsuario } from '../controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail } from './login/controller/login.js';
 
 
 
 app.post('/register', async (req, res) => {
     await crearUsuario(req, res);
+});
+
+app.get('/verificar', async (req, res) => {
+    await verifyEmail(req, res);
 });
 
 app.post('/login', async (req, res) => {

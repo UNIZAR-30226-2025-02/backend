@@ -122,10 +122,10 @@ export const html_correo = (verificationLink) => {
             <div class="container">
                 <h1>Verificación de Correo Electrónico</h1>
                 <p>Hola,</p>
-                <p>Gracias por registrarte en nuestra plataforma. Para completar tu registro, por favor haz clic en el botón de abajo para verificar tu dirección de correo electrónico.</p>
+                <p>Gracias por registrarte CheckMateX. Para completar tu registro, por favor haz clic en el botón de abajo para verificar tu dirección de correo electrónico.</p>
                 <a href="${verificationLink}" class="button">Verificar Correo</a>
                 <p>Si no solicitaste este correo, puedes ignorarlo con seguridad.</p>
-                <p class="footer">© 2025 TuEmpresa. Todos los derechos reservados.</p>
+                <p class="footer">© 2025 RookieGames. Todos los derechos reservados.</p>
             </div>
         </body>
         </html>`;
