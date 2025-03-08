@@ -4,42 +4,49 @@ import { eq } from 'drizzle-orm';
 import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import { Console } from 'node:console';
 
 
 export async function crearUsuario(req, res) {
     try {
-        if (!req.body.NombreUser || !req.body.NombreCompleto || !req.body.Apellidos || !req.body.Correo || !req.body.Contrasena) {
+        const NombreUser = req.body.NombreUser;
+        const NombreCompleto = req.body.NombreCompleto;
+        const Apellidos = req.body.Apellidos;
+        const Correo = req.body.Correo;
+        const Contrasena = req.body.Contrasena;
+
+        if (!NombreUser || !NombreCompleto || !Apellidos || !Correo || !Contrasena) {
             throw new Error('Faltan campos');
         }
         // Verificar si el usuario ya existe
-        const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, req.body.NombreUser));
+        const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarioExistente.length > 0) {
             throw new Error('El usuario ya existe');
         }
         // Verificar si el correo ya está en uso
-        const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, req.body.Correo));
+        const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length > 0) {
             throw new Error('El correo ya está en uso');
         }
-        if (req.body.Contrasena.length < 4) {
+        if (Contrasena.length < 4) {
             throw new Error('La contraseña debe tener al menos 4 caracteres');
         }
-        if (req.body.NombreUser.length < 4) {
+        if (NombreUser.length < 4) {
             throw new Error('El nombre de usuario debe tener al menos 4 caracteres');
         }
 
         // Hashear la contraseña antes de almacenarla
-        const hashedPassword = await bcrypt.hash(req.body.Contrasena, 10);
+        const hashedPassword = await bcrypt.hash(Contrasena, 10);
         // Crear un identificador único para el usuario
         const id = uuidv4();
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
             id: id,
             FotoPerfil: "none",
-            NombreUser: req.body.NombreUser,
-            NombreCompleto: req.body.NombreCompleto,
-            Apellidos: req.body.Apellidos,
-            Correo: req.body.Correo,
+            NombreUser: NombreUser,
+            NombreCompleto: NombreCompleto,
+            Apellidos: Apellidos,
+            Correo: Correo,
             Contrasena: hashedPassword,
             estadoUser: "unlogged",
             correoVerificado: "no",
@@ -54,12 +61,15 @@ export async function crearUsuario(req, res) {
 
 export async function login(req, res) {
     try {
-        if (!req.body.NombreUser || !req.body.Contrasena) {
+        const NombreUser = req.body.NombreUser;
+        const Contrasegna = req.body.Contrasena;
+
+        if (!NombreUser || !Contrasegna) {
             res.status(400).send('Faltan campos');
             return;
         }
 
-        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, req.body.NombreUser));
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
             res.status(400).send('Usuario no encontrado');
             return;
@@ -68,7 +78,7 @@ export async function login(req, res) {
         const user = usuarios[0];
 
         // Comparar la contraseña hasheada con la ingresada
-        const isMatch = await bcrypt.compare(req.body.Contrasena, user.Contrasena);
+        const isMatch = await bcrypt.compare(Contrasegna, user.Contrasena);
         if (!isMatch) {
             res.status(400).send('Contraseña incorrecta');
             return;
@@ -81,7 +91,7 @@ export async function login(req, res) {
         // }
 
         // Actualizar el estado de sesión
-        await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, req.body.NombreUser));
+        await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
         const { Contrasena, ...publicUser } = user;
         // Establecer en user el estado de sesión
         user.estadoUser = 'logged';
@@ -93,12 +103,13 @@ export async function login(req, res) {
 
 export async function logout(req, res) {
     try {
-        if (!req.body.NombreUser) {
+        const NombreUser = req.body.NombreUser;
+        if (!NombreUser) {
             res.status(400).send('Faltan campos');
             return;
         }
 
-        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, req.body.NombreUser));
+        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
         res.status(500).send('Error al desloguear el usuario');
@@ -107,44 +118,61 @@ export async function logout(req, res) {
 
 export async function editUser(req, res) {
     try {
-        if (!req.body.NombreUser || !req.body.NombreCompleto || !req.body.Apellidos || !req.body.Contrasena) {
+        const NombreUser = req.body.NombreUser;
+        const NombreCompleto = req.body.NombreCompleto;
+        const Apellidos = req.body.Apellidos;
+        const Contrasegna = req.body.Contrasena;
+        const FotoPerfil = !req.body.FotoPerfil ? 'none' : req.body.FotoPerfil;
+
+        if (!NombreUser || !NombreCompleto || !Apellidos || !Contrasegna || !FotoPerfil) {
             res.status(400).send('Faltan campos');
             return;
         }
-        if (req.body.Contrasena.length < 4) {
+        if (Contrasegna.length < 4) {
             res.status(400).send('La contraseña debe tener al menos 4 caracteres');
             return;
         }
-        if (req.body.NombreUser.length < 4) {
+        if (NombreUser.length < 4) {
             res.status(400).send('El nombre de usuario debe tener al menos 4 caracteres');
+            return;
+        }
+        if (NombreCompleto.length < 4) {
+            res.status(400).send('El nombre completo debe tener al menos 4 caracteres');
+            return;
+        }
+        if (Apellidos.length < 4) {
+            res.status(400).send('Los apellidos deben tener al menos 4 caracteres');
+            return;
+        }
+        if (FotoPerfil.length < 4) {
+            res.status(400).send('La foto de perfil debe tener al menos 4 caracteres');
             return;
         }
 
         // Buscar el usuario a editar
-        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, req.body.NombreUser));
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
             res.status(400).send('Usuario no encontrado');
             return;
         }
         const user = usuarios[0];
-
         if (user.estadoUser === 'unlogged') {
             res.status(400).send('Usuario no logueado. Inicie sesión para editar su perfil');
             return;
         }
-        const hashedPassword = await bcrypt.hash(req.body.Contrasena, 10);
+        const hashedPassword = await bcrypt.hash(Contrasegna, 10);
 
         await db.update(usuario)
             .set({
-                FotoPerfil: req.body.FotoPerfil || 'none',
-                NombreCompleto: req.body.NombreCompleto,
-                Apellidos: req.body.Apellidos,
+                FotoPerfil: FotoPerfil,
+                NombreCompleto: NombreCompleto,
+                Apellidos: Apellidos,
                 Contrasena: hashedPassword
             })
-            .where(eq(usuario.NombreUser, req.body.NombreUser))
-        user.FotoPerfil = req.body.FotoPerfil || 'none';
-        user.NombreCompleto = req.body.NombreCompleto;
-        user.Apellidos = req.body.Apellidos;
+            .where(eq(usuario.NombreUser, NombreUser))
+        user.FotoPerfil = FotoPerfil;
+        user.NombreCompleto = NombreCompleto;
+        user.Apellidos = Apellidos;
         const { Contrasena, ...publicUser } = user;
         res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
