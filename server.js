@@ -70,7 +70,11 @@ function newConnection (socket) {
 
     //peticion para unirse a una partida
     socket.on('join-game', async (data) => {
+
+        await loadGame(data);
         console.log("Unido a partida!" + JSON.stringify(data))
+        // AQUI YA HAY 2 JUGADORES Y SE PUEDE EMPEZAR LA PARTIDA
+        //const chess = new Chess();
     });
     //peticion para salir de una partida
     socket.on('leave-game', async (data) => {

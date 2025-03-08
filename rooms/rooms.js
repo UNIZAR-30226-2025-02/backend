@@ -2,6 +2,7 @@ import { db } from '../db/db.js';
 import { partida } from '../db/schemas/partida.js';
 import { usuario } from '../db/schemas/usuario.js';
 import { Chess } from 'chess.js';
+import { eq } from "drizzle-orm";
 //import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
@@ -14,8 +15,15 @@ let ActiveXObjects = {};
  */
 export async function createNewGame(data) {
     const idJugador = data.idJugador;
-    const mode = data.mode; 
+    const mode = String(data.mode); 
+    const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
+    console.log(jugador);
     try {
+        //MIRAR QUE EL ESTADO DE LA PARTIDA DEL JUGADOR NO ESTE OCUPADO
+        //...
+
+        const puntuacionModo = jugador[mode]; // Puntuación del modo seleccionado por el jugador
+        console.log("Puntuación del modo:", puntuacionModo);
         // Crear un nuevo objeto de partida
         const chess = new Chess();
 
@@ -25,7 +33,17 @@ export async function createNewGame(data) {
 
         //Generamos un numero aleatorio entre 0 y 1 para determinar el color del jugador
         const randomColor = Math.random() < 0.5 ? 'white' : 'black';
-        
+        if (randomColor === 'white') {
+            chess.setHeader('White', idJugador);
+            chess.setHeader('Black', null);
+            chess.setHeader('White Elo', puntuacionModo);
+            chess.setHeader('Black Elo', null);
+        } else {
+            chess.setHeader('White', null);
+            chess.setHeader('Black', idJugador);
+            chess.setHeader('White Elo', null);
+            chess.setHeader('Black Elo', puntuacionModo); 
+        }
         // Crear una nueva partida en la base de datos
         await db.insert(partida).values({
             id: gameId,
@@ -34,7 +52,7 @@ export async function createNewGame(data) {
             JugadorB: randomColor === 'black' ? Number(idJugador) : null,
             //Modo seleccionado por el jugador
             Modo: mode,
-            PGN: '',
+            PGN: chess.pgn(),
             Ganador: null,
             Variacion_JW: 0, // Valor por defecto
             Variacion_JB: 0  // Valor por defecto
@@ -51,9 +69,12 @@ export async function createNewGame(data) {
 /*
  * Unirse a una partida existente a traves de su id
  */
-export async function loadGame(idPartida, idJugador) {
+export async function loadGame(data) {
     try {
 
+        const idPartida = data.idPartida;
+        const idJugador = data.idJugador;
+        const chess = new Chess();
         // Buscar la partida en la base de datos
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         if (!partidaEncontrada) {
@@ -70,6 +91,10 @@ export async function loadGame(idPartida, idJugador) {
             return socket.emit('error', 'Partida llena');
         }
 
+        //HAY QUE RELLENAR LOS CAMPOS NULL DEL PGN CON EL ID DEL JUGADOR Y LA PUNTUACION DEL MODO
+        
+
+        
         // Actualizar la base de datos con el nuevo jugador
         await db.update(partida)
             //el hueco libre puede ser JugadorW o JugadorB, pero el otro que no es null hay que dejarlo igual
@@ -102,7 +127,9 @@ export async function loadGame(idPartida, idJugador) {
 /*
 * Gestionar el movimiento de las piezas
 */
-export async function manejarMovimiento(idPartida, movimiento) {
+export async function manejarMovimiento(data, chess) {
+    const idPartida = data.idPartida;
+    const movimiento = data.movimiento;
     try {
        //Verificar primero si la partida esta activa
        if (!ActiveXObjects[idPartida]) {
@@ -119,14 +146,13 @@ export async function manejarMovimiento(idPartida, movimiento) {
         socket.to(idPartida).emit('moveMade', {move, board: game.board()});
 
         //Actualizar el PGN en la base de datos
-        //MIRAR SI ESTO SE HACE SOLO CUANDO ES GAME OVER O NO
         //esto en principio no hace falta porque el PGN se actualiza automaticamente al hacer un movimiento
-        /*
+        
         db.update(partida)
             .set({ PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
-        */
+        
         //Comprobar si la partida ha terminado
         if (game.game_over()) {
             const winner = game.turn() === 'w' ? activeGames[gameId].players[1] : activeGames[gameId].players[0];
@@ -147,6 +173,76 @@ export async function manejarMovimiento(idPartida, movimiento) {
 
     } catch (error) {
         console.error("Error al manejar el movimiento:", error);
+    }
+}
+
+/*
+* Funcion para encontrar una partida
+*/
+export async function findGame(data) {
+    const idJugador = data.idJugador;
+    const modo = data.modo; // Modo de juego seleccionado por el jugador
+    try {
+        //Buscar una partida de entre las activas donde solo haya un jugador que coincida con el modo
+        //Solo pueden enfrentarse jugadores que en ese modo tengan una diferencia de 100 elo como mucho
+        //variable idUsuario que sea el id de un usuario que ya esta en la partida, que puede estar en JugadorW o JugadorB
+
+        //Nombramos una lista de ids de jugadores que ya estan en una partida activa
+        const partidasPendientes = await db.select({
+            idJugadorBlancas: partida.JugadorW,
+            idJugadorNegras: partida.JugadorB,
+            idPartida: partida.id
+        })
+            .from(partida)
+            .where(
+                eq(partida.Modo, modo),
+                eq(partida.JugadorW, null).or(eq(partida.JugadorB, null))            
+            )
+            .get();
+        
+        //Quedarse con la lista de ids de usuarios de partidasPendientes
+        
+        /*let idUsuario = null;
+        for (const partida of partidasPendientes) {
+            if (partida.idJugadorBlancas !== null) {
+            idUsuario = partida.idJugadorBlancas;
+            break;
+            } else if (partida.idJugadorNegras !== null) {
+            idUsuario = partida.idJugadorNegras;
+            break;
+            }
+        }
+        */
+        
+
+        
+    
+/*        const partidaEncontrada = await db.select()
+            .from(partida)
+            .where(
+                eq(partida.Modo, modo),
+                eq(partida.JugadorW, null).or(eq(partida.JugadorB, null))            
+                //Condicion de que el juagador que se une a la partida tenga un elo similar al de los jugadores que ya hay en la partida
+                //HAY QUE HACERLA
+                
+                
+            )
+            .limit(1)
+            .get();
+*/
+        
+        //si ha encontrado la partida carga esa partida
+        if (partidaEncontrada) {
+            //Unir al jugador a la partida
+            await loadGame(partidaEncontrada.id, idJugador);
+        } else {
+            // Si no se encuentra una partida, crear una nueva
+            await createNewGame({ idJugador, modo });
+        }
+
+
+    } catch (error) {
+        console.error("Error al encontrar una partida:", error);
     }
 }
 
