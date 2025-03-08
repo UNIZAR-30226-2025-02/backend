@@ -24,6 +24,7 @@ export const usuario = sqliteTable('usuario', {
     Punt_5_10: integer('Punt_5_10'),
 
     correoVerificado: text('correoVerificado'),
+    tokenVerificacion: text('tokenVerificacion'),
     estadoUser: text('estadoUser')
 })
 

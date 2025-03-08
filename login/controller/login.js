@@ -4,8 +4,15 @@ import { eq } from 'drizzle-orm';
 import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
+import { sendVerificationEmail } from './tokenSender.js';
+import { httpRespuestaWebPositiva } from './httpsEnviables.js';
 import { Console } from 'node:console';
+import { dot } from 'node:test/reporters';
 
+const generateVerificationToken = (userId) => {
+    return jwt.sign({ userId }, process.env.EMAIL_FIRMA, { expiresIn: '1h' });
+};
 
 export async function crearUsuario(req, res) {
     try {
@@ -39,6 +46,9 @@ export async function crearUsuario(req, res) {
         const hashedPassword = await bcrypt.hash(Contrasena, 10);
         // Crear un identificador único para el usuario
         const id = uuidv4();
+        // Crear un token de verificación para el correo 
+        const token = generateVerificationToken(id);
+
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
             id: id,
@@ -50,14 +60,44 @@ export async function crearUsuario(req, res) {
             Contrasena: hashedPassword,
             estadoUser: "unlogged",
             correoVerificado: "no",
+            tokenVerificacion: token,
             created_at: new Date().toISOString()
         });
-        res.send({ mensaje: 'Usuario creado correctamente' });
+        // Enviar correo de verificación
+        await sendVerificationEmail(Correo, token);
+        console.log(token);
+        res.json({ message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
+
     } catch (error) {
         console.log(error.message);
         res.status(400).send("Error al crear el usuario");
     }
 }
+
+export async function verifyEmail(req, res) {
+    const token = req.query.token;
+    const tokenString = String(token);
+
+    // Validar que el token tiene tres partes (Header, Payload, Signature)
+    if (!tokenString || tokenString.split('.').length !== 3) {
+        return res.status(400).json({ error: 'Token malformado o inválido' });
+    }
+
+    try {
+        console.log("Token recibido:", tokenString);
+        const decoded = jwt.verify(tokenString, process.env.EMAIL_FIRMA);
+        const id = decoded.userId;
+
+        // Actualiza la base de datos para marcar el email como verificado
+        await db.update(usuario).set({ correoVerificado: 'yes' }).where(eq(usuario.id, id));
+
+        res.send(httpRespuestaWebPositiva);
+    } catch (error) {
+        console.log("Error al verificar el token:", error.message);
+        res.status(400).json({ error: 'Token inválido o expirado' });
+    }
+};
+
 
 export async function login(req, res) {
     try {
@@ -85,10 +125,10 @@ export async function login(req, res) {
         }
 
         // Comprobar si el correo del usuario ha sido verificado
-        // if (user.correoVerificado === 'no') {
-        //     res.status(400).send('Correo no verificado');
-        //     return;
-        // }
+        if (user.correoVerificado === 'no') {
+            res.status(400).send('Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión');
+            return;
+        }
 
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
