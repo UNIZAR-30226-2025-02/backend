@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { html_correo } from './httpsEnviables.js';
+import { html_correo } from './htmlEnviables.js';
 import Console from 'console';
 
 const transporter = nodemailer.createTransport({

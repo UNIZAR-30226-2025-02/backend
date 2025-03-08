@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail } from './tokenSender.js';
-import { httpRespuestaWebPositiva } from './httpsEnviables.js';
+import { httpRespuestaWebPositiva } from './htmlEnviables.js';
 import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
 
