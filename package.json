@@ -21,12 +21,17 @@
   "homepage": "https://github.com/UNIZAR-30226-2025-02/backend#readme",
   "dependencies": {
     "@libsql/client": "0.14.0",
+    "bcrypt": "5.1.1",
     "dotenv": "16.4.7",
     "drizzle-orm": "0.40.0",
     "drizzle-zod": "0.7.0",
     "esbuild": "0.25.0",
     "express": "4.21.2",
-    "socket.io": "4.8.1"
+    "jsonwebtoken": "9.0.2",
+    "nodemailer": "6.10.0",
+    "nodemon": "3.1.9",
+    "socket.io": "4.8.1",
+    "uuid": "11.1.0"
   },
   "devDependencies": {
     "drizzle-kit": "0.30.5"

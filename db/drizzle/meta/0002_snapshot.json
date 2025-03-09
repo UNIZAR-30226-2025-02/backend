@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d0fbec25-5369-4480-8b58-9d3d82e1038e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "02a15210-4b63-462b-95e7-5a433aa9c35f",
+  "prevId": "7077a0cc-b782-4b24-932a-8d0c7e77d08d",
   "tables": {
     "amistad": {
       "name": "amistad",
@@ -595,6 +595,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "correoVerificado": {
+          "name": "correoVerificado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estadoUser": {
+          "name": "estadoUser",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -624,7 +638,9 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"usuario\".\"emailVerified\"": "\"usuario\".\"correoVerificado\""
+    }
   },
   "internal": {
     "indexes": {}

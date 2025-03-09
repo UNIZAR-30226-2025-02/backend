@@ -1,5 +1,5 @@
 import { db } from '../../db/db.js';
-import { mensaje } from '../../db/schemas/mensaje.js';
+import { mensaje } from '../../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
 
 /*
@@ -29,7 +29,7 @@ export async function saveMessage(data) {
 export async function fetchMessages(data) {
     try {
         console.log("Buscando mensajes para la partida con ID:", data.game_id);
-        const messages = 
+        const messages =
             await db.select().from(mensaje).where(eq(mensaje.Id_partida, data.game_id)).all();
         return messages;
     } catch (error) {

@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d0fbec25-5369-4480-8b58-9d3d82e1038e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "7077a0cc-b782-4b24-932a-8d0c7e77d08d",
+  "prevId": "d0fbec25-5369-4480-8b58-9d3d82e1038e",
   "tables": {
     "amistad": {
       "name": "amistad",
@@ -592,6 +592,20 @@
         "Punt_5_10": {
           "name": "Punt_5_10",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "emailVerified": {
+          "name": "emailVerified",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estadoUser": {
+          "name": "estadoUser",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

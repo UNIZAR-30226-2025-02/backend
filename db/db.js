@@ -1,13 +1,14 @@
 import '../dotenv-config.js'
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
-import { amistad } from './schemas/amistad.js'
-import { apertura } from './schemas/apertura.js'
-import { mensaje } from './schemas/mensaje.js'
-import { partida } from './schemas/partida.js'
-import { ranking } from './schemas/ranking.js'
-import { reto } from './schemas/reto.js'
-import { usuario } from './schemas/usuario.js'   
+import * as amistad from './schemas/schemas.js'
+import * as apertura from './schemas/schemas.js'
+import * as mensaje from './schemas/schemas.js'
+import * as partida from './schemas/schemas.js'
+import * as ranking from './schemas/schemas.js'
+import * as reto from './schemas/schemas.js'
+import * as usuario from './schemas/schemas.js'
+
 
 const client = createClient({
   url: process.env.DATABASE_URL,
