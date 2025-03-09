@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
+import { createNewGame, loadGame, manejarMovimiento, emparejamiento } from './rooms/rooms.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -57,6 +58,35 @@ function newConnection(socket) {
 
     socket.on('message-deleted', async (data) => {
         console.log("Mensaje eliminado!" + JSON.stringify(data))
+    });
+
+    //peticion para crear una nueva partida
+    socket.on('create-game', async (data) => {
+
+        await createNewGame(data);
+        console.log("Nueva partida creada!" + JSON.stringify(data))
+        
+    });
+
+    //peticion para unirse a una partida
+    socket.on('join-game', async (data) => {
+
+        await loadGame(data, socket);
+        console.log("Unido a partida!" + JSON.stringify(data))
+    });
+
+    //peticion para salir de una partida
+    socket.on('leave-game', async (data) => {
+        console.log("Salida de partida!" + JSON.stringify(data))
+    });
+
+    socket.on('make-move', async (data) => {
+        await manejarMovimiento(data, socket);
+        console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
+    });
+
+    socket.on('see-pending-pairings', async (data) => {
+        await emparejamiento(data, socket);
     });
 }
 
