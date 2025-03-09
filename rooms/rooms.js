@@ -35,13 +35,9 @@ export async function createNewGame(data) {
         const randomColor = Math.random() < 0.5 ? 'white' : 'black';
         if (randomColor === 'white') {
             chess.setHeader('White', idJugador);
-            chess.setHeader('Black', null);
             chess.setHeader('White Elo', puntuacionModo);
-            chess.setHeader('Black Elo', null);
         } else {
-            chess.setHeader('White', null);
             chess.setHeader('Black', idJugador);
-            chess.setHeader('White Elo', null);
             chess.setHeader('Black Elo', puntuacionModo); 
         }
         // Crear una nueva partida en la base de datos
@@ -52,7 +48,8 @@ export async function createNewGame(data) {
             JugadorB: randomColor === 'black' ? Number(idJugador) : null,
             //Modo seleccionado por el jugador
             Modo: mode,
-            PGN: chess.pgn(),
+            //PGN: chess.pgn(),
+            PGN: null, // Valor por defecto al crear la partida
             Ganador: null,
             Variacion_JW: 0, // Valor por defecto
             Variacion_JB: 0  // Valor por defecto
@@ -79,7 +76,8 @@ export async function loadGame(data, socket) {
 
         const idPartida = data.idPartida;
         const idJugador = data.idJugador;
-        const chess = new Chess();
+        const existingGame = ActiveXObjects[idPartida].chess;
+        console.log(existingGame.header());
         // Buscar la partida en la base de datos
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         if (!partidaEncontrada) {
@@ -97,38 +95,34 @@ export async function loadGame(data, socket) {
         }
 
         //Completar el Header de la partida
-        const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
-        console.log(jugador);
+        const nuevoJugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
+        console.log(nuevoJugador);
         //Sacar la puntuacion del jugador en el modo de la partida
-        const puntuacionModo = jugador[partidaEncontrada.Modo]; // Puntuación del modo seleccionado por el jugador
+        const puntuacionModo = nuevoJugador[partidaEncontrada.Modo]; // Puntuación del modo seleccionado por el jugador
         console.log("Puntuación del modo:", puntuacionModo);
         //Completar el header de la partida
-        // Cargar el estado del juego desde el PGN almacenado en la base de datos
-        chess.loadPgn(partidaEncontrada.PGN);
+        //Cargar el estado del juego desde el PGN almacenado en la base de datos
+        //existingGame.loadPgn(partidaEncontrada.PGN);
         
         // Obtener las puntuaciones guardadas en el header
         //REVISAR ESTO, DUPLICA LOS CAMPOS DE ELO DEL HEADER
-        const headers = chess.header();
-        let puntuacionOponente = null;
+        const headers = existingGame.header();
+        //let puntuacionOponente = null;
         
         if (partidaEncontrada.JugadorW === null) {
             // Si el jugador se une como White, la puntuación del oponente está en 'Black Elo'
-            puntuacionOponente = headers['Black Elo'];
-        
-            chess.setHeader('White', idJugador);
-            chess.setHeader('White Elo', puntuacionModo);
+            //puntuacionOponente = headers['Black Elo'];
+            existingGame.setHeader('White', idJugador);
+            existingGame.setHeader('White Elo', puntuacionModo);
         } else {
             // Si el jugador se une como Black, la puntuación del oponente está en 'White Elo'
-            puntuacionOponente = headers['White Elo'];
-        
-            chess.setHeader('Black', idJugador);
-            chess.setHeader('Black Elo', puntuacionModo);
+            //puntuacionOponente = headers['White Elo'];
+            existingGame.setHeader('Black', idJugador);
+            existingGame.setHeader('Black Elo', puntuacionModo);
         }
         
         // Guardar el nuevo PGN con el header actualizado
-        const updatedPGN = chess.pgn();
-
-        
+        const updatedPGN = existingGame.pgn();
         // Actualizar la base de datos con el nuevo jugador
         await db.update(partida)
             //el hueco libre puede ser JugadorW o JugadorB, pero el otro que no es null hay que dejarlo igual
@@ -140,20 +134,20 @@ export async function loadGame(data, socket) {
             .where(eq(partida.id, idPartida))
             .run();
         
-        //Unir al jugador a la partida
-        socket.join(idPartida);
-
         //Guardar la partida en memoria
         ActiveXObjects[idPartida].players.push(idJugador);
 
+        //Unir al jugador a la partida
+        socket.join(idPartida);
+
         // Notificar a los jugadores que la partida está lista
-        socket.emit('gameJoined', { idPartida, board: ActiveXObjects[idPartida].chess.board() });
-        socket.to(idPartida).emit('opponentJoined', { idJugador });
+        //socket.emit('gameJoined', { idPartida, board: ActiveXObjects[idPartida].chess.board() });
+        //socket.emit('game-Ready', {idPartida});
+        socket.broadcast.to(idPartida).emit('game-ready', {idPartida});
 
         console.log("El jugador, "+ idJugador +", se ha unido a la partida con ID:", idPartida);
+        console.log("Jugadores en la partida: " + String(ActiveXObjects[idPartida].players));
         
-    
-
     }catch (error) {
         console.error("Error al cargar la partida:", error);
     }
@@ -162,9 +156,11 @@ export async function loadGame(data, socket) {
 /*
 * Gestionar el movimiento de las piezas
 */
-export async function manejarMovimiento(data, chess) {
+export async function manejarMovimiento(data, socket) {
     const idPartida = data.idPartida;
     const movimiento = data.movimiento;
+    console.log("Partidas en  memoria: ", ActiveXObjects);
+
     try {
        //Verificar primero si la partida esta activa
        if (!ActiveXObjects[idPartida]) {
@@ -178,7 +174,14 @@ export async function manejarMovimiento(data, chess) {
         }
 
         //Si el movimiento se efectua bien emitimos el movimiento
-        socket.to(idPartida).emit('moveMade', {move, board: game.board()});
+        //socket.to(idPartida).emit('new-move', {move, board: game.board()});
+        console.log("Movimiento realizado:", movimiento);
+
+        console.log("Historial de la partida:", game.history());
+        console.log("Tablero de la partida:", game.board());
+        console.log("PGN de la partida:", game.pgn());
+
+        socket.to(idPartida).emit('new-move', {movimiento, board: game.board()});
 
         //Actualizar el PGN en la base de datos
         //esto en principio no hace falta porque el PGN se actualiza automaticamente al hacer un movimiento
@@ -187,11 +190,15 @@ export async function manejarMovimiento(data, chess) {
             .set({ PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
-        
         //Comprobar si la partida ha terminado
-        if (game.game_over()) {
-            const winner = game.turn() === 'w' ? activeGames[gameId].players[1] : activeGames[gameId].players[0];
+        console.log("¿La partida ha terminado? ", game.isGameOver());
 
+        if (game.isGameOver()) {
+            //El ganador es el jugador que no le toca el turno
+            const winner =  game.turn() === 'w' ? game.header()['Black'] : game.header()['White'];
+            //MIRAR SETHEADER Y LA VARIACION DE ELO
+            // game.setHeader('Result', '1-0');
+            //const winner =  game.turn() === 'w' ? 'negras' : 'blancas';
             db.update(partida)
                 .set({ Ganador: winner })
                 .where(eq(partida.id, idPartida))
