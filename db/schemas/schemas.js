@@ -64,10 +64,10 @@ export const retoInsertSchema = createInsertSchema(reto).partial()
 export const partida = sqliteTable('partida', {
     id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`'CURRENT_TIMESTAMP'`),
-    JugadorW: integer('JugadorW').references(() => usuario.id).notNull(),
-    JugadorB: integer('JugadorB').references(() => usuario.id).notNull(),
+    JugadorW: integer('JugadorW').references(() => usuario.id),
+    JugadorB: integer('JugadorB').references(() => usuario.id),
     Modo: text('Modo'),
-    Ganador: integer('Ganador').references(() => usuario.id).notNull(),
+    Ganador: integer('Ganador').references(() => usuario.id),
     PGN: text('PGN'),
     Variacion_JW: integer('Variacion_JW'),
     Variacion_JB: integer('Variacion_JB')
