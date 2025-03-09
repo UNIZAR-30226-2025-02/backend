@@ -59,7 +59,12 @@ export async function createNewGame(data) {
         });
         console.log("Nueva partida creada con ID:", gameId);
         // Almacenar la partida activa en memoria
-        ActiveXObjects[gameId] = chess;
+                
+        ActiveXObjects[gameId] = {
+            players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
+            chess: chess
+        };
+        console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
     } catch (error) {
         console.error("Error al crear una nueva partida:", error);
     }
@@ -69,7 +74,7 @@ export async function createNewGame(data) {
 /*
  * Unirse a una partida existente a traves de su id
  */
-export async function loadGame(data) {
+export async function loadGame(data, socket) {
     try {
 
         const idPartida = data.idPartida;
@@ -91,8 +96,37 @@ export async function loadGame(data) {
             return socket.emit('error', 'Partida llena');
         }
 
-        //HAY QUE RELLENAR LOS CAMPOS NULL DEL PGN CON EL ID DEL JUGADOR Y LA PUNTUACION DEL MODO
+        //Completar el Header de la partida
+        const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
+        console.log(jugador);
+        //Sacar la puntuacion del jugador en el modo de la partida
+        const puntuacionModo = jugador[partidaEncontrada.Modo]; // Puntuación del modo seleccionado por el jugador
+        console.log("Puntuación del modo:", puntuacionModo);
+        //Completar el header de la partida
+        // Cargar el estado del juego desde el PGN almacenado en la base de datos
+        chess.loadPgn(partidaEncontrada.PGN);
         
+        // Obtener las puntuaciones guardadas en el header
+        //REVISAR ESTO, DUPLICA LOS CAMPOS DE ELO DEL HEADER
+        const headers = chess.header();
+        let puntuacionOponente = null;
+        
+        if (partidaEncontrada.JugadorW === null) {
+            // Si el jugador se une como White, la puntuación del oponente está en 'Black Elo'
+            puntuacionOponente = headers['Black Elo'];
+        
+            chess.setHeader('White', idJugador);
+            chess.setHeader('White Elo', puntuacionModo);
+        } else {
+            // Si el jugador se une como Black, la puntuación del oponente está en 'White Elo'
+            puntuacionOponente = headers['White Elo'];
+        
+            chess.setHeader('Black', idJugador);
+            chess.setHeader('Black Elo', puntuacionModo);
+        }
+        
+        // Guardar el nuevo PGN con el header actualizado
+        const updatedPGN = chess.pgn();
 
         
         // Actualizar la base de datos con el nuevo jugador
@@ -100,7 +134,8 @@ export async function loadGame(data) {
             //el hueco libre puede ser JugadorW o JugadorB, pero el otro que no es null hay que dejarlo igual
             .set({ 
                 JugadorW: partidaEncontrada.JugadorW === null ? idJugador : partidaEncontrada.JugadorW,
-                JugadorB: partidaEncontrada.JugadorB === null ? idJugador : partidaEncontrada.JugadorB
+                JugadorB: partidaEncontrada.JugadorB === null ? idJugador : partidaEncontrada.JugadorB,
+                PGN: updatedPGN
             })
             .where(eq(partida.id, idPartida))
             .run();
@@ -109,11 +144,11 @@ export async function loadGame(data) {
         socket.join(idPartida);
 
         //Guardar la partida en memoria
-        activeGames[gameId].players.push(idJugador);
+        ActiveXObjects[idPartida].players.push(idJugador);
 
         // Notificar a los jugadores que la partida está lista
-        socket.emit('gameJoined', { idPartida, board: activeGames[gameId].chess.board() });
-        socket.to(gameId).emit('opponentJoined', { idJugador });
+        socket.emit('gameJoined', { idPartida, board: ActiveXObjects[idPartida].chess.board() });
+        socket.to(idPartida).emit('opponentJoined', { idJugador });
 
         console.log("El jugador, "+ idJugador +", se ha unido a la partida con ID:", idPartida);
         

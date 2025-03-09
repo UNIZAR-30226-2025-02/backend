@@ -4,6 +4,7 @@ import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
 import { createNewGame } from './rooms/rooms.js';
+import { loadGame } from './rooms/rooms.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -71,10 +72,8 @@ function newConnection (socket) {
     //peticion para unirse a una partida
     socket.on('join-game', async (data) => {
 
-        await loadGame(data);
+        await loadGame(data, socket);
         console.log("Unido a partida!" + JSON.stringify(data))
-        // AQUI YA HAY 2 JUGADORES Y SE PUEDE EMPEZAR LA PARTIDA
-        //const chess = new Chess();
     });
     //peticion para salir de una partida
     socket.on('leave-game', async (data) => {
