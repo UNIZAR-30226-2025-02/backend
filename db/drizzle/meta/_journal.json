@@ -43,6 +43,13 @@
       "when": 1741536619831,
       "tag": "0005_conscious_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1741638155296,
+      "tag": "0006_windy_stranger",
+      "breakpoints": true
     }
   ]
 }
