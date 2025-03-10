@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail } from './tokenSender.js';
-import { httpRespuestaWebPositiva } from './htmlEnviables.js';
+import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
 import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
 
@@ -60,8 +60,8 @@ export async function crearUsuario(req, res) {
             Contrasena: hashedPassword,
             estadoUser: "unlogged",
             correoVerificado: "no",
-            tokenVerificacion: token,
-            created_at: new Date().toISOString()
+            tokenVerificacion: token
+            //created_at: new Date().toISOString()
         });
         // Enviar correo de verificación
         await sendVerificationEmail(Correo, token);
@@ -73,6 +73,37 @@ export async function crearUsuario(req, res) {
         res.status(400).send("Error al crear el usuario");
     }
 }
+
+export async function resendVerificationEmail(req, res) {
+    try {
+        const Correo = req.body.Correo;
+        if (!Correo) {
+            res.status(400).send('Faltan campos');
+            return;
+        }
+        // Verificar si el correo ya está en uso
+        const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
+        if (correoExistente.length === 0) {
+            res.status(400).send('El correo no está registrado');
+            return;
+        }
+        const user = correoExistente[0];
+        if (user.correoVerificado === 'yes') {
+            res.status(400).send('El correo ya ha sido verificado');
+            return;
+        }
+        // Crear un token de verificación para el correo
+        const token = generateVerificationToken(user.id);
+        // Actualizar el token de verificación en la base de datos
+        await db.update(usuario).set({ tokenVerificacion: token }).where(eq(usuario.Correo, Correo));
+        // Enviar correo de verificación
+        await sendVerificationEmail(Correo, token);
+        res.json({ message: 'Correo de verificación reenviado. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
+    } catch (error) {
+        res.status(500).send('Error al reenviar el correo de verificación');
+    }
+}
+
 
 export async function verifyEmail(req, res) {
     const token = req.query.token;
@@ -94,7 +125,7 @@ export async function verifyEmail(req, res) {
         res.send(httpRespuestaWebPositiva);
     } catch (error) {
         console.log("Error al verificar el token:", error.message);
-        res.status(400).json({ error: 'Token inválido o expirado' });
+        res.status(400).send(httpRespuestaWebNegativa);
     }
 };
 

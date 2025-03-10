@@ -130,3 +130,78 @@ export const html_correo = (verificationLink) => {
         </body>
         </html>`;
 };
+
+
+export const httpRespuestaWebNegativa = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Verificación Erronea</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                color: #333;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                text-align: center;
+            }
+
+            .container {
+                padding: 20px;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 600px;
+                width: 100%;
+            }
+
+            h1 {
+                color: red;
+            }
+
+            pre {
+                font-size: 14px;
+                color: #333;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+
+            p {
+                font-size: 18px;
+            }
+
+            .btn {
+                margin-top: 20px;
+                padding: 10px 20px;
+                background-color: red;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .btn:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="container">
+            <h1>¡Algo ha ido mal!</h1>
+            <p>Tu correo no se ha podido verificar.</p>
+            <p>Puede que tu solicitud haya caducado, prueba a solicitar que se te reenvíe un enlace de verificación.</p>
+
+            
+
+            <button class="btn" onclick="window.close();">Cerrar pestaña</button>
+        </div>
+
+    </body>
+    </html>`;

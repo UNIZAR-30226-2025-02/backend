@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail } from './login/controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail } from './login/controller/login.js';
 
 
 export const app = express()
@@ -20,6 +20,10 @@ app.get("/", (req, res) => {
 
 app.post('/register', async (req, res) => {
     await crearUsuario(req, res);
+});
+
+app.post('/resendVerification', async (req, res) => {
+    await resendVerificationEmail(req, res);
 });
 
 app.get('/verificar', async (req, res) => {
