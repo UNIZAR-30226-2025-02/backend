@@ -17,12 +17,10 @@ const generateVerificationToken = (userId) => {
 export async function crearUsuario(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
-        const NombreCompleto = req.body.NombreCompleto;
-        const Apellidos = req.body.Apellidos;
         const Correo = req.body.Correo;
         const Contrasena = req.body.Contrasena;
 
-        if (!NombreUser || !NombreCompleto || !Apellidos || !Correo || !Contrasena) {
+        if (!NombreUser || !Correo || !Contrasena) {
             throw new Error('Faltan campos');
         }
         // Verificar si el usuario ya existe
@@ -54,8 +52,6 @@ export async function crearUsuario(req, res) {
             id: id,
             FotoPerfil: "none",
             NombreUser: NombreUser,
-            NombreCompleto: NombreCompleto,
-            Apellidos: Apellidos,
             Correo: Correo,
             Contrasena: hashedPassword,
             estadoUser: "unlogged",
@@ -190,24 +186,14 @@ export async function logout(req, res) {
 export async function editUser(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
-        const NombreCompleto = req.body.NombreCompleto;
-        const Apellidos = req.body.Apellidos;
         const FotoPerfil = !req.body.FotoPerfil ? 'none' : req.body.FotoPerfil;
 
-        if (!NombreUser || !NombreCompleto || !Apellidos || !FotoPerfil) {
+        if (!NombreUser || !FotoPerfil) {
             res.status(400).send('Faltan campos');
             return;
         }
         if (NombreUser.length < 4) {
             res.status(400).send('El nombre de usuario debe tener al menos 4 caracteres');
-            return;
-        }
-        if (NombreCompleto.length < 4) {
-            res.status(400).send('El nombre completo debe tener al menos 4 caracteres');
-            return;
-        }
-        if (Apellidos.length < 4) {
-            res.status(400).send('Los apellidos deben tener al menos 4 caracteres');
             return;
         }
         if (FotoPerfil.length < 4) {
@@ -234,13 +220,9 @@ export async function editUser(req, res) {
         await db.update(usuario)
             .set({
                 FotoPerfil: FotoPerfil,
-                NombreCompleto: NombreCompleto,
-                Apellidos: Apellidos,
             })
             .where(eq(usuario.NombreUser, NombreUser))
         user.FotoPerfil = FotoPerfil;
-        user.NombreCompleto = NombreCompleto;
-        user.Apellidos = Apellidos;
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
