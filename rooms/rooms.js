@@ -1,7 +1,7 @@
 import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
-import { eq, or, isNull } from "drizzle-orm";
+import { eq, or, and, isNull } from "drizzle-orm";
 //import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
@@ -248,9 +248,10 @@ export async function emparejamiento(idJugadorNuevo, modo) {
     // const idJugadorNuevo = data.idJugador;
 
     // Buscar partidas pendientes
+    // MIRAR TAMBIEN EL MODO DE LA PARTIDA PARA COGER SOLO LAS QUE SEAN DE ESE MODO !!!!
     const listadoPartidasPendientes = await db.select()
         .from(partida)
-        .where(or(isNull(partida.JugadorW), isNull(partida.JugadorB)))
+        .where(and(eq(partida.Modo, modo), or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
         .all();
     
     //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
