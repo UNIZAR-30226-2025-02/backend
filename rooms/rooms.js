@@ -13,13 +13,13 @@ let ActiveXObjects = {};
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
  */
-export async function createNewGame(data) {
+export async function createNewGame(idJugador, mode, socket) {
     // DISTINGUIR SI EL USUARIO ESTA CREADO Y NO ES INVITADO, VER SI ESTA LOGEADO, VERIFICADO ETC
     // SI ES GUEST, DEJARLE CREAR LA PARTIDA
 
     // tabla partida: campo tipo: guest, matched, duel(amigos)
-    const idJugador = data.idJugador;
-    const mode = String(data.mode); 
+    // const idJugador = data.idJugador;
+    // const mode = String(data.mode); 
     const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
     console.log(jugador);
     try {
@@ -67,6 +67,8 @@ export async function createNewGame(data) {
         console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
         // Crear la sala socket de la partida
         socket.join(gameId);
+        return gameId;
+
     } catch (error) {
         console.error("Error al crear una nueva partida:", error);
     }
@@ -76,11 +78,11 @@ export async function createNewGame(data) {
 /*
  * Unirse a una partida existente a traves de su id
  */
-export async function loadGame(data, socket) {
+export async function loadGame(idPartida, idJugador, socket) {
     try {
 
-        const idPartida = data.idPartida;
-        const idJugador = data.idJugador;
+        // const idPartida = data.idPartida;
+        // const idJugador = data.idJugador;
         const existingGame = ActiveXObjects[idPartida].chess;
         console.log(existingGame.header());
         // Buscar la partida en la base de datos
@@ -111,7 +113,7 @@ export async function loadGame(data, socket) {
         
         // Obtener las puntuaciones guardadas en el header
         //REVISAR ESTO, DUPLICA LOS CAMPOS DE ELO DEL HEADER
-        const headers = existingGame.header();
+        // const headers = existingGame.header();
         //let puntuacionOponente = null;
         
         if (partidaEncontrada.JugadorW === null) {
@@ -238,7 +240,7 @@ export async function manejarMovimiento(data, socket) {
 /*
 * Funcion para encontrar una partida
 */
-export async function findGame(data, socket) {
+/*export async function findGame(data, socket) {
     const idJugador = data.idJugador;
     const modo = data.modo; // Modo de juego seleccionado por el jugador
     try {
@@ -289,7 +291,7 @@ export async function findGame(data, socket) {
             .limit(1)
             .get();
 */
-        
+/*        
         //si ha encontrado la partida carga esa partida
         if (partidaEncontrada) {
             //Unir al jugador a la partida
@@ -304,13 +306,14 @@ export async function findGame(data, socket) {
         console.error("Error al encontrar una partida:", error);
     }
 }
+*/
 
-export async function emparejamiento(data) {
+export async function emparejamiento(idJugadorNuevo, modo) {
     // Buscar una partida de entre las activas donde solo haya un jugador que coincida con el modo
     // Solo pueden enfrentarse jugadores que en ese modo tengan una diferencia de 100 elo como mucho
 
-    const modo = data.modo; // Modo de juego seleccionado por el jugador
-    const idJugadorNuevo = data.idJugador;
+    // const modo = data.modo; // Modo de juego seleccionado por el jugador
+    // const idJugadorNuevo = data.idJugador;
 
     // Buscar partidas pendientes
     const listadoPartidasPendientes = await db.select()
@@ -353,12 +356,32 @@ export async function emparejamiento(data) {
             console.log("Jugador nuevo: ", idJugadorNuevo);
             console.log("ID de la partida: ", emparejamiento.id);
 
-            return { idPartida: emparejamiento.id, idJugador: idJugadorNuevo, emptyColor: emparejamiento.emptyColor };
+            // Devuelve el id de la partida seleccionada de entre las pendientes en la que se ha
+            // podido emparejar al jugador
+            return emparejamiento.id;
         }
     }
 
+    // Si no ha encontrado ninguna partida pendiente con la que emparejar al jugador, devuelve null
+    return null;
 }   
 
+export async function findGame(data, socket) {
+    // Buscar una partida de entre las activas donde el jugador pueda ser emparejado, y si no la 
+    // hay, crear una nueva partida para el jugador
+
+    const idJugador = data.idJugador;       
+    const modo = data.mode;                 
+    let idPartida = await emparejamiento(idJugador, modo);
+
+    if (idPartida) {
+        await loadGame(idPartida, idJugador, socket);
+        return idPartida;
+    } else {
+        idPartida = await createNewGame(idJugador, modo, socket);
+        return idPartida;
+    }
+}
 /*
  * Por ahora con socket, podria ser una peticion a api REST
  * app.get('/games/find-game', (req, res) => {
