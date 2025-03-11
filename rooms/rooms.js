@@ -218,11 +218,19 @@ export async function manejarMovimiento(data, socket) {
 
             //El ganador es el jugador que no le toca el turno
             const winner =  game.turn() === 'w' ? game.header()['Black'] : game.header()['White'];
+            const result = game.turn() === 'w' ? 'black' : 'white';
             //MIRAR SETHEADER Y LA VARIACION DE ELO
             // game.setHeader('Result', '1-0');
-            //const winner =  game.turn() === 'w' ? 'negras' : 'blancas';
+
+            const { variacionW, variacionB } = await ratingVariation(
+                game.header()['White Elo'],
+                game.header()['Black Elo'],
+                result,
+                40
+            );
+
             db.update(partida)
-                .set({ Ganador: winner })
+                .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB })
                 .where(eq(partida.id, idPartida))
                 .run();
             
@@ -319,30 +327,33 @@ export async function findGame(data, socket) {
         return idPartida;
     }
 }
-/*
- * Por ahora con socket, podria ser una peticion a api REST
- * app.get('/games/find-game', (req, res) => {
- *     findGame(req.body)
- * }
- *
- * app.get('/games/{game_id}', (req, res) => {
- *     loadGame(req.body)
- * }
- * 
- * socket.on('find-game', async (data) => {
-    await findGame(data, socket);
+
+export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_factor) {
+    // Calcular la variación de elo de los jugadores tras una partida
+    // Calcular la expectativa de puntuación para cada jugador
+    const expectativaW = 1 / (1 + Math.pow(10, (puntuacionB - puntuacionW) / 400));
+    const expectativaB = 1 / (1 + Math.pow(10, (puntuacionW - puntuacionB) / 400));
+
+    // Determinar el resultado de la partida para cada jugador
+    let resultadoW, resultadoB;
+    if (resultado === 'white') {
+        resultadoW = 1;
+        resultadoB = 0;
+    } else if (resultado === 'black') {
+        resultadoW = 0;
+        resultadoB = 1;
+    } else if (resultado === 'draw') {
+        resultadoW = 0.5;
+        resultadoB = 0.5;
+    } else {
+        throw new Error('Resultado inválido');
     }
 
-    // findGame llama a emparejamiento
-    // ---> si se puede encontrar una partida donde meterse, se mete al jugador ahi.
-    // ---> si no, crea una nueva partida
-    // enviar al cliente un evento 'en-espera'
+    // Calcular la variación de puntuación para cada jugador
+    const variacionW = Math.round(((k_factor * (resultadoW - expectativaW)) * 100)) /100;
+    const variacionB = Math.round(((k_factor * (resultadoB - expectativaB)) * 100)) /100;
 
-
-    // socket.on('move', async (data) => {
-    //     await makeMove(data, socket);
-    // });
-
-*/
+    return { variacionW, variacionB };
+}
 
 
