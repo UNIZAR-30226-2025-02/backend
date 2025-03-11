@@ -21,7 +21,7 @@ export async function createNewGame(idJugador, mode, socket) {
     // const idJugador = data.idJugador;
     // const mode = String(data.mode); 
     const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
-    console.log(jugador);
+    //console.log(jugador);
     try {
         //MIRAR QUE EL ESTADO DE LA PARTIDA DEL JUGADOR NO ESTE OCUPADO
         //...
@@ -64,7 +64,7 @@ export async function createNewGame(idJugador, mode, socket) {
             players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
             chess: chess
         };
-        console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
+        // console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
         // Crear la sala socket de la partida
         socket.join(gameId);
         return gameId;
@@ -84,7 +84,8 @@ export async function loadGame(idPartida, idJugador, socket) {
         // const idPartida = data.idPartida;
         // const idJugador = data.idJugador;
         const existingGame = ActiveXObjects[idPartida].chess;
-        console.log(existingGame.header());
+        
+        //console.log(existingGame.header());
         // Buscar la partida en la base de datos
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         if (!partidaEncontrada) {
@@ -103,10 +104,12 @@ export async function loadGame(idPartida, idJugador, socket) {
 
         //Completar el Header de la partida
         const nuevoJugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
-        console.log(nuevoJugador);
+
+        //console.log(nuevoJugador);
         //Sacar la puntuacion del jugador en el modo de la partida
         const puntuacionModo = nuevoJugador[partidaEncontrada.Modo]; // Puntuación del modo seleccionado por el jugador
         console.log("Puntuación del modo:", puntuacionModo);
+
         //Completar el header de la partida
         //Cargar el estado del juego desde el PGN almacenado en la base de datos
         //existingGame.loadPgn(partidaEncontrada.PGN);
@@ -195,8 +198,8 @@ export async function manejarMovimiento(data, socket) {
         console.log("Movimiento realizado:", movimiento);
 
         console.log("Historial de la partida:", game.history());
-        console.log("Tablero de la partida:", game.board());
-        console.log("PGN de la partida:", game.pgn());
+        //console.log("Tablero de la partida:", game.board());
+        //console.log("PGN de la partida:", game.pgn());
 
         socket.to(idPartida).emit('new-move', {movimiento, board: game.board()});
 
@@ -249,7 +252,8 @@ export async function emparejamiento(idJugadorNuevo, modo) {
         .from(partida)
         .where(or(isNull(partida.JugadorW), isNull(partida.JugadorB)))
         .all();
-    console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
+    
+    //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
     
     // Obtener los jugadores de las partidas pendientes
     const emparejamientosPendientes = [];
@@ -263,6 +267,7 @@ export async function emparejamiento(idJugadorNuevo, modo) {
             emparejamientosPendientes.push(emparejamiento);
         }
     }
+    
     console.log("Emparejamientos pendientes: ", emparejamientosPendientes);
 
     // Para cada jugador pendiente, comprobar si es posible emparejarlo con el jugador actual
@@ -281,6 +286,7 @@ export async function emparejamiento(idJugadorNuevo, modo) {
         if (Math.abs(jugadorExistente[modo] - jugadorNuevo[modo]) <= 100) {
             // Emparejar a los jugadores
             console.log("Emparejando jugadores...");
+            console.log("------------------------------------------------------------")
             console.log("Jugador existente: ", emparejamiento.jugador);
             console.log("Jugador nuevo: ", idJugadorNuevo);
             console.log("ID de la partida: ", emparejamiento.id);
