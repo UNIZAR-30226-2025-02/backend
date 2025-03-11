@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail } from './login/controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd } from './login/controller/login.js';
 
 
 export const app = express()
@@ -42,3 +42,10 @@ app.post('/editUser', async (req, res) => {
     await editUser(req, res);
 });
 
+app.post('/sendPasswdReset', async (req, res) => {
+    await sendPasswdReset(req, res);
+});
+
+app.post('/tryResetPasswd', async (req, res) => {
+    await resetPasswd(req, res);
+});

@@ -25,7 +25,8 @@ export const usuario = sqliteTable('usuario', {
 
     correoVerificado: text('correoVerificado'),
     tokenVerificacion: text('tokenVerificacion'),
-    estadoUser: text('estadoUser')
+    estadoUser: text('estadoUser'),
+    tokenPasswd: text('tokenPasswd')
 })
 
 // Uso de zod internamente para validar los datos

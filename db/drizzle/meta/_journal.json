@@ -43,6 +43,13 @@
       "when": 1741536619831,
       "tag": "0005_conscious_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1741694098112,
+      "tag": "0006_cooing_moonstone",
+      "breakpoints": true
     }
   ]
 }

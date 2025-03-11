@@ -5,7 +5,7 @@ import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
-import { sendVerificationEmail } from './tokenSender.js';
+import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
 import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
@@ -163,7 +163,7 @@ export async function login(req, res) {
 
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
-        const { Contrasena, ...publicUser } = user;
+        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         // Establecer en user el estado de sesión
         user.estadoUser = 'logged';
         res.send(publicUser);
@@ -192,15 +192,10 @@ export async function editUser(req, res) {
         const NombreUser = req.body.NombreUser;
         const NombreCompleto = req.body.NombreCompleto;
         const Apellidos = req.body.Apellidos;
-        const Contrasegna = req.body.Contrasena;
         const FotoPerfil = !req.body.FotoPerfil ? 'none' : req.body.FotoPerfil;
 
-        if (!NombreUser || !NombreCompleto || !Apellidos || !Contrasegna || !FotoPerfil) {
+        if (!NombreUser || !NombreCompleto || !Apellidos || !FotoPerfil) {
             res.status(400).send('Faltan campos');
-            return;
-        }
-        if (Contrasegna.length < 4) {
-            res.status(400).send('La contraseña debe tener al menos 4 caracteres');
             return;
         }
         if (NombreUser.length < 4) {
@@ -231,24 +226,90 @@ export async function editUser(req, res) {
             res.status(400).send('Usuario no logueado. Inicie sesión para editar su perfil');
             return;
         }
-        const hashedPassword = await bcrypt.hash(Contrasegna, 10);
+        if (user.correoVerificado === 'no') {
+            res.status(400).send('Correo no verificado. Por favor, verifica tu correo antes de editar tu perfil');
+            return;
+        }
 
         await db.update(usuario)
             .set({
                 FotoPerfil: FotoPerfil,
                 NombreCompleto: NombreCompleto,
                 Apellidos: Apellidos,
-                Contrasena: hashedPassword
             })
             .where(eq(usuario.NombreUser, NombreUser))
         user.FotoPerfil = FotoPerfil;
         user.NombreCompleto = NombreCompleto;
         user.Apellidos = Apellidos;
-        const { Contrasena, ...publicUser } = user;
+        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
         res.status(500).send('Error al editar el usuario');
     }
 }
 
+export async function sendPasswdReset(req, res) {
+    try {
 
+        const Correo = req.body.Correo;
+        if (!Correo) {
+            res.status(400).send('Faltan campos');
+            return;
+        }
+        const usuarios = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
+        if (usuarios.length === 0) {
+            res.status(400).send('Correo no registrado');
+            return;
+        }
+        const user = usuarios[0];
+        if (user.estadoUser == 'unlogged' || user.correoVerificado == 'no') {
+            res.status(400).send('El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña. ');
+            return;
+        }
+        // Crear un token de verificación para el correo de 9 caracteres
+        const token = randomUUID().slice(0, 9);
+        const hashedToken = await bcrypt.hash(token, 10);
+        await db.update(usuario).set({ tokenPasswd: hashedToken }).where(eq(usuario.Correo, Correo));
+        await sendChangePasswdEmail(Correo, token);
+        res.json({ message: 'Correo de restablecimiento de contraseña enviado. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
+    } catch (error) {
+        res.status(500).send('Error al enviar el correo de restablecimiento de contraseña');
+    }
+}
+
+export async function resetPasswd(req, res) {
+    try {
+        const token = req.body.token;
+        const user = req.body.NombreUser;
+        const Contrasegna = req.body.Contrasena;
+        if (!token || !Contrasegna || !user) {
+            res.status(400).send('Faltan campos');
+            return;
+        }
+        if (Contrasegna.length < 4) {
+            res.status(400).send('La contraseña debe tener al menos 4 caracteres');
+            return;
+        }
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, user));
+        if (usuarios.length === 0) {
+            res.status(400).send('Correo no registrado');
+            return;
+        }
+        const userAux = usuarios[0];
+        if (userAux.estadoUser === 'unlogged' || userAux.correoVerificado === 'no') {
+            res.status(400).send('El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña. ');
+            return;
+        }
+        // Comparar el token de restablecimiento de contraseña
+        const isMatch = bcrypt.compare(token, userAux.tokenPasswd);
+        if (!isMatch) {
+            res.status(400).send('Token incorrecto, no se reestablecerá la contraseña.');
+            return;
+        }
+        const hashedPassword = await bcrypt.hash(Contrasegna, 10);
+        await db.update(usuario).set({ Contrasena: hashedPassword }).where(eq(usuario.id, userAux.id));
+        res.send('Contraseña restablecida correctamente');
+    } catch (error) {
+        res.status(500).send('Error al restablecer la contraseña');
+    }
+}
