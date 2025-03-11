@@ -237,77 +237,6 @@ export async function manejarMovimiento(data, socket) {
     }
 }
 
-/*
-* Funcion para encontrar una partida
-*/
-/*export async function findGame(data, socket) {
-    const idJugador = data.idJugador;
-    const modo = data.modo; // Modo de juego seleccionado por el jugador
-    try {
-        //Buscar una partida de entre las activas donde solo haya un jugador que coincida con el modo
-        //Solo pueden enfrentarse jugadores que en ese modo tengan una diferencia de 100 elo como mucho
-        //variable idUsuario que sea el id de un usuario que ya esta en la partida, que puede estar en JugadorW o JugadorB
-        const partidaEncontrada = await emparejamiento(modo, idJugador);
-        //Nombramos una lista de ids de jugadores que ya estan en una partida activa
-        const partidasPendientes = await db.select({
-            idJugadorBlancas: partida.JugadorW,
-            idJugadorNegras: partida.JugadorB,
-            idPartida: partida.id
-        })
-            .from(partida)
-            .where(
-                eq(partida.Modo, modo),
-                eq(partida.JugadorW, null).or(eq(partida.JugadorB, null))            
-            )
-            .get();
-        
-        //Quedarse con la lista de ids de usuarios de partidasPendientes
-        
-        /*let idUsuario = null;
-        for (const partida of partidasPendientes) {
-            if (partida.idJugadorBlancas !== null) {
-            idUsuario = partida.idJugadorBlancas;
-            break;
-            } else if (partida.idJugadorNegras !== null) {
-            idUsuario = partida.idJugadorNegras;
-            break;
-            }
-        }
-        */
-        
-
-        
-    
-/*        const partidaEncontrada = await db.select()
-            .from(partida)
-            .where(
-                eq(partida.Modo, modo),
-                eq(partida.JugadorW, null).or(eq(partida.JugadorB, null))            
-                //Condicion de que el juagador que se une a la partida tenga un elo similar al de los jugadores que ya hay en la partida
-                //HAY QUE HACERLA
-                
-                
-            )
-            .limit(1)
-            .get();
-*/
-/*        
-        //si ha encontrado la partida carga esa partida
-        if (partidaEncontrada) {
-            //Unir al jugador a la partida
-            await loadGame(partidaEncontrada.id, idJugador);
-        } else {
-            // Si no se encuentra una partida, crear una nueva
-            await createNewGame({ idJugador, modo });
-        }
-
-
-    } catch (error) {
-        console.error("Error al encontrar una partida:", error);
-    }
-}
-*/
-
 export async function emparejamiento(idJugadorNuevo, modo) {
     // Buscar una partida de entre las activas donde solo haya un jugador que coincida con el modo
     // Solo pueden enfrentarse jugadores que en ese modo tengan una diferencia de 100 elo como mucho
@@ -363,6 +292,7 @@ export async function emparejamiento(idJugadorNuevo, modo) {
     }
 
     // Si no ha encontrado ninguna partida pendiente con la que emparejar al jugador, devuelve null
+    console.log("No se ha encontrado rival para el jugador, se creará una nueva partida");
     return null;
 }   
 
