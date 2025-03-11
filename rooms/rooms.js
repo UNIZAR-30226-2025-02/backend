@@ -2,6 +2,7 @@ import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
 import { eq, or, and, isNull } from "drizzle-orm";
+import { io } from '../server.js';
 //import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
@@ -89,16 +90,19 @@ export async function loadGame(idPartida, idJugador, socket) {
         // Buscar la partida en la base de datos
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         if (!partidaEncontrada) {
+            console.log("Partida no encontrada");
             return socket.emit('error', 'Partida no encontrada');
         }
 
         //Verificar si la partida esta terminada
         if(partidaEncontrada.Ganador != null){
+            console.log("Partida terminada");
             return socket.emit('error', 'Partida terminada');
         }
 
         //Verificar si ya hay dos jugadores en la partida
         if(partidaEncontrada.JugadorW != null && partidaEncontrada.JugadorB != null){
+            console.log("Partida llena");
             return socket.emit('error', 'Partida llena');
         }
 
@@ -152,7 +156,7 @@ export async function loadGame(idPartida, idJugador, socket) {
         // Notificar a los jugadores que la partida está lista
         //socket.emit('gameJoined', { idPartida, board: ActiveXObjects[idPartida].chess.board() });
         //socket.emit('game-Ready', {idPartida});
-        socket.broadcast.to(idPartida).emit('game-ready', {idPartida});
+        io.to(idPartida).emit('game-ready', {idPartida});
 
         console.log("El jugador, "+ idJugador +", se ha unido a la partida con ID:", idPartida);
         console.log("Jugadores en la partida: " + String(ActiveXObjects[idPartida].players));
@@ -167,27 +171,50 @@ export async function loadGame(idPartida, idJugador, socket) {
 */
 export async function manejarMovimiento(data, socket) {
     const rooms = socket.rooms;
-    console.log("Salas del socket:", rooms);
+    // console.log("Salas del socket:", rooms);
 
     const idPartida = data.idPartida;
     const movimiento = data.movimiento;
+    const idJugador = data.idJugador;
     // const timeleft = data.timeleft; 
 
     if (!rooms.has(idPartida)) {
+        console.log("No estas jugando la partida! No puedes hacer movimientos en ella.");
         return socket.emit('error', 'No estás en la partida');
     }
 
-    console.log("Partidas en  memoria: ", ActiveXObjects);
+    // console.log("Partidas en  memoria: ", ActiveXObjects);
 
     try {
        //Verificar primero si la partida esta activa
        if (!ActiveXObjects[idPartida]) {
+            console.log("Partida no activa");
             return socket.emit('error', 'Partida no activa');
         }
 
         const game = ActiveXObjects[idPartida].chess;
+        const gameTurn = game.turn();
+        const moveColor = movimiento.color;
+
+        //Verificar si el jugador que intenta hacer el movimiento es el que le toca
+        if (gameTurn !== moveColor) {
+            console.log("No es tu turno");
+            return socket.emit('error', 'No es tu turno');
+        }
+
+        // Verificar si el jugador que intenta hacer el movimiento es el que lleva ese color
+        // en la partida recuperandolo del header del pgn
+        const headers = game.header();
+        const jugadorConTurno = moveColor === 'w' ? headers['White'] : headers['Black'];
+        if (jugadorConTurno !== idJugador) {
+            console.log("No puedes mover las piezas de tu oponente");
+            return socket.emit('error', 'No puedes mover las piezas de tu oponente');
+        }
+        
+
         const resultadoMovimiento = game.move(movimiento);
         if (resultadoMovimiento === null) {
+            console.log("Movimiento inválido");
             return socket.emit('error', 'Movimiento inválido');
         }
         // game.set_comment(timeleft);
@@ -201,7 +228,7 @@ export async function manejarMovimiento(data, socket) {
         //console.log("Tablero de la partida:", game.board());
         //console.log("PGN de la partida:", game.pgn());
 
-        socket.to(idPartida).emit('new-move', {movimiento, board: game.board()});
+        socket.broadcast.to(idPartida).emit('new-move', {movimiento, board: game.board()});
 
         //Actualizar el PGN en la base de datos
         //esto en principio no hace falta porque el PGN se actualiza automaticamente al hacer un movimiento
@@ -234,8 +261,11 @@ export async function manejarMovimiento(data, socket) {
                 .where(eq(partida.id, idPartida))
                 .run();
             
+            console.log("Variación de elo del jugador blanco:", variacionW);
+            console.log("Variación de elo del jugador negro:", variacionB);
+
             //Notificacion
-            socket.broadcast.to(idPartida).emit('gameOver', { winner });
+            io.to(idPartida).emit('gameOver', { winner });
             console.log("La partida ha terminado, el ganador es: ", winner);
 
             //Eliminar la partida de memoria
@@ -277,7 +307,7 @@ export async function emparejamiento(idJugadorNuevo, modo) {
         }
     }
     
-    console.log("Emparejamientos pendientes: ", emparejamientosPendientes);
+    //console.log("Emparejamientos pendientes: ", emparejamientosPendientes);
 
     // Para cada jugador pendiente, comprobar si es posible emparejarlo con el jugador actual
     for (const emparejamiento of emparejamientosPendientes) {
@@ -287,10 +317,10 @@ export async function emparejamiento(idJugadorNuevo, modo) {
             .where(eq(usuario.id, emparejamiento.jugador))
             .get();
         
-        console.log("Puntuación del jugador pendiente: ", jugadorExistente[modo]);
+        //console.log("Puntuación del jugador pendiente: ", jugadorExistente[modo]);
         // Obtener la puntuación del jugador actual
         const jugadorNuevo = await db.select().from(usuario).where(eq(usuario.id, idJugadorNuevo)).get();
-        console.log("Puntuación del jugador actual: ", jugadorNuevo[modo]);
+        //console.log("Puntuación del jugador actual: ", jugadorNuevo[modo]);
         // Comprobar si la diferencia de elo es menor o igual a 100
         if (Math.abs(jugadorExistente[modo] - jugadorNuevo[modo]) <= 100) {
             // Emparejar a los jugadores
@@ -299,7 +329,7 @@ export async function emparejamiento(idJugadorNuevo, modo) {
             console.log("Jugador existente: ", emparejamiento.jugador);
             console.log("Jugador nuevo: ", idJugadorNuevo);
             console.log("ID de la partida: ", emparejamiento.id);
-
+            console.log("------------------------------------------------------------")
             // Devuelve el id de la partida seleccionada de entre las pendientes en la que se ha
             // podido emparejar al jugador
             return emparejamiento.id;
