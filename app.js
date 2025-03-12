@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd } from './login/controller/login.js';
-
+import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida } from './db_requests.js/db_requests.js';
 
 export const app = express()
 
@@ -18,6 +18,8 @@ app.get("/", (req, res) => {
 });
 
 
+
+// ########## Usuario, inicio de sesión y autenticación ##########
 app.post('/register', async (req, res) => {
     await crearUsuario(req, res);
 });
@@ -49,3 +51,22 @@ app.post('/sendPasswdReset', async (req, res) => {
 app.post('/tryResetPasswd', async (req, res) => {
     await resetPasswd(req, res);
 });
+
+
+// ########## Consultas Información ##########
+app.get('/buscarUsuarioPorUser', async (req, res) => {
+    await buscarUsuarioPorUser(req, res);
+});
+
+app.get('/buscarPartidasDeUsuario', async (req, res) => {
+    await buscarPartidasDeUsuario(req, res);
+});
+
+app.get('/buscarUlt5PartidasDeUsuario', async (req, res) => {
+    await buscarUlt5PartidasDeUsuario(req, res);
+});
+
+app.get('/buscarPartida', async (req, res) => {
+    await buscarPartida(req, res);
+});
+

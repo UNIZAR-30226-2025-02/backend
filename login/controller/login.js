@@ -66,7 +66,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).send("Error al crear el usuario");
+        res.status(400).json({ error: "Error al crear el usuario" });
     }
 }
 
@@ -74,18 +74,18 @@ export async function resendVerificationEmail(req, res) {
     try {
         const Correo = req.body.Correo;
         if (!Correo) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length === 0) {
-            res.status(400).send('El correo no está registrado');
+            res.status(400).json({ error: 'El correo no está registrado' });
             return;
         }
         const user = correoExistente[0];
         if (user.correoVerificado === 'yes') {
-            res.status(400).send('El correo ya ha sido verificado');
+            res.status(400).json({ error: 'El correo ya ha sido verificado' });
             return;
         }
         // Crear un token de verificación para el correo
@@ -96,7 +96,7 @@ export async function resendVerificationEmail(req, res) {
         await sendVerificationEmail(Correo, token);
         res.json({ message: 'Correo de verificación reenviado. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
     } catch (error) {
-        res.status(500).send('Error al reenviar el correo de verificación');
+        res.status(500).json({ error: 'Error al reenviar el correo de verificación' });
     }
 }
 
@@ -132,13 +132,13 @@ export async function login(req, res) {
         const Contrasegna = req.body.Contrasena;
 
         if (!NombreUser || !Contrasegna) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
 
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
-            res.status(400).send('Usuario no encontrado');
+            res.status(400).json({ error: 'Usuario no encontrado' });
             return;
         }
 
@@ -147,13 +147,13 @@ export async function login(req, res) {
         // Comparar la contraseña hasheada con la ingresada
         const isMatch = await bcrypt.compare(Contrasegna, user.Contrasena);
         if (!isMatch) {
-            res.status(400).send('Contraseña incorrecta');
+            res.status(400).json({ error: 'Contraseña incorrecta' });
             return;
         }
 
         // Comprobar si el correo del usuario ha sido verificado
         if (user.correoVerificado === 'no') {
-            res.status(400).send('Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión');
+            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
             return;
         }
 
@@ -164,7 +164,7 @@ export async function login(req, res) {
         user.estadoUser = 'logged';
         res.send(publicUser);
     } catch (error) {
-        res.status(500).send('Error al loguear el usuario');
+        res.status(500).json({ error: 'Error al loguear el usuario' });
     }
 }
 
@@ -172,14 +172,14 @@ export async function logout(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
         if (!NombreUser) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
 
         await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
-        res.status(500).send('Error al desloguear el usuario');
+        res.status(500).json({ error: 'Error al desloguear el usuario' });
     }
 }
 
@@ -189,31 +189,31 @@ export async function editUser(req, res) {
         const FotoPerfil = !req.body.FotoPerfil ? 'none' : req.body.FotoPerfil;
 
         if (!NombreUser || !FotoPerfil) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
         if (NombreUser.length < 4) {
-            res.status(400).send('El nombre de usuario debe tener al menos 4 caracteres');
+            res.status(400).json({ error: 'El nombre de usuario debe tener al menos 4 caracteres' });
             return;
         }
         if (FotoPerfil.length < 4) {
-            res.status(400).send('La foto de perfil debe tener al menos 4 caracteres');
+            res.status(400).json({ error: 'La foto de perfil debe tener al menos 4 caracteres' });
             return;
         }
 
         // Buscar el usuario a editar
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
-            res.status(400).send('Usuario no encontrado');
+            res.status(400).json({ error: 'Usuario no encontrado' });
             return;
         }
         const user = usuarios[0];
         if (user.estadoUser === 'unlogged') {
-            res.status(400).send('Usuario no logueado. Inicie sesión para editar su perfil');
+            res.status(400).json({ error: 'Usuario no logueado. Inicie sesión para editar su perfil' });
             return;
         }
         if (user.correoVerificado === 'no') {
-            res.status(400).send('Correo no verificado. Por favor, verifica tu correo antes de editar tu perfil');
+            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de editar tu perfil' });
             return;
         }
 
@@ -226,26 +226,25 @@ export async function editUser(req, res) {
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
-        res.status(500).send('Error al editar el usuario');
+        res.status(500).json({ error: 'Error al editar el usuario' });
     }
 }
 
 export async function sendPasswdReset(req, res) {
     try {
-
         const Correo = req.body.Correo;
         if (!Correo) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
         const usuarios = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (usuarios.length === 0) {
-            res.status(400).send('Correo no registrado');
+            res.status(400).json({ error: 'Correo no registrado' });
             return;
         }
         const user = usuarios[0];
         if (user.estadoUser == 'unlogged' || user.correoVerificado == 'no') {
-            res.status(400).send('El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña. ');
+            res.status(400).json({ error: 'El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña.' });
             return;
         }
         // Crear un token de verificación para el correo de 9 caracteres
@@ -255,7 +254,7 @@ export async function sendPasswdReset(req, res) {
         await sendChangePasswdEmail(Correo, token);
         res.json({ message: 'Correo de restablecimiento de contraseña enviado. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
     } catch (error) {
-        res.status(500).send('Error al enviar el correo de restablecimiento de contraseña');
+        res.status(500).json({ error: 'Error al enviar el correo de restablecimiento de contraseña' });
     }
 }
 
@@ -265,33 +264,33 @@ export async function resetPasswd(req, res) {
         const user = req.body.NombreUser;
         const Contrasegna = req.body.Contrasena;
         if (!token || !Contrasegna || !user) {
-            res.status(400).send('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
             return;
         }
         if (Contrasegna.length < 4) {
-            res.status(400).send('La contraseña debe tener al menos 4 caracteres');
+            res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres' });
             return;
         }
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, user));
         if (usuarios.length === 0) {
-            res.status(400).send('Correo no registrado');
+            res.status(400).json({ error: 'Correo no registrado' });
             return;
         }
         const userAux = usuarios[0];
         if (userAux.estadoUser === 'unlogged' || userAux.correoVerificado === 'no') {
-            res.status(400).send('El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña. ');
+            res.status(400).json({ error: 'El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña.' });
             return;
         }
         // Comparar el token de restablecimiento de contraseña
-        const isMatch = bcrypt.compare(token, userAux.tokenPasswd);
+        const isMatch = await bcrypt.compare(token, userAux.tokenPasswd);
         if (!isMatch) {
-            res.status(400).send('Token incorrecto, no se reestablecerá la contraseña.');
+            res.status(400).json({ error: 'Token incorrecto, no se reestablecerá la contraseña.' });
             return;
         }
         const hashedPassword = await bcrypt.hash(Contrasegna, 10);
         await db.update(usuario).set({ Contrasena: hashedPassword }).where(eq(usuario.id, userAux.id));
-        res.send('Contraseña restablecida correctamente');
+        res.json({ message: 'Contraseña restablecida correctamente' });
     } catch (error) {
-        res.status(500).send('Error al restablecer la contraseña');
+        res.status(500).json({ error: 'Error al restablecer la contraseña' });
     }
 }
