@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "28535b0a-11e0-4253-9d82-44c0c5e2ba30",
+  "id": "4f6e8f2b-e367-45ab-aaae-dfc1acedb6fc",
   "prevId": "b40c27da-e2ed-4a6d-9959-9b35ea1faac7",
   "tables": {
     "amistad": {
@@ -20,7 +20,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Jugador1": {
           "name": "Jugador1",
@@ -100,7 +100,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Nombre_Aper": {
           "name": "Nombre_Aper",
@@ -147,7 +147,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "id_partida": {
           "name": "id_partida",
@@ -220,7 +220,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "JugadorW": {
           "name": "JugadorW",
@@ -334,7 +334,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Modo": {
           "name": "Modo",
@@ -380,7 +380,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Retador": {
           "name": "Retador",
@@ -489,7 +489,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "FotoPerfil": {
           "name": "FotoPerfil",
