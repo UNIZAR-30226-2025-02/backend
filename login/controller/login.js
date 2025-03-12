@@ -277,8 +277,8 @@ export async function resetPasswd(req, res) {
             return;
         }
         const userAux = usuarios[0];
-        if (userAux.estadoUser === 'unlogged' || userAux.correoVerificado === 'no') {
-            res.status(400).json({ error: 'El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña.' });
+        if (userAux.correoVerificado === 'no') {
+            res.status(400).json({ error: 'El usuario debe haber verificado su correo para restablecer la contraseña.' });
             return;
         }
         // Comparar el token de restablecimiento de contraseña
