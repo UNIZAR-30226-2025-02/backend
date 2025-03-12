@@ -212,26 +212,28 @@ export async function manejarMovimiento(data, socket) {
         }
 
         const game = ActiveXObjects[idPartida].chess;
-        const gameTurn = game.turn();
-        const moveColor = movimiento.color;
+        //const gameTurn = game.turn();
+        //const moveColor = movimiento.color;
 
         // Verificar si el jugador que intenta hacer el movimiento es el que lleva ese color
         // en la partida recuperandolo del header del pgn
 
-        const headers = game.header();
+        /*const headers = game.header();
         const jugadorConTurno = moveColor === 'w' ? headers['White'] : headers['Black'];
         if (jugadorConTurno !== idJugador) {
             console.log("No puedes mover las piezas de tu oponente");
             socket.emit('errorMessage', 'No puedes mover las piezas de tu oponente');
             return null;
         }
+        */
         
         //Verificar si el jugador que intenta hacer el movimiento es el que le toca
-        if (gameTurn !== moveColor) {
+        /*if (gameTurn !== moveColor) {
             console.log("No es tu turno");
             socket.emit('errorMessage', 'No es tu turno');
             return null;
         }
+        */
         
         const resultadoMovimiento = game.move(movimiento);
         if (resultadoMovimiento === null) {
