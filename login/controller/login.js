@@ -294,3 +294,5 @@ export async function resetPasswd(req, res) {
         res.status(500).json({ error: 'Error al restablecer la contraseña' });
     }
 }
+
+

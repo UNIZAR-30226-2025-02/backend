@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd } from './login/controller/login.js';
-import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida } from './db_requests.js/db_requests.js';
+import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida, getUserInfo } from './db_requests.js/db_requests.js';
 
 export const app = express()
 
@@ -68,5 +68,9 @@ app.get('/buscarUlt5PartidasDeUsuario', async (req, res) => {
 
 app.get('/buscarPartida', async (req, res) => {
     await buscarPartida(req, res);
+});
+
+app.get('/getUserInfo', async (req, res) => {
+    await getUserInfo(req, res);
 });
 

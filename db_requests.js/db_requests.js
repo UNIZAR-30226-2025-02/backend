@@ -13,6 +13,35 @@ export async function buscarUsuarioPorUser(req, res) {
     }
 }
 
+export async function getUserInfo(req, res) {
+    try {
+        const userId = req.query.id;
+        if (!userId) {
+            res.status(400).json({ error: 'Faltan campos' });
+            return;
+        }
+        const usuarios = await db.select().from(usuario).where(eq(usuario.id, userId));
+        if (usuarios.length === 0) {
+            res.status(400).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+        const user = usuarios[0];
+        // Comprobar si el correo del usuario ha sido verificado y el usuario está logueado
+        if (user.correoVerificado === 'no') {
+            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
+            return;
+        }
+        if (user.estadoUser === 'unlogged') {
+            res.status(400).json({ error: 'Usuario no logueado. Inicie sesión para ver su información' });
+            return;
+        }
+        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
+        res.send(publicUser);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener la información del usuario' });
+    }
+}
+
 export async function buscarPartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
@@ -47,3 +76,5 @@ export async function buscarPartida(req, res) {
         res.status(500).json({ error: 'Error al buscar la partida' });
     }
 }
+
+
