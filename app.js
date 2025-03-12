@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail } from './login/controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd } from './login/controller/login.js';
 
 
 export const app = express()
@@ -22,6 +22,10 @@ app.post('/register', async (req, res) => {
     await crearUsuario(req, res);
 });
 
+app.post('/resendVerification', async (req, res) => {
+    await resendVerificationEmail(req, res);
+});
+
 app.get('/verificar', async (req, res) => {
     await verifyEmail(req, res);
 });
@@ -38,3 +42,10 @@ app.post('/editUser', async (req, res) => {
     await editUser(req, res);
 });
 
+app.post('/sendPasswdReset', async (req, res) => {
+    await sendPasswdReset(req, res);
+});
+
+app.post('/tryResetPasswd', async (req, res) => {
+    await resetPasswd(req, res);
+});

@@ -9,10 +9,7 @@ export const usuario = sqliteTable('usuario', {
     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
     FotoPerfil: text('FotoPerfil'),
     NombreUser: text('NombreUser').unique(),
-    NombreCompleto: text('NombreCompleto'),
-    Apellidos: text('Apellidos'),
     Correo: text('Correo').unique(),
-    Edad: integer('Edad'),
     Contrasena: text('Contrasena').notNull(),
     EstadoPartida: text('EstadoPartida'),
     Amistades: integer('Amistades'),
@@ -25,7 +22,8 @@ export const usuario = sqliteTable('usuario', {
 
     correoVerificado: text('correoVerificado'),
     tokenVerificacion: text('tokenVerificacion'),
-    estadoUser: text('estadoUser')
+    estadoUser: text('estadoUser'),
+    tokenPasswd: text('tokenPasswd')
 })
 
 // Uso de zod internamente para validar los datos

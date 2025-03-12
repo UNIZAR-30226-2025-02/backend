@@ -616,6 +616,13 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "tokenPasswd": {
+          "name": "tokenPasswd",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {

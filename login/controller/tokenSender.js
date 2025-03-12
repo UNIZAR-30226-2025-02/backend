@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { html_correo } from './htmlEnviables.js';
+import { html_correo, html_cambio_contrasena } from './htmlEnviables.js';
 import Console from 'console';
 
 const transporter = nodemailer.createTransport({
@@ -18,6 +18,24 @@ export const sendVerificationEmail = async (email, token) => {
         to: email,
         subject: 'Verifica tu correo electrónico',
         html: html_correo(verificationLink)
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Correo de verificación enviado');
+    } catch (error) {
+        console.error('Error enviando el correo:', error);
+    }
+};
+
+
+export const sendChangePasswdEmail = async (email, token) => {
+    const codigo = `${token}`;
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'Solicitud de cambio de contraseña',
+        html: html_cambio_contrasena(codigo)
     };
 
     try {
