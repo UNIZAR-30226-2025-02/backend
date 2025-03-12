@@ -91,19 +91,22 @@ export async function loadGame(idPartida, idJugador, socket) {
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         if (!partidaEncontrada) {
             console.log("Partida no encontrada");
-            return socket.emit('error', 'Partida no encontrada');
+            socket.emit('errorMessage', 'Partida no encontrada');
+            return null;
         }
 
         //Verificar si la partida esta terminada
         if(partidaEncontrada.Ganador != null){
             console.log("Partida terminada");
-            return socket.emit('error', 'Partida terminada');
+            socket.emit('errorMessage', 'Partida terminada');
+            return null;
         }
 
         //Verificar si ya hay dos jugadores en la partida
         if(partidaEncontrada.JugadorW != null && partidaEncontrada.JugadorB != null){
             console.log("Partida llena");
-            return socket.emit('error', 'Partida llena');
+            socket.emit('errorMessage', 'Partida llena');
+            return null;
         }
 
         //Completar el Header de la partida
@@ -122,7 +125,7 @@ export async function loadGame(idPartida, idJugador, socket) {
         //REVISAR ESTO, DUPLICA LOS CAMPOS DE ELO DEL HEADER
         // const headers = existingGame.header();
         //let puntuacionOponente = null;
-        
+
         if (partidaEncontrada.JugadorW === null) {
             // Si el jugador se une como White, la puntuación del oponente está en 'Black Elo'
             //puntuacionOponente = headers['Black Elo'];
@@ -156,7 +159,21 @@ export async function loadGame(idPartida, idJugador, socket) {
         // Notificar a los jugadores que la partida está lista
         //socket.emit('gameJoined', { idPartida, board: ActiveXObjects[idPartida].chess.board() });
         //socket.emit('game-Ready', {idPartida});
+        const idBlancas = existingGame.header()['White'];
+        const idNegras = existingGame.header()['Black'];
+
+        // Notificar a los jugadores que la partida está lista a través de la sala
         io.to(idPartida).emit('game-ready', {idPartida});
+        // Notificar a cada jugador su color en la partida
+
+        console.log("ID jugador blanco:", idBlancas);
+        console.log("ID jugador negro:", idNegras);
+        io.to(idPartida).emit('color', {
+            jugadores: [
+            { id: idBlancas, color: 'white' },
+            { id: idNegras, color: 'black' }
+            ]
+        });
 
         console.log("El jugador, "+ idJugador +", se ha unido a la partida con ID:", idPartida);
         console.log("Jugadores en la partida: " + String(ActiveXObjects[idPartida].players));
@@ -180,7 +197,8 @@ export async function manejarMovimiento(data, socket) {
 
     if (!rooms.has(idPartida)) {
         console.log("No estas jugando la partida! No puedes hacer movimientos en ella.");
-        return socket.emit('error', 'No estás en la partida');
+        socket.emit('errorMessage', 'No estás en la partida');
+        return null;
     }
 
     // console.log("Partidas en  memoria: ", ActiveXObjects);
@@ -189,33 +207,37 @@ export async function manejarMovimiento(data, socket) {
        //Verificar primero si la partida esta activa
        if (!ActiveXObjects[idPartida]) {
             console.log("Partida no activa");
-            return socket.emit('error', 'Partida no activa');
+            socket.emit('errorMessage', 'Partida no activa');
+            return null;
         }
 
         const game = ActiveXObjects[idPartida].chess;
         const gameTurn = game.turn();
         const moveColor = movimiento.color;
 
-        //Verificar si el jugador que intenta hacer el movimiento es el que le toca
-        if (gameTurn !== moveColor) {
-            console.log("No es tu turno");
-            return socket.emit('error', 'No es tu turno');
-        }
-
         // Verificar si el jugador que intenta hacer el movimiento es el que lleva ese color
         // en la partida recuperandolo del header del pgn
+
         const headers = game.header();
         const jugadorConTurno = moveColor === 'w' ? headers['White'] : headers['Black'];
         if (jugadorConTurno !== idJugador) {
             console.log("No puedes mover las piezas de tu oponente");
-            return socket.emit('error', 'No puedes mover las piezas de tu oponente');
+            socket.emit('errorMessage', 'No puedes mover las piezas de tu oponente');
+            return null;
         }
         
-
+        //Verificar si el jugador que intenta hacer el movimiento es el que le toca
+        if (gameTurn !== moveColor) {
+            console.log("No es tu turno");
+            socket.emit('errorMessage', 'No es tu turno');
+            return null;
+        }
+        
         const resultadoMovimiento = game.move(movimiento);
         if (resultadoMovimiento === null) {
             console.log("Movimiento inválido");
-            return socket.emit('error', 'Movimiento inválido');
+            socket.emit('errorMessage', 'Movimiento inválido');
+            return null;
         }
         // game.set_comment(timeleft);
 
