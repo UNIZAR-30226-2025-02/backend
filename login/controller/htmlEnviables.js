@@ -183,7 +183,7 @@ export const html_correo = (verificationLink) => {
                         padding: 12px 20px;
                         margin-top: 20px;
                         background-color: #007bff;
-                        color: white;
+                        color: #ffffff;
                         text-decoration: none;
                         font-size: 18px;
                         border-radius: 5px;
