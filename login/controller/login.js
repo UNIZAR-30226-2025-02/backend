@@ -243,8 +243,8 @@ export async function sendPasswdReset(req, res) {
             return;
         }
         const user = usuarios[0];
-        if (user.estadoUser == 'unlogged' || user.correoVerificado == 'no') {
-            res.status(400).json({ error: 'El usuario debe estar logueado y haber verificado su correo para restablecer la contraseña.' });
+        if (user.correoVerificado == 'no') {
+            res.status(400).json({ error: 'El usuario debe haber verificado su correo para restablecer la contraseña.' });
             return;
         }
         // Crear un token de verificación para el correo de 9 caracteres
