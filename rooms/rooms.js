@@ -64,6 +64,9 @@ export async function createNewGame(idJugador, mode, socket) {
         ActiveXObjects[gameId] = {
             players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
             chess: chess,
+            //Variables de tablas
+            tablasW: 0,
+            tablasB: 0,
         };
         // console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
         // Crear la sala socket de la partida
@@ -409,4 +412,76 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
 
     return { variacionW, variacionB };
 }
+
+//Funcion para abandonar en una partida
+export async function surrenderGame(data, socket) {
+    const idPartida = data.idPartida;
+    const idJugador = data.idJugador;
+
+    // Verificar si la partida existe y el jugador está en ella
+    if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
+        console.log("No estás en esta partida");
+        return socket.emit('error', 'No estás en esta partida');
+    }
+
+    socket.broadcast.to(idPartida).emit('Player surrendered:', { idJugador });
+
+    // Obtener el color del jugador que se rinde en base a idJugador
+    const game = ActiveXObjects[idPartida].chess;
+    
+    const headers = game.header();
+    const jugadorConTurno = game.turn() === 'w' ? headers['White'] : headers['Black'];
+    const color = jugadorConTurno === idJugador ? 'black' : 'white';
+
+    // Obtener el oponente
+    const oponente = color === 'white' ? headers['Black'] : headers['White'];
+    // Actualizar la base de datos con el ganador
+    await db.update(partida)
+        .set({ Ganador: oponente })
+        .where(eq(partida.id, idPartida))
+        .run();
+    // Emitir el evento de fin de partida al oponente
+    socket.broadcast.to(idPartida).emit('gameOver', { winner: oponente });
+    // Eliminar la partida de memoria
+    delete ActiveXObjects[idPartida];
+    console.log("La partida ha terminado, el ganador es: ", oponente);
+   
+    
+}
+
+export async function requestTie(data, socket) {
+    const idPartida = data.idPartida;
+    const idJugador = data.idJugador;
+
+    // Verificar si la partida existe y el jugador está en ella
+    if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
+        console.log("No estás en esta partida");
+        return socket.emit('error', 'No estás en esta partida');
+    }
+
+    socket.broadcast.to(idPartida).emit('requestTie', { idJugador });
+
+    //Poner el campo de tablas a 1 del jugador que tiene JugadorW o JugadorB idJugador
+    if(ActiveXObjects[idPartida].chess.header()['White'] === idJugador){
+        ActiveXObjects[idPartida].tablasW = 1;
+    }else{
+        ActiveXObjects[idPartida].tablasB = 1;
+    }
+
+    //Comprobar si los dos campos de tablas estan a uno, y si lo estan la partida finaliza en empate
+    if(ActiveXObjects[idPartida].tablasW === 1 && ActiveXObjects[idPartida].tablasB === 1) {
+        // Actualizar la base de datos con el ganador
+        await db.update(partida)
+            .set({ Ganador: 'draw' })
+            .where(eq(partida.id, idPartida))
+            .run();
+        // Emitir el evento de fin de partida al oponente
+        socket.broadcast.to(idPartida).emit('gameOver', { winner: 'draw' });
+        // Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+        console.log("La partida ha terminado en empate");
+    }
+
+}
+
 
