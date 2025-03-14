@@ -21,23 +21,28 @@ export async function crearUsuario(req, res) {
         const Contrasena = req.body.Contrasena;
 
         if (!NombreUser || !Correo || !Contrasena) {
-            throw new Error('Faltan campos');
+            res.status(400).json({ error: 'Faltan campos' });
+            return
         }
         // Verificar si el usuario ya existe
         const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarioExistente.length > 0) {
-            throw new Error('El usuario ya existe');
+            res.status(400).json({ error: 'El usuario ya existe' });
+            return
         }
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length > 0) {
-            throw new Error('El correo ya está en uso');
+            res.status(400).json({ error: 'El correo ya está en uso' });
+            return
         }
         if (Contrasena.length < 4) {
-            throw new Error('La contraseña debe tener al menos 4 caracteres');
+            res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres' });
+            return
         }
         if (NombreUser.length < 4) {
-            throw new Error('El nombre de usuario debe tener al menos 4 caracteres');
+            res.status(400).json({ error: 'El nombre de usuario debe tener al menos 4 caracteres' });
+            return
         }
 
         // Hashear la contraseña antes de almacenarla
