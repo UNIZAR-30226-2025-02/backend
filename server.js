@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
-import { findGame, manejarMovimiento, leaveRoom } from './rooms/rooms.js';
+import { findGame, manejarMovimiento, leaveRoom, surrenderGame, requestTie } from './rooms/rooms.js';
 import { addFriend, removeFriend, challengeFriend, createDuelGame } from './friendship/friends.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
