@@ -165,3 +165,26 @@ export async function createDuelGame(idRetador, idRetado, mode, socket) {
         return { success: false, message: "Error al crear partida." };
     }
 }
+
+export async function deleteChallenge(data, socket) {
+    const idRetador = data.idRetador;
+    const idRetado = data.idRetado;
+    const modo = data.modo;
+    try {
+
+        // Buscar y eliminar el reto de la base de datos
+        const result = await db.delete(reto)
+            .where(
+                eq(reto.Retador, idRetador) && eq(reto.Retado, idRetado)
+            )
+            .run();
+
+        if (result.changes > 0) {
+            console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
+        } else {
+            console.log(`No se encontró un reto entre ${data.idRetador} y ${data.idRetado}.`);
+        }
+    } catch (error) {
+        console.error("Error al eliminar el reto:", error);
+    }
+}

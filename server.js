@@ -96,6 +96,48 @@ function newConnection(socket) {
     //socket.on('see-pending-pairings', async (data) => {
     //    await emparejamiento(data, socket);
     //});
+
+    //---------------AMISTAD-------------------
+    socket.on('add-friend', async (data) => {
+        await addFriend(data, socket);
+        console.log("Amigo añadido!" + JSON.stringify(data))
+    });
+
+    socket.on('remove-friend', async (data) => {
+        await removeFriend(data, socket);
+        console.log("Amigo eliminado!" + JSON.stringify(data))
+    });
+
+    socket.on('challenge-friend', async (data) => {
+        //Data para el reto: 
+        //idRetador: id del jugador que reta
+        //idRetado: id del jugador que recibe el reto
+        //modo
+        const result = await challengeFriend(data, socket);
+        
+        // Enviar la notificación al retado
+        io.to(data.idRetado).emit('new-challenge', {
+            retador: data.idRetador,
+            modo: data.modo
+        });
+
+    });
+
+    socket.on('accept-challenge', async (data) => {
+        const result = await createDuelGame(data, socket);
+        
+        // Notificar a ambos jugadores
+        io.to(data.idRetador).emit('challenge-accepted', { gameId: result.gameId });
+        io.to(data.idRetado).emit('challenge-accepted', { gameId: result.gameId });
+
+    });
+
+    socket.on('reject-challenge', async (data) => {
+        io.to(data.idRetador).emit('challenge-rejected', { retado: data.idRetado });
+        //Funcion para borrar un reto
+        //await deleteChallenge(data, socket);
+
+    });
 }
 
 io.on('connection', newConnection);
