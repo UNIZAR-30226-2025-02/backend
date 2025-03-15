@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer';
 import { html_correo, html_cambio_contrasena } from './htmlEnviables.js';
-import Console from 'console';
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
@@ -13,8 +12,8 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendVerificationEmail = async (email, token) => {
-    //const direccion = 'http://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net/verificar';
-    const direccion = 'http://localhost:3000/verificar';
+    const direccion = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net/verificar';
+
     const verificationLink = `${direccion}?token=${token}`;
     const mailOptions = {
         from: process.env.EMAIL_USER,

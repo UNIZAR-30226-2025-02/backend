@@ -164,9 +164,10 @@ export async function login(req, res) {
 
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
-        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         // Establecer en user el estado de sesión
         user.estadoUser = 'logged';
+        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
+
         res.send(publicUser);
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
