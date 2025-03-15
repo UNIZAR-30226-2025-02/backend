@@ -3,7 +3,8 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
-import { findGame, manejarMovimiento } from './rooms/rooms.js';
+import { findGame, manejarMovimiento, leaveRoom } from './rooms/rooms.js';
+import { addFriend, removeFriend, challengeFriend, createDuelGame } from './friendship/friends.js';
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -91,6 +92,27 @@ function newConnection(socket) {
     socket.on('make-move', async (data) => {
         await manejarMovimiento(data, socket);
         console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
+    });
+
+    socket.on('leave-room', async (data) => {
+        
+        await leaveRoom(data, socket);
+        console.log(`Jugador ${data.idJugador} intenta abandonar la sala ${data.idPartida}`);
+        
+    });
+
+    // Evento para rendirse
+    socket.on('surrender', async (data) => {
+        
+        await surrenderGame(data, socket);
+        console.log(`Jugador ${data.idJugador} se rinde en la partida ${data.idPartida}`);
+    });
+
+// Evento para solicitar tablas
+    socket.on('request-tie', async (data) => {
+
+        await requestTie(data, socket);
+        console.log(`Jugador ${data.idJugador} solicita tablas en la partida ${data.idPartida}`);
     });
 
     //socket.on('see-pending-pairings', async (data) => {
