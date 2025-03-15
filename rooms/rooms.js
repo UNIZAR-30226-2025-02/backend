@@ -430,14 +430,23 @@ export async function surrenderGame(data, socket) {
     const game = ActiveXObjects[idPartida].chess;
     
     const headers = game.header();
-    const jugadorConTurno = game.turn() === 'w' ? headers['White'] : headers['Black'];
-    const color = jugadorConTurno === idJugador ? 'black' : 'white';
-
-    // Obtener el oponente
+    const color = headers['White'] === idJugador ? 'white' : 'black';
+    // El oponente es el jugador que no se ha rendido
     const oponente = color === 'white' ? headers['Black'] : headers['White'];
+    //Hay que calcular la variacion de elo
+    const { variacionW, variacionB } = await ratingVariation(
+        game.header()['White Elo'],
+        game.header()['Black Elo'],
+        color === 'white' ? 'black' : 'white',
+        40
+    );
+
+    console.log("Variación de elo del jugador blanco:", variacionW);
+    console.log("Variación de elo del jugador negro:", variacionB);
+
     // Actualizar la base de datos con el ganador
     await db.update(partida)
-        .set({ Ganador: oponente })
+        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB })
         .where(eq(partida.id, idPartida))
         .run();
     // Emitir el evento de fin de partida al oponente
@@ -446,7 +455,6 @@ export async function surrenderGame(data, socket) {
     delete ActiveXObjects[idPartida];
     console.log("La partida ha terminado, el ganador es: ", oponente);
    
-    
 }
 
 export async function requestTie(data, socket) {
@@ -482,6 +490,32 @@ export async function requestTie(data, socket) {
         console.log("La partida ha terminado en empate");
     }
 
+}
+
+//Funcion para abandonar una sala en la que solo esta el jugador
+export async function leaveRoom(data, socket) {
+    const idPartida = data.idPartida;
+    const idJugador = data.idJugador;
+
+    // Verificar si la partida existe y el jugador está en ella
+    if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
+        console.log("No estás en esta partida");
+        return socket.emit('error', 'No estás en esta partida');
+    }
+
+    //Verificar si el jugador es el unico en la partida
+    if(ActiveXObjects[idPartida].players.length === 1){
+        //Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+        //Eliminar la partida de la base de datos
+        await db.delete(partida)
+            .where(eq(partida.id, idPartida))
+            .run();
+        console.log("La partida ha sido eliminada de memoria");
+    }else{
+        //No puede salir sin rendirse porque ya se ha unido alguien
+        console.log("No puedes salir de la partida sin rendirte");
+    }
 }
 
 
