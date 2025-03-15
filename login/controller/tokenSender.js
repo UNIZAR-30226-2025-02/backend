@@ -13,7 +13,8 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendVerificationEmail = async (email, token) => {
-    const direccion = 'http://http://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net/verificar';
+    //const direccion = 'http://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net/verificar';
+    const direccion = 'http://localhost:3000/verificar';
     const verificationLink = `${direccion}?token=${token}`;
     const mailOptions = {
         from: process.env.EMAIL_USER,

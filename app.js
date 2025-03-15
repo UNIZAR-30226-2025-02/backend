@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd } from './login/controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/controller/login.js';
 import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida, getUserInfo } from './db_requests.js/db_requests.js';
 
 export const app = express()
@@ -51,6 +51,16 @@ app.post('/sendPasswdReset', async (req, res) => {
 app.post('/tryResetPasswd', async (req, res) => {
     await resetPasswd(req, res);
 });
+
+app.post('/crearInvitado', async (req, res) => {
+    await crearInvitado(req, res);
+});
+
+app.post('/borrarInvitado', async (req, res) => {
+    await borrarInvitado(req, res);
+});
+
+
 
 
 // ########## Consultas Información ##########
