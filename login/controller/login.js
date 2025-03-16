@@ -69,7 +69,7 @@ export async function crearUsuario(req, res) {
         varMessage = "Después de hacer el insert";
 
         // Enviar correo de verificación
-        //await sendVerificationEmail(Correo, token);
+        await sendVerificationEmail(Correo, token);
         console.log(token);
         res.json({ message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
 
