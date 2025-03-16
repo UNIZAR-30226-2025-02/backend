@@ -71,7 +71,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).json({ error: "Error al crear el usuario" });
+        res.status(400).json({ error: error.message });
     }
 }
 
@@ -164,9 +164,10 @@ export async function login(req, res) {
 
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
-        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         // Establecer en user el estado de sesión
         user.estadoUser = 'logged';
+        const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
+
         res.send(publicUser);
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
@@ -190,13 +191,19 @@ export async function logout(req, res) {
 
 export async function editUser(req, res) {
     try {
+        const id = req.body.id;
         const NombreUser = req.body.NombreUser;
         const FotoPerfil = !req.body.FotoPerfil ? 'none' : req.body.FotoPerfil;
 
+        if (!id) {
+            res.status(400).json({ error: 'Falta el id del usuario' });
+            return;
+        }
         if (!NombreUser || !FotoPerfil) {
             res.status(400).json({ error: 'Faltan campos' });
             return;
         }
+
         if (NombreUser.length < 4) {
             res.status(400).json({ error: 'El nombre de usuario debe tener al menos 4 caracteres' });
             return;
@@ -207,13 +214,13 @@ export async function editUser(req, res) {
         }
 
         // Buscar el usuario a editar
-        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        const usuarios = await db.select().from(usuario).where(eq(usuario.id, id));
         if (usuarios.length === 0) {
             res.status(400).json({ error: 'Usuario no encontrado' });
             return;
         }
         const user = usuarios[0];
-        if (user.estadoUser === 'unlogged') {
+        if (user.estadoUser !== 'logged') {
             res.status(400).json({ error: 'Usuario no logueado. Inicie sesión para editar su perfil' });
             return;
         }
@@ -224,10 +231,12 @@ export async function editUser(req, res) {
 
         await db.update(usuario)
             .set({
+                NombreUser: NombreUser,
                 FotoPerfil: FotoPerfil,
             })
-            .where(eq(usuario.NombreUser, NombreUser))
+            .where(eq(usuario.id, id));
         user.FotoPerfil = FotoPerfil;
+        user.NombreUser = NombreUser;
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         res.send({ mensaje: 'Usuario editado correctamente', publicUser });
     } catch (error) {
@@ -300,4 +309,61 @@ export async function resetPasswd(req, res) {
     }
 }
 
+// ################################# INVITADOS #################################
+export async function crearInvitado(req, res) {
+    try {
+        const baseName = "guest";
+        const id = uuidv4();
+        const NombreUser = req.body.NombreUser;
+        if (!NombreUser) {
+            NombreUser = baseName + uuidv4();
+        }
+
+        // COMPROBAR QUE NO EXISTA UN USUARIO CON EL MISMO NOMBRE
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        if (usuarios.length > 0) {
+            res.status(400).json({ error: 'El nombre de usuario está ocupado, prueba con otro.' });
+            return;
+        }
+
+
+        // Insertar el usuario en la base de datos
+        await db.insert(usuario).values({
+            id: id,
+            FotoPerfil: "none",
+            NombreUser: NombreUser,
+            Correo: NombreUser,
+            Contrasena: "none",
+            correoVerificado: "no",
+            estadoUser: baseName
+        });
+
+        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser });
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(400).json({ error: "Error al crear el invitado" });
+    }
+}
+
+export async function borrarInvitado(req, res) {
+    try {
+        const id = req.body.id;
+        if (!id) {
+            res.status(400).json({ error: 'Falta el id del invitado' });
+            return;
+        }
+        const usuarios = await db.select().from(usuario).where(eq(usuario.id, id));
+        if (usuarios.length === 0) {
+            res.status(400).json({ error: 'Invitado no encontrado' });
+            return;
+        }
+
+
+        await db.delete(usuario).where(eq(usuario.id, id));
+        res.send('Invitado eliminado correctamente');
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar el invitado' });
+    }
+}
 
