@@ -25,11 +25,11 @@ export async function crearUsuario(req, res) {
             return
         }
         // Verificar si el usuario ya existe
-        // const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        // if (usuarioExistente.length > 0) {
-        //     res.status(400).json({ error: 'El usuario ya existe' });
-        //     return
-        // }
+        const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        if (usuarioExistente.length > 0) {
+            res.status(400).json({ error: 'El usuario ya existe' });
+            return
+        }
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length > 0) {
@@ -75,7 +75,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).json({ error: error.message, message: varMessage });
+        res.status(400).json({ error: error.message, message: varMessage, varToken: token });
     }
 }
 
