@@ -45,12 +45,7 @@ export async function crearUsuario(req, res) {
             return
         }
 
-        // Hashear la contraseña antes de almacenarla
-        const hashedPassword = await bcrypt.hash(Contrasena, 10);
-        // Crear un identificador único para el usuario
-        const id = uuidv4();
-        // Crear un token de verificación para el correo 
-        const token = generateVerificationToken(id);
+
 
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
@@ -58,12 +53,24 @@ export async function crearUsuario(req, res) {
             FotoPerfil: "none",
             NombreUser: NombreUser,
             Correo: Correo,
-            Contrasena: hashedPassword,
+            //Contrasena: hashedPassword,
             estadoUser: "unlogged",
             correoVerificado: "no",
-            tokenVerificacion: token
-            //created_at: new Date().toISOString()
+            //tokenVerificacion: token
         });
+
+        // Hashear la contraseña antes de almacenarla
+        const hashedPassword = await bcrypt.hash(Contrasena, 10);
+        // Crear un identificador único para el usuario
+        const id = uuidv4();
+        // Crear un token de verificación para el correo 
+        const token = generateVerificationToken(id)
+
+        db.update(usuario).values({
+            Contrasena: hashedPassword,
+            tokenVerificacion: token
+        }).where(eq(usuario.id, id));
+
         // Enviar correo de verificación
         await sendVerificationEmail(Correo, token);
         console.log(token);
@@ -71,7 +78,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).json({ error: "Error al crear el usuario" });
+        res.status(400).json({ error: error.message, token: token });
     }
 }
 
