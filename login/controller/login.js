@@ -53,10 +53,10 @@ export async function crearUsuario(req, res) {
             FotoPerfil: "none",
             NombreUser: NombreUser,
             Correo: Correo,
-            //Contrasena: hashedPassword,
+            Contrasena: "hola",
             estadoUser: "unlogged",
             correoVerificado: "no",
-            //tokenVerificacion: token
+            tokenVerificacion: "1111"
         });
 
         // Hashear la contraseña antes de almacenarla
