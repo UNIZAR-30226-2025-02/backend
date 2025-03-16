@@ -52,7 +52,7 @@ export async function crearUsuario(req, res) {
         // Crear un token de verificación para el correo 
         const token = generateVerificationToken(id)
 
-        varMessage = "Antes de hacer el insert";
+        var varMessage = "Antes de hacer el insert";
 
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
