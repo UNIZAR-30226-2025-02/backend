@@ -25,11 +25,11 @@ export async function crearUsuario(req, res) {
             return
         }
         // Verificar si el usuario ya existe
-        const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        if (usuarioExistente.length > 0) {
-            res.status(400).json({ error: 'El usuario ya existe' });
-            return
-        }
+        // const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        // if (usuarioExistente.length > 0) {
+        //     res.status(400).json({ error: 'El usuario ya existe' });
+        //     return
+        // }
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length > 0) {
@@ -46,25 +46,24 @@ export async function crearUsuario(req, res) {
         }
 
         // Hashear la contraseña antes de almacenarla
-        //const hashedPassword = await bcrypt.hash(Contrasena, 10);
+        const hashedPassword = await bcrypt.hash(Contrasena, 10);
         // Crear un identificador único para el usuario
-        //const id = uuidv4();
+        const id = uuidv4();
         // Crear un token de verificación para el correo 
-        //const token = generateVerificationToken(id)
+        const token = generateVerificationToken(id)
 
         var varMessage = "Antes de hacer el insert";
 
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
-            id: "iodshgsdoighsdoifgh",
+            id: id,
             FotoPerfil: "none",
             NombreUser: NombreUser,
             Correo: Correo,
-            //Contrasena: hashedPassword,
-            Contrasena: "AAA",
+            Contrasena: hashedPassword,
             estadoUser: "unlogged",
             correoVerificado: "no",
-            tokenVerificacion: "osdhgpsodghsdpogfh"
+            tokenVerificacion: token
         });
 
         varMessage = "Después de hacer el insert";
@@ -76,7 +75,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.send({ error: error.message, message: varMessage });
+        res.status(400).json({ error: error.message, message: varMessage });
     }
 }
 
