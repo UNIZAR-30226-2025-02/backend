@@ -45,41 +45,37 @@ export async function crearUsuario(req, res) {
             return
         }
 
-
-
-        // Insertar el usuario en la base de datos
-        await db.insert(usuario).values({
-            id: "kdjxh g",
-            FotoPerfil: "none",
-            NombreUser: NombreUser,
-            Correo: Correo,
-            Contrasena: "hola",
-            estadoUser: "unlogged",
-            correoVerificado: "no",
-            tokenVerificacion: "1111"
-        });
-
         // Hashear la contraseña antes de almacenarla
         const hashedPassword = await bcrypt.hash(Contrasena, 10);
         // Crear un identificador único para el usuario
-        // const id = uuidv4();
-        const id = "kdjxh g";
+        const id = uuidv4();
         // Crear un token de verificación para el correo 
         const token = generateVerificationToken(id)
 
-        db.update(usuario).set({
+        varMessage = "Antes de hacer el insert";
+
+        // Insertar el usuario en la base de datos
+        await db.insert(usuario).values({
+            id: id,
+            FotoPerfil: "none",
+            NombreUser: NombreUser,
+            Correo: Correo,
             Contrasena: hashedPassword,
+            estadoUser: "unlogged",
+            correoVerificado: "no",
             tokenVerificacion: token
-        }).where(eq(usuario.id, id));
+        });
+
+        varMessage = "Después de hacer el insert";
 
         // Enviar correo de verificación
-        await sendVerificationEmail(Correo, token);
+        //await sendVerificationEmail(Correo, token);
         console.log(token);
         res.json({ message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta. ¡Ten cuidado!, el correo ha podido ser clasificado como spam.' });
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message, message: varMessage });
     }
 }
 
