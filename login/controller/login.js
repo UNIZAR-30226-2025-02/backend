@@ -46,17 +46,17 @@ export async function crearUsuario(req, res) {
         }
 
         // Hashear la contraseña antes de almacenarla
-        const hashedPassword = await bcrypt.hash(Contrasena, 10);
+        //const hashedPassword = await bcrypt.hash(Contrasena, 10);
         // Crear un identificador único para el usuario
-        const id = uuidv4();
+        //const id = uuidv4();
         // Crear un token de verificación para el correo 
-        const token = generateVerificationToken(id)
+        //const token = generateVerificationToken(id)
 
         var varMessage = "Antes de hacer el insert";
 
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
-            id: id,
+            id: "iodshgsdoighsdoifgh",
             FotoPerfil: "none",
             NombreUser: NombreUser,
             Correo: Correo,
@@ -64,7 +64,7 @@ export async function crearUsuario(req, res) {
             Contrasena: "AAA",
             estadoUser: "unlogged",
             correoVerificado: "no",
-            tokenVerificacion: token
+            tokenVerificacion: "osdhgpsodghsdpogfh"
         });
 
         varMessage = "Después de hacer el insert";
