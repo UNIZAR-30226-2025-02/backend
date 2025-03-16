@@ -60,7 +60,8 @@ export async function crearUsuario(req, res) {
             FotoPerfil: "none",
             NombreUser: NombreUser,
             Correo: Correo,
-            Contrasena: hashedPassword,
+            //Contrasena: hashedPassword,
+            Contrasena: "AAA",
             estadoUser: "unlogged",
             correoVerificado: "no",
             tokenVerificacion: token
@@ -75,7 +76,7 @@ export async function crearUsuario(req, res) {
 
     } catch (error) {
         console.log(error.message);
-        res.status(400).send({ error: error.message, message: varMessage });
+        res.send({ error: error.message, message: varMessage });
     }
 }
 
