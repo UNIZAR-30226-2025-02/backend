@@ -7,9 +7,6 @@ import { io } from '../server.js';
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
 let ActiveXObjects = {};
-// { jugadores[jugador1, jugador2], chess: chess, ¿¿¿¿ relojes[reloj1, reloj2] ???? }
-
-/********FUNCIONES AUXILIARES**********/
 
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
@@ -168,6 +165,7 @@ export async function loadGame(idPartida, idJugador, socket) {
 
         console.log("ID jugador blanco:", idBlancas);
         console.log("ID jugador negro:", idNegras);
+        // Pasarles el ID del usuario tambien ? o solo eso
         io.to(idPartida).emit('color', {
             jugadores: [
             { id: idBlancas, color: 'white' },
@@ -212,29 +210,7 @@ export async function manejarMovimiento(data, socket) {
         }
 
         const game = ActiveXObjects[idPartida].chess;
-        //const gameTurn = game.turn();
-        //const moveColor = movimiento.color;
 
-        // Verificar si el jugador que intenta hacer el movimiento es el que lleva ese color
-        // en la partida recuperandolo del header del pgn
-
-        /*const headers = game.header();
-        const jugadorConTurno = moveColor === 'w' ? headers['White'] : headers['Black'];
-        if (jugadorConTurno !== idJugador) {
-            console.log("No puedes mover las piezas de tu oponente");
-            socket.emit('errorMessage', 'No puedes mover las piezas de tu oponente');
-            return null;
-        }
-        */
-        
-        //Verificar si el jugador que intenta hacer el movimiento es el que le toca
-        /*if (gameTurn !== moveColor) {
-            console.log("No es tu turno");
-            socket.emit('errorMessage', 'No es tu turno');
-            return null;
-        }
-        */
-        
         const resultadoMovimiento = game.move(movimiento);
         if (resultadoMovimiento === null) {
             console.log("Movimiento inválido");
@@ -303,6 +279,9 @@ export async function manejarMovimiento(data, socket) {
 }
 
 export async function emparejamiento(idJugadorNuevo, modo) {
+
+    // tener otro parametro que sea si se busca partida de guests, o normal
+
     // Buscar una partida de entre las activas donde solo haya un jugador que coincida con el modo
     // Solo pueden enfrentarse jugadores que en ese modo tengan una diferencia de 100 elo como mucho
 
@@ -311,6 +290,8 @@ export async function emparejamiento(idJugadorNuevo, modo) {
 
     // Buscar partidas pendientes
     // MIRAR TAMBIEN EL MODO DE LA PARTIDA PARA COGER SOLO LAS QUE SEAN DE ESE MODO !!!!
+
+    // COGER TAMBIEN QUE SEA IGUAL EL TIPO QUE EL QUE ESTA BUSCANDO (guest o normal)
     const listadoPartidasPendientes = await db.select()
         .from(partida)
         .where(and(eq(partida.Modo, modo), or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
@@ -368,16 +349,22 @@ export async function emparejamiento(idJugadorNuevo, modo) {
 export async function findGame(data, socket) {
     // Buscar una partida de entre las activas donde el jugador pueda ser emparejado, y si no la 
     // hay, crear una nueva partida para el jugador
-
+    // VER EN LA BASE DE DATOS SI EstadoPartida del jugador es 'ingame' y no dejarle o si es 'free' dejarle
     const idJugador = data.idJugador;       
-    const modo = data.mode;                 
+    const modo = data.mode;
+    // BUSCAR IDJUGADOR EN LA BASE DE DATOS PARA VER SI EXISTE Y VER SI ES GUEST O USUARIO REGISTRADO
+
+    // tipoPartida = lo que saquemos de la base de datos
+    // let idPartida = await emparejamiento(idJugador, modo, tipoPartida);           
     let idPartida = await emparejamiento(idJugador, modo);
 
     if (idPartida) {
         await loadGame(idPartida, idJugador, socket);
+        // Poner el EstadoPartida del jugador en 'ingame'
         return idPartida;
     } else {
         idPartida = await createNewGame(idJugador, modo, socket);
+        // Poner el EstadoPartida del jugador en 'ingame'
         return idPartida;
     }
 }
@@ -409,4 +396,3 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
 
     return { variacionW, variacionB };
 }
-
