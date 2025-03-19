@@ -33,7 +33,7 @@ function newConnection(socket) {
     socket.on('new-connection', async (data) => {
         console.log("Nueva conexión: " + JSON.stringify(data))
         userId = data.userId;
-        socket = data.socket;
+        // socket = data.socket;
         inGame = data.inGame;
 
         activeSockets[userId] = socket;
