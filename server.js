@@ -60,23 +60,6 @@ function newConnection(socket) {
         console.log("Mensaje eliminado!" + JSON.stringify(data))
     });
 
-    /*
-    //peticion para crear una nueva partida
-    socket.on('create-game', async (data) => {
-
-        await createNewGame(data);
-        console.log("Nueva partida creada!" + JSON.stringify(data))
-        
-    });
-
-    //peticion para unirse a una partida
-    socket.on('join-game', async (data) => {
-
-        await joinGame(data, socket);
-        console.log("Unido a partida!" + JSON.stringify(data))
-    });
-    */
-
     //peticion para salir de una partida
     socket.on('find-game', async (data) => {
         await findGame(data, socket);
@@ -92,10 +75,6 @@ function newConnection(socket) {
         await manejarMovimiento(data, socket);
         // console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
     });
-
-    //socket.on('see-pending-pairings', async (data) => {
-    //    await emparejamiento(data, socket);
-    //});
 }
 
 io.on('connection', newConnection);
