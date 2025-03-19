@@ -405,8 +405,8 @@ async function resultManager(game, idPartida) {
 
         //Eliminar la partida de memoria
         delete ActiveXObjects[idPartida];
-        
         return;
+
     } else if (game.isDraw()) {
         console.log("Tablas");
         
@@ -450,7 +450,10 @@ async function resultManager(game, idPartida) {
 
         //Eliminar la partida de memoria
         delete ActiveXObjects[idPartida];
+        return;
+
     } else {
         console.log("Error al determinar el motivo de finalización de la partida");
+        return;
     }
 }
