@@ -20,7 +20,8 @@ export const io = new Server(server, {
 })
 
 const PORT = app.get('port')
-
+export let activeSockets = {};
+export let midGameExits = {};
 server.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
@@ -29,9 +30,33 @@ function newConnection(socket) {
     // Nueva conexión vía webSocket
     console.log("Usuario conectado")
 
+    socket.on('new-connection', async (data) => {
+        console.log("Nueva conexión: " + JSON.stringify(data))
+        userId = data.userId;
+        socket = data.socket;
+        inGame = data.inGame;
+
+        activeSockets[userId] = socket;
+        if (inGame) {
+            gameId = midGameExits[userId];
+            delete midGameExits[userId];
+            restoreGame(gameId, userId);
+        }
+    });
+
+    socket.on('mid-game-exit', async (data) => {
+        console.log("Salida de partida en curso: " + JSON.stringify(data))
+        userId = data.userId;
+        gameId = data.gameId;
+
+        midGameExits[userId] = gameId;
+    });
+
     // Aquí habrá que gestionar los posibles eventos/mensajes que nos pueden llegar del cliente
     // (move, searchGame, etc.)
     socket.on('disconnect', () => {
+        // Eliminar socket de la lista de sockets activos
+        delete activeSockets[userId];
         console.log("Usuario desconectado")
     })
 
