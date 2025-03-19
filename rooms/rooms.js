@@ -19,10 +19,10 @@ export async function createNewGame(idJugador, mode, socket) {
     // const idJugador = data.idJugador;
     // const mode = String(data.mode); 
     const jugador = await db.select().from(usuario).where(eq(usuario.id, idJugador)).get();
-    //console.log(jugador);
+    let tipoPartida = jugador.estadoUser === 'guest' ? 'guest' : 'ranked';
+    console.log("Tipo de partida:", tipoPartida);
+
     try {
-        //MIRAR QUE EL ESTADO DE LA PARTIDA DEL JUGADOR NO ESTE OCUPADO
-        //...
         const puntuacionModo = jugador[mode]; // Puntuación del modo seleccionado por el jugador
         console.log("Puntuación del modo:", puntuacionModo);
         // Crear un nuevo objeto de partida
@@ -53,7 +53,8 @@ export async function createNewGame(idJugador, mode, socket) {
             //PGN: null, // Valor por defecto al crear la partida
             Ganador: null, // Valor por defecto
             Variacion_JW: 0, // Valor por defecto
-            Variacion_JB: 0  // Valor por defecto
+            Variacion_JB: 0,  // Valor por defecto
+            Tipo: tipoPartida
         });
         console.log("Nueva partida creada con ID:", gameId);
         // Almacenar la partida activa en memoria
@@ -250,7 +251,7 @@ export async function manejarMovimiento(data, socket) {
             resultManager(game, idPartida);
             // NO SOLO SE ACABAN LAS PARTIDAS POR JAQUE MATE, DISTINGUIR AHOGADO, RENDICION, ETC
             await db.update(usuario)
-                    .set({ EstadoPartida: 'none' })
+                    .set({ EstadoPartida: null })
                     .where(or(
                             eq(usuario.id, ActiveXObjects[idPartida].players[0]),
                             eq(usuario.id, ActiveXObjects[idPartida].players[1])))
@@ -262,7 +263,7 @@ export async function manejarMovimiento(data, socket) {
     }
 }
 
-export async function emparejamiento(idJugadorNuevo, modo) {
+export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
 
     // tener otro parametro que sea si se busca partida de guests, o normal
 
@@ -278,7 +279,9 @@ export async function emparejamiento(idJugadorNuevo, modo) {
     // COGER TAMBIEN QUE SEA IGUAL EL TIPO QUE EL QUE ESTA BUSCANDO (guest o normal)
     const listadoPartidasPendientes = await db.select()
         .from(partida)
-        .where(and(eq(partida.Modo, modo), or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
+        .where(and(eq(partida.Modo, modo),
+                   eq(partida.Tipo, tipoPartida),
+                   or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
         .all();
     
     //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
@@ -330,21 +333,50 @@ export async function emparejamiento(idJugadorNuevo, modo) {
     return null;
 }   
 
+// Buscar una partida de entre las activas donde el jugador pueda ser emparejado, y si no la 
+// hay, crear una nueva partida para el jugador
 export async function findGame(data, socket) {
-    // Buscar una partida de entre las activas donde el jugador pueda ser emparejado, y si no la 
-    // hay, crear una nueva partida para el jugador
-    // VER EN LA BASE DE DATOS SI EstadoPartida del jugador es 'ingame' y no dejarle o si es 'free' dejarle
     const idJugador = data.idJugador;       
     const modo = data.mode;
-    // BUSCAR IDJUGADOR EN LA BASE DE DATOS PARA VER SI EXISTE Y VER SI ES GUEST O USUARIO REGISTRADO
+    let tipoPartida;
 
-    // tipoPartida = lo que saquemos de la base de datos
-    // let idPartida = await emparejamiento(idJugador, modo, tipoPartida);           
-    let idPartida = await emparejamiento(idJugador, modo);
+    // Comprobar si el jugador ya está en una partida
+    const jugador = await db.select()
+                            .from(usuario)
+                            .where(eq(usuario.id, idJugador))
+                            .get();
+
+    if (jugador.EstadoPartida === 'pairing') {
+        console.log("El jugador ya está buscando partida");
+        socket.emit('errorMessage', 'Ya estás buscando partida');
+        return null;
+    }
+    if (jugador.EstadoPartida === 'ingame') {
+        console.log("El jugador ya está en una partida");
+        socket.emit('errorMessage', 'Ya estás en una partida');
+        return null;
+    }
+
+    // Comprobar si el jugador está logeado o si es un invitado
+    if (jugador.estadoUser === 'unlogged') {
+        console.log("El jugador no está logeado");
+        socket.emit('errorMessage', 'Debes iniciar sesión para jugar');
+        return null;
+    } else {
+        if (jugador.estadoUser === 'guest') {
+            console.log("El jugador es un invitado");
+            tipoPartida = 'guest';
+        } else if (jugador.estadoUser === 'logged') {
+            console.log("El jugador es un usuario registrado con sesion iniciada");
+            tipoPartida = 'ranked';
+        }
+    }
+      
+    let idPartida = await emparejamiento(idJugador, modo, tipoPartida);
 
     if (idPartida) {
         await loadGame(idPartida, idJugador, socket);
-        // Poner el EstadoPartida del jugador en 'ingame'
+        // Poner el EstadoPartida de los dos jugadores en 'ingame'
         await db.update(usuario)
                 .set({ EstadoPartida: 'ingame' })
                 .where(or(
@@ -354,7 +386,7 @@ export async function findGame(data, socket) {
         return idPartida;
     } else {
         idPartida = await createNewGame(idJugador, modo, socket);
-        // Poner el EstadoPartida del jugador en 'ingame'
+        // El estado del jugador pasa a 'pairing'
         return idPartida;
     }
 }
