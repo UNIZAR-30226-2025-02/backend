@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
-import { activeSockets } from '../../server.js';
 import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
 
@@ -140,7 +139,6 @@ export async function login(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
         const Contrasegna = req.body.Contrasena;
-        var inGame = false;
 
         if (!NombreUser || !Contrasegna) {
             res.status(400).json({ error: 'Faltan campos' });
@@ -168,24 +166,13 @@ export async function login(req, res) {
             return;
         }
 
-        if (user.estadoUser === 'logged') {
-            // Recuperar el socket del usuario que ya esta conectado y comunicarle que se ha conectado otro dispositivo a su cuenta
-            const oldSocket = activeSockets[user.id];
-            oldSocket.emit('new-connection-detected', { message: 'Se ha detectado una nueva conexión a tu cuenta' });
-            // Actualizar el estado de sesión
-            if (user.EstadoPartida === 'inGame') {
-                inGame = true;
-            }
-        }
-        else {
-            // Actualizar el estado de sesión
-            await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
-            // Establecer en user el estado de sesión
-            user.estadoUser = 'logged';
-        }
+        // Actualizar el estado de sesión
+        await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
+        // Establecer en user el estado de sesión
+        user.estadoUser = 'logged';
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
-        res.send(publicUser, inGame);
 
+        res.send(publicUser);
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
     }
@@ -198,19 +185,6 @@ export async function logout(req, res) {
             res.status(400).json({ error: 'Faltan campos' });
             return;
         }
-
-        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        if (usuarios.length === 0) {
-            res.status(400).json({ error: 'Usuario no encontrado' });
-            return;
-        }
-        usuario = usuarios[0];
-        if (usuario.estadoUser !== 'logged') {
-            res.status(400).json({ error: 'El usuario no había iniciado sesión' });
-            return;
-        }
-        const userId = usuario.id;
-        delete activeSockets[userId];
 
         await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
         res.send('Usuario deslogueado correctamente');

@@ -1,1 +1,0 @@
-ALTER TABLE `partida` ADD `Tipo` text;
