@@ -57,11 +57,17 @@ export async function createNewGame(idJugador, mode, socket) {
         });
         console.log("Nueva partida creada con ID:", gameId);
         // Almacenar la partida activa en memoria
-                
+        
+        db.update(usuario)
+            .set({EstadoPartida: 'pairing'})
+            .where(eq(usuario.id, idJugador))
+            .run();
+        
         ActiveXObjects[gameId] = {
             players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
             chess: chess,
         };
+
         // console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
         // Crear la sala socket de la partida
         socket.join(gameId);
@@ -243,6 +249,12 @@ export async function manejarMovimiento(data, socket) {
         if (game.isGameOver()) {
             resultManager(game, idPartida);
             // NO SOLO SE ACABAN LAS PARTIDAS POR JAQUE MATE, DISTINGUIR AHOGADO, RENDICION, ETC
+            await db.update(usuario)
+            .set({ EstadoPartida: 'none' })
+            .where(or(
+                     eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+                     eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+            .run();
         }
 
     } catch (error) {
@@ -333,6 +345,12 @@ export async function findGame(data, socket) {
     if (idPartida) {
         await loadGame(idPartida, idJugador, socket);
         // Poner el EstadoPartida del jugador en 'ingame'
+        await db.update(usuario)
+            .set({ EstadoPartida: 'ingame' })
+            .where(or(
+                     eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+                     eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+            .run();
         return idPartida;
     } else {
         idPartida = await createNewGame(idJugador, modo, socket);
@@ -456,4 +474,10 @@ async function resultManager(game, idPartida) {
         console.log("Error al determinar el motivo de finalización de la partida");
         return;
     }
+}
+
+export async function restoreGame(gameID, socket) {
+    socket.join(gameID);
+    const existingGamePGN = ActiveXObjects[gameID].chess.pgn();
+    socket.emit('game-restored', existingGamePGN);
 }
