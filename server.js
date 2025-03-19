@@ -56,7 +56,6 @@ function newConnection(socket) {
     // (move, searchGame, etc.)
     socket.on('disconnect', () => {
         // Eliminar socket de la lista de sockets activos
-        delete activeSockets[userId];
         console.log("Usuario desconectado")
     })
 

@@ -199,6 +199,19 @@ export async function logout(req, res) {
             return;
         }
 
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        if (usuarios.length === 0) {
+            res.status(400).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+        usuario = usuarios[0];
+        if (usuario.estadoUser !== 'logged') {
+            res.status(400).json({ error: 'El usuario no había iniciado sesión' });
+            return;
+        }
+        const userId = usuario.id;
+        delete activeSockets[userId];
+
         await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
