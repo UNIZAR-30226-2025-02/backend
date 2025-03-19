@@ -39,6 +39,7 @@ function newConnection(socket) {
         activeSockets[userId] = socket;
         if (inGame) {
             gameId = midGameExits[userId];
+            delete midGameExits[userId];
             restoreGame(gameId, userId);
         }
     });
