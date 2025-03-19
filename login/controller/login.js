@@ -172,6 +172,10 @@ export async function login(req, res) {
             // Recuperar el socket del usuario que ya esta conectado y comunicarle que se ha conectado otro dispositivo a su cuenta
             const oldSocket = activeSockets[user.id];
             oldSocket.emit('new-connection-detected', { message: 'Se ha detectado una nueva conexión a tu cuenta' });
+            // Actualizar el estado de sesión
+            if (user.EstadoPartida === 'inGame') {
+                inGame = true;
+            }
         }
         else {
             // Actualizar el estado de sesión
@@ -180,7 +184,7 @@ export async function login(req, res) {
             user.estadoUser = 'logged';
         }
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
-        res.send(publicUser);
+        res.send(publicUser, inGame);
 
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
