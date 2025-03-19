@@ -241,36 +241,8 @@ export async function manejarMovimiento(data, socket) {
         console.log("¿La partida ha terminado? ", game.isGameOver());
 
         if (game.isGameOver()) {
+            resultManager(game, idPartida);
             // NO SOLO SE ACABAN LAS PARTIDAS POR JAQUE MATE, DISTINGUIR AHOGADO, RENDICION, ETC
-
-            //El ganador es el jugador que no le toca el turno
-            const winner =  game.turn() === 'w' ? game.header()['Black'] : game.header()['White'];
-            const result = game.turn() === 'w' ? 'black' : 'white';
-            //MIRAR SETHEADER Y LA VARIACION DE ELO
-            // game.setHeader('Result', '1-0');
-
-            const { variacionW, variacionB } = await ratingVariation(
-                game.header()['White Elo'],
-                game.header()['Black Elo'],
-                result,
-                40
-            );
-
-            db.update(partida)
-                .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB })
-                .where(eq(partida.id, idPartida))
-                .run();
-            
-            console.log("Variación de elo del jugador blanco:", variacionW);
-            console.log("Variación de elo del jugador negro:", variacionB);
-
-            //Notificacion
-            io.to(idPartida).emit('gameOver', { winner });
-            console.log("La partida ha terminado, el ganador es: ", winner);
-
-            //Eliminar la partida de memoria
-            delete ActiveXObjects[idPartida];
-
         }
 
     } catch (error) {
@@ -395,4 +367,90 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
     const variacionB = Math.round(((k_factor * (resultadoB - expectativaB)) * 100)) /100;
 
     return { variacionW, variacionB };
+}
+
+async function resultManager(game, idPartida) {
+    if (game.isCheckmate()) {
+        console.log("Jaque mate");
+        // El ganador es el jugador que hizo el último movimiento
+        const lastMove = game.history({ verbose: true }).pop();
+        const winner = lastMove.color === 'w' ? game.header()['White'] : game.header()['Black'];
+        const result = lastMove.color === 'w' ? 'white' : 'black';
+        // Actualizar el resultado de la partida en la base de datos
+        if (result === 'white') {
+            game.setHeader('Result', '1-0');
+        } else if (result === 'black') {
+            game.setHeader('Result', '0-1');
+        }
+        // Calcular variacion de rating de los jugadores
+        const { variacionW, variacionB } = await ratingVariation(
+            game.header()['White Elo'],
+            game.header()['Black Elo'],
+            result,
+            40
+        );
+
+        db.update(partida)
+            .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .where(eq(partida.id, idPartida))
+            .run();
+        // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        console.log("Variación de elo del jugador blanco:", variacionW);
+        console.log("Variación de elo del jugador negro:", variacionB);
+
+        //Notificacion
+        io.to(idPartida).emit('gameOver', { winner });
+        console.log("La partida ha terminado, el ganador es: ", winner);
+
+        //Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+        
+        return;
+    } else if (game.isDraw()) {
+        console.log("Tablas");
+        
+        const drawReasons = {
+            isStalemate: "Ahogado",
+            isThreefoldRepetition: "Tablas por repetición de movimientos",
+            isInsufficientMaterial: "Material insuficiente",
+            isDrawByFiftyMoves: "Tablas por regla de los 50 movimientos"
+        };
+
+        // Recorre el mapa y muestra el primer motivo que sea verdadero
+        for (const [method, message] of Object.entries(drawReasons)) {
+            if (game[method]()) {
+                console.log(message);
+            }
+        }
+
+        const result = "draw";
+        game.setHeader('Result', '1/2-1/2');
+
+        // Calcular variacion de rating de los jugadores
+        const { variacionW, variacionB } = await ratingVariation(
+            game.header()['White Elo'],
+            game.header()['Black Elo'],
+            result,
+            40
+        );
+
+        db.update(partida)
+            .set({Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .where(eq(partida.id, idPartida))
+            .run();
+        // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        console.log("Variación de elo del jugador blanco:", variacionW);
+        console.log("Variación de elo del jugador negro:", variacionB);
+
+        //Notificacion
+        io.to(idPartida).emit('gameOver', { result });
+        console.log("La partida ha terminado en tablas");
+
+        //Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+    } else {
+        console.log("Error al determinar el motivo de finalización de la partida");
+    }
 }

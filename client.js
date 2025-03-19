@@ -2,7 +2,8 @@ import { io } from 'socket.io-client';
 import { Chess } from 'chess.js';
 
 // Configuración del servidor
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net'; // Cambia esto a la URL de tu servidor
+// const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
+const BASE_URL = 'http://localhost:3000';
 const chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 const userId = process.argv[2];  // Leer el ID del usuario del segundo argumento al ejecutar el script

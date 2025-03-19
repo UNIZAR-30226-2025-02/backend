@@ -90,7 +90,7 @@ function newConnection(socket) {
 
     socket.on('make-move', async (data) => {
         await manejarMovimiento(data, socket);
-        console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
+        // console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
     });
 
     //socket.on('see-pending-pairings', async (data) => {
