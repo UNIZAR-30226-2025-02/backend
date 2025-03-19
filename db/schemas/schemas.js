@@ -73,7 +73,8 @@ export const partida = sqliteTable('partida', {
     Ganador: integer('Ganador').references(() => usuario.id),
     PGN: text('PGN'),
     Variacion_JW: integer('Variacion_JW'),
-    Variacion_JB: integer('Variacion_JB')
+    Variacion_JB: integer('Variacion_JB'),
+    Tipo: text('Tipo')
 })
 
 export const partidaSelectSchema = createSelectSchema(partida).partial()

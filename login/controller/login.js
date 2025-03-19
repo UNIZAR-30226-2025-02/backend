@@ -342,7 +342,8 @@ export async function crearInvitado(req, res) {
             estadoUser: baseName
         });
 
-        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser });
+        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser, estadoUser: baseName });
+
     }
     catch (error) {
         console.log(error.message);
