@@ -62,6 +62,7 @@ export async function createNewGame(idJugador, mode, socket) {
             players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
             chess: chess,
         };
+
         // console.log("Partida almacenada en memoria:", ActiveXObjects[gameId]);
         // Crear la sala socket de la partida
         socket.join(gameId);
@@ -456,4 +457,10 @@ async function resultManager(game, idPartida) {
         console.log("Error al determinar el motivo de finalización de la partida");
         return;
     }
+}
+
+export async function restoreGame(gameID, socket) {
+    socket.join(gameID);
+    const existingGamePGN = ActiveXObjects[gameID].chess.pgn();
+    socket.emit('game-restored', existingGamePGN);
 }
