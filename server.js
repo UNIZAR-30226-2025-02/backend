@@ -109,7 +109,7 @@ async function newConnection(socket) {
     });
 
     // ------------------------------------------------------------------------------------------
-    
+
     socket.on('disconnect', () => {
         console.log("Usuario desconectado")
     })
@@ -139,6 +139,7 @@ async function newConnection(socket) {
     //peticion para salir de una partida
     socket.on('cancel-pairing', async (data) => {
         await cancelarBusquedaPartida(data, socket);
+        // Encontrar la partida de activeXObjects, ver q esta solo y eliminarla (tambien de bbdd)
     });
 
     // peticion para hacer un movimiento en una partida
@@ -149,11 +150,19 @@ async function newConnection(socket) {
     // peticion para rendirse en una partida
     socket.on('resign', async (data) => {
         await manejarRendicion(data, socket);
+        // recibir evento resign, y finalizar de forma correcta la partida (indicar resultado,
+        // actualizar bbdd, motivo del final de partida = rendicion)
+        // resultManager(game, idPartida, true);
     });
 
     // peticion para ofrecer tablas al oponente durante una partida
     socket.on('draw-offer', async (data) => {
         await ofertaDeTablas(data, socket);
+        // recibir evento draw-offer
+        // emitir evento draw-offered a la sala (para que el oponente lo reciba)
+        //      socket.broadcast.to(gameID) broadcast a la sala menos al socket que ha activado este 
+        //      evento socket on
+        // esperar evento draw-accept o draw-decline
     });
 
 }
