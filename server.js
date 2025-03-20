@@ -4,9 +4,10 @@ import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
 import { findGame, manejarMovimiento } from './rooms/rooms.js';
+import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
-let activeSockets = {};
+let activeSockets = new Map();
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
@@ -37,6 +38,8 @@ async function authenticate(socket) {
     try {
         // Extraer el token de las query params (ej: io('http://localhost:3000?token=abc123'))
         const token = socket.handshake.query.token;
+
+        // Si no se ha proporcionado un token, desconectar el socket
         if (!token) {
             console.error('No se ha proporcionado un token de autenticación, enviando desconexión...');
             socket.disconnect();
@@ -44,7 +47,10 @@ async function authenticate(socket) {
         }
 
         // Verificar y decodificar el token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.decode(token);
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Token verificado, el id del usuario es: " + JSON.stringify(verified.userId));
+
         const userId = decoded.userId;
 
         // Si ya existe un socket activo para este usuario (sesión activa), lo desconectamos
