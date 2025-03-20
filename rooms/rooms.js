@@ -559,3 +559,18 @@ export async function buscarPartidaActiva(userID, socket) {
     }
     console.log("El jugador no estaba en ninguna partida activa...");
 }
+
+// FUNCIONALIDADES QUE FALTAN POR IMPLEMENTAR:
+// -----------------------------------------------------------------------------------------------
+export async function cancelarBusquedaPartida(data, socket) {
+    console.log("Cancelando la búsqueda de partida...");
+}
+
+export async function manejarRendicion(data, socket) {
+    console.log("Rendición de la partida...");
+}
+
+export async function ofertaDeTablas(data, socket) {
+    console.log("Oferta de tablas...");
+}
+// -----------------------------------------------------------------------------------------------

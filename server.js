@@ -2,8 +2,9 @@ import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
-import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
-import { findGame, manejarMovimiento, buscarPartidaActiva } from './rooms/rooms.js';
+import { saveMessage, fetchMessages } from './chat/controller/chat.js';
+import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
+         manejarRendicion, ofertaDeTablas } from './rooms/rooms.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -96,28 +97,25 @@ async function newConnection(socket) {
     // Aquí habrá que gestionar los posibles eventos/mensajes que nos pueden llegar del cliente
     console.log("Escuchando eventos...");
 
-    socket.on('ping', () => {
-        socket.emit('pong');
-    });
-    
-    socket.on('disconnect', () => {
-        console.log("Usuario desconectado")
-    })
+    // Envío de heartbeats de forma periódica (cada 5 segundos) por parte del servidor
+    // para asegurar que los sockets de los clientes no se desconecten por inactividad
+
+    // setTimeout(() => {
+    //     io.emit('ping', { message: 'Ping!' });
+    // }, 5000);
+    //
+    // socket.on('pong', () => {
+    //     console.log('Pong recibido!');
+    // });
+    //
+    // socket.on('disconnect', () => {
+    //     console.log("Usuario desconectado")
+    // })
 
     // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
     socket.on('send-message', async (data) => {
         await saveMessage(data);
     });
-
-    // Eliminación de mensaje por parte de uno de los jugadores (y notificación al resto)
-    // socket.on('delete-message', async (data) => {
-    //     await deleteMessage(data);
-    // });
-    //
-    // socket.on('message-deleted', async (data) => {
-    //     console.log("Mensaje eliminado!" + JSON.stringify(data))
-    // });
-
 
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
