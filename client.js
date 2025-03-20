@@ -1,15 +1,53 @@
 import { io } from 'socket.io-client';
 import { Chess } from 'chess.js';
+import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
 const BASE_URL = 'http://localhost:3000';
+const loginUrl = 'http://localhost:3000/login';
 const chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
-const userId = process.argv[2];  // Leer el ID del usuario del segundo argumento al ejecutar el script
+
+const user = process.argv[2]; 
+const password = process.argv[3];
+let userId = '';                                        // Se actualizará una vez logueado
 const mode = 'Punt_3';                                  // Modo de juego 
-let gameId = '';                                      // Se actualizará una vez emparejado
-let color = '';                                       // Se actualizará una vez emparejado
+let gameId = '';                                        // Se actualizará una vez emparejado
+let color = '';                                         // Se actualizará una vez emparejado
+
+async function clientLogin(user, password) {
+    try {
+        // Realiza la petición POST para hacer login
+        console.log('Loggeando...');
+        const response = await axios.post(loginUrl, {
+            NombreUser: user,
+            Contrasena: password,
+        });
+
+        console.log('Loggeado...');
+
+        // Obtiene el ID del usuario de la respuesta
+        userId = response.data.publicUser.id;
+
+        console.log('Login exitoso. ID de usuario:', userId);
+        // Obtiene el token de la respuesta
+        const token = response.data.accessToken;
+
+        console.log('Login exitoso. Token recibido:', token);
+
+        // Conectar al servidor WebSocket usando el token
+        const socket = io(BASE_URL, {
+            query: { token: token }  // Enviar el token a través del query en la conexión
+        });
+
+        buscarPartida(socket);
+
+    } catch (error) {
+        console.error('Error al hacer login o conectar al WebSocket:', error.message);
+    }
+}
+
 // Función para hacer movimientos aleatorios en la partida
 async function realizarMovimientos(socket, color, gameId) {
     console.log('Realizando movimientos...');
@@ -37,17 +75,25 @@ async function realizarMovimientos(socket, color, gameId) {
 }
 
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
-function buscarPartida() {
-    const socket = io(BASE_URL, {
-        auth: {
-            userId: userId
-        }
-    });
+function buscarPartida(socket) {
+    // Cuando el socket se conecte correctamente
 
     socket.on('connect', () => {
-        console.log('Conectado al servidor de sockets');
-        socket.emit('find-game', { idJugador: userId , mode: mode});
+        console.log('Conexión WebSocket establecida.');
+        console.log('Buscando partida con ID de usuario:', userId, 'y modo:', mode);
+        setTimeout(() => {
+            socket.emit('find-game', { idJugador: userId, mode: mode });
+        }, 5000);
     });
+
+    socket.on('pong', () => {
+        console.log('Pong recibido!');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Desconectado del servidor WebSocket');
+    });
+
 
     socket.on('game-ready', (data) => {
         console.log('Partida encontrada:', data.idPartida);
@@ -82,5 +128,9 @@ function buscarPartida() {
     });
 }
 
-// Ejecutar la función de búsqueda de partida
-buscarPartida();
+// Ejecutar la función de login y luego buscar partida
+async function main() {
+    await clientLogin(user, password);  // Esperar a que el login se complete
+}
+
+main();  // Ejecutar el programa principal

@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages, deleteMessage } from './chat/controller/chat.js';
-import { findGame, manejarMovimiento } from './rooms/rooms.js';
+import { findGame, manejarMovimiento, buscarPartidaActiva } from './rooms/rooms.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -69,9 +69,14 @@ async function authenticate(socket) {
                 }
             }, 5000);
             }
-                    // Almacenar el nuevo socket
+        // Almacenar el nuevo socket
+        
         activeSockets.set(userId, socket);
         console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
+
+        console.log("Buscando si el usuario tiene una partida activa...")
+
+        await buscarPartidaActiva(userId, socket);
 
     } catch (error) {
         console.error('Error al autenticar el socket:', error.message);
@@ -83,13 +88,18 @@ async function authenticate(socket) {
 // Función que se ejecuta cada vez que un nuevo cliente se conecta al servidor
 // (manejo de conexiones y eventos)
 // -----------------------------------------------------------------------------------------------
-function newConnection(socket) {
+async function newConnection(socket) {
     // Nueva conexión vía webSocket
     console.log("Usuario conectado, id: " + socket.id)
-    authenticate(socket);
+    await authenticate(socket);
 
     // Aquí habrá que gestionar los posibles eventos/mensajes que nos pueden llegar del cliente
-    // (move, searchGame, etc.)
+    console.log("Escuchando eventos...");
+
+    socket.on('ping', () => {
+        socket.emit('pong');
+    });
+    
     socket.on('disconnect', () => {
         console.log("Usuario desconectado")
     })
@@ -100,9 +110,14 @@ function newConnection(socket) {
     });
 
     // Eliminación de mensaje por parte de uno de los jugadores (y notificación al resto)
-    socket.on('delete-message', async (data) => {
-        await deleteMessage(data);
-    });
+    // socket.on('delete-message', async (data) => {
+    //     await deleteMessage(data);
+    // });
+    //
+    // socket.on('message-deleted', async (data) => {
+    //     console.log("Mensaje eliminado!" + JSON.stringify(data))
+    // });
+
 
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
@@ -115,25 +130,33 @@ function newConnection(socket) {
         console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
     });
 
-    socket.on('message-deleted', async (data) => {
-        console.log("Mensaje eliminado!" + JSON.stringify(data))
-    });
-
     //peticion para salir de una partida
     socket.on('find-game', async (data) => {
+        console.log("Recibido evento find-game...");
         await findGame(data, socket);
-        // console.log("Salida de partida!" + JSON.stringify(data))
     });
 
     //peticion para salir de una partida
-    socket.on('leave-game', async (data) => {
-        // console.log("Salida de partida!" + JSON.stringify(data))
+    /*socket.on('cancel-pairing', async (data) => {
+        await cancelarBusquedaPartida(data, socket);
     });
 
+    // peticion para hacer un movimiento en una partida
     socket.on('make-move', async (data) => {
         await manejarMovimiento(data, socket);
-        // console.log("Movimiento Realizado: " + JSON.stringify(data.movimiento))
     });
+
+    // peticion para rendirse en una partida
+    socket.on('resign', async (data) => {
+        await manejarRendicion(data, socket);
+    });
+
+    // peticion para ofrecer tablas al oponente durante una partida
+    socket.on('draw-offer', async (data) => {
+        await ofertaDeTablas(data, socket);
+    });
+    */
+
 }
 // -----------------------------------------------------------------------------------------------
 // Escuchar eventos de conexión al servidor

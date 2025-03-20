@@ -277,6 +277,11 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     // MIRAR TAMBIEN EL MODO DE LA PARTIDA PARA COGER SOLO LAS QUE SEAN DE ESE MODO !!!!
 
     // COGER TAMBIEN QUE SEA IGUAL EL TIPO QUE EL QUE ESTA BUSCANDO (guest o normal)
+    console.log("Buscando partida de tipo:", tipoPartida);
+    console.log("Buscando partida de modo:", modo);
+    console.log("ID del jugador nuevo:", idJugadorNuevo);
+    
+    console.log("Obteniendo listado de partidas pendientes...");
     const listadoPartidasPendientes = await db.select()
         .from(partida)
         .where(and(eq(partida.Modo, modo),
@@ -287,6 +292,7 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
     
     // Obtener los jugadores de las partidas pendientes
+    console.log("Obteniendo listado de jugadores pendientes de emparejar...");
     const emparejamientosPendientes = [];
     for (const partida of listadoPartidasPendientes) {
         if (partida.JugadorW !== null) {
@@ -506,4 +512,33 @@ async function resultManager(game, idPartida) {
         console.log("Error al determinar el motivo de finalización de la partida");
         return;
     }
+}
+
+export async function buscarPartidaActiva(userID, socket) {    
+    const jugador = await db.select()
+                            .from(usuario)
+                            .where(eq(usuario.id, userID))
+                            .get();
+
+    if (jugador.EstadoPartida === 'ingame') {
+        console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
+
+        for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+            if (gameData.players.includes(userID)) {
+                const game = gameData.chess;
+
+                console.log("Notificando al jugador la información de la partida en la que está...");
+
+                // Unir a la socket room de la partida el nuevo socket de conexión del jugador
+                socket.join(gameID);
+                socket.emit('existing-game', { gameID, game });
+            }
+        }
+
+        console.error("Error al buscar la partida activa del jugador");
+        socket.emit('errorMessage', 'Error al buscar la partida activa del jugador');
+        return;
+    }
+    console.log("El jugador no estaba en ninguna partida activa...");
+    return;
 }

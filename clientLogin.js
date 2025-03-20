@@ -58,6 +58,6 @@ const username = 'sammy';  // Sustituir con el nombre de usuario
 const password = '123456';  // Sustituir con la contraseña
 
 clientLogin(username, password);
-setTimeout(() => {
-  clientLogout(username);
-}, 5000); // Desconectar después de 5 segundos
+//setTimeout(() => {
+//  clientLogout(username);
+//}, 5000); // Desconectar después de 5 segundos
