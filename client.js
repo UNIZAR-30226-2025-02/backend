@@ -145,7 +145,7 @@ function buscarPartida(socket) {
 
         chess = new Chess();
         const isValid = chess.loadPgn(pgn);
-        if (!isValid) {
+        if (isValid === false) {
             console.error('Error al cargar el PGN:', pgn);
         }
 
