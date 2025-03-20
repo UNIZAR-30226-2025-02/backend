@@ -6,7 +6,7 @@ import axios from 'axios';
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
 const BASE_URL = 'http://localhost:3000';
 const loginUrl = 'http://localhost:3000/login';
-const chess = new Chess();
+let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
 const user = process.argv[2]; 
@@ -79,12 +79,18 @@ async function realizarMovimientos(socket, color, gameId) {
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
 function buscarPartida(socket) {
     // Cuando el socket se conecte correctamente
+    let estabaEnPartida = false;
 
     socket.on('connect', () => {
         console.log('Conexión WebSocket establecida.');
         console.log('Buscando partida con ID de usuario:', userId, 'y modo:', mode);
         setTimeout(() => {
-            socket.emit('find-game', { idJugador: userId, mode: mode });
+            if (!estabaEnPartida) {
+                socket.emit('find-game', { idJugador: userId, mode: mode });
+            } else {
+                console.log('Estaba en partida, no se busca nueva partida');
+                realizarMovimientos(socket, color, gameId);
+            }
         }, 5000);
     });
 
@@ -126,7 +132,15 @@ function buscarPartida(socket) {
 
     socket.on('existing-game', (data) => {
         const pgn = data.pgn;
-        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', JSON.stringify(pgn));
+
+        // Actualizar color e id de la partida al recuperar una partida en curso, y recuperar
+        // el estado del tablero
+        color = data.color;
+        gameId = data.gameID;
+        chess = data.game;
+
+        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', pgn);
+        estabaEnPartida = true;
     });
 
     socket.on('gameOver', (gameData) => {

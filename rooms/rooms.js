@@ -541,7 +541,14 @@ export async function buscarPartidaActiva(userID, socket) {
                 console.log("Uniendo socket a la sala de la partida con id:", gameID);
                 socket.join(gameID);
                 const pgn = game.pgn();
-                socket.emit('existing-game', { gameID, pgn });
+                const headers = game.header();
+
+                // Recuperar el color del jugador en la partida
+                const color = headers['White'] === userID ? 'white' : 'black';
+
+                // Notificar al cliente que estaba en una partida activa, proporcionando la info
+                // necesaria para retomarla
+                socket.emit('existing-game', { gameID, pgn, color, game });
             }
         }
         // ---------------------------------------------------------------------------------------
