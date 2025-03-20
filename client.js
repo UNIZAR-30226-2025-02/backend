@@ -59,20 +59,25 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 1000);
+            }, 50);
             console.log('Movimiento realizado:', randomMove);
         }
     });
 
     // Si voy con blancas, hacer el primer movimiento
     console.log('Color:', color);
-    if (color === 'white') {
-        console.log('Soy blancas, haciendo el primer movimiento...');
+    const turno = chess.turn();
+
+    if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
         const moves = chess.moves();
-        const randomMove = moves[Math.floor(Math.random() * moves.length)];
-        chess.move(randomMove);
-        socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-        console.log('Movimiento realizado:', randomMove);
+        if (moves.length > 0) {
+            const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            chess.move(randomMove);
+            socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
+            console.log('Movimiento realizado:', randomMove);
+        } else {
+            console.log('No hay movimientos posibles.');
+        }
     }
 }
 
@@ -91,7 +96,7 @@ function buscarPartida(socket) {
                 console.log('Estaba en partida, no se busca nueva partida');
                 realizarMovimientos(socket, color, gameId);
             }
-        }, 5000);
+        }, 1000);
     });
 
     socket.on('pong', () => {
@@ -122,7 +127,7 @@ function buscarPartida(socket) {
         // Esperar 5 segundos para que el valor de las variables sea correcto
         setTimeout(() => {
             realizarMovimientos(socket, color, gameId);
-        }, 5000);
+        }, 1000);
     });
 
     socket.on('force-logout', (data) => {
@@ -137,7 +142,12 @@ function buscarPartida(socket) {
         // el estado del tablero
         color = data.color;
         gameId = data.gameID;
-        chess = data.game;
+
+        chess = new Chess();
+        const isValid = chess.loadPgn(pgn);
+        if (!isValid) {
+            console.error('Error al cargar el PGN:', pgn);
+        }
 
         console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', pgn);
         estabaEnPartida = true;

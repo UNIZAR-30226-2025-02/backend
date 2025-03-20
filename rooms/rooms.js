@@ -548,7 +548,7 @@ export async function buscarPartidaActiva(userID, socket) {
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla
-                socket.emit('existing-game', { gameID, pgn, color, game });
+                socket.emit('existing-game', { gameID, pgn, color });
             }
         }
         // ---------------------------------------------------------------------------------------
