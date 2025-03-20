@@ -523,8 +523,6 @@ export async function buscarPartidaActiva(userID, socket) {
     if (jugador.EstadoPartida === 'ingame') {
         console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
 
-        // ESTO TODAVÍA NO FUNCIONAAAAAAAAAAAAAAAA
-        // ---------------------------------------------------------------------------------------
         let idPartidaEnJuego;
         for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
             console.log("idPartida:", gameID);

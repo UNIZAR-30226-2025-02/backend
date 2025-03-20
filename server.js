@@ -69,7 +69,7 @@ async function authenticate(socket) {
                     oldSocket.disconnect();
                 }
             }, 5000);
-            }
+        }
         // Almacenar el nuevo socket
         
         activeSockets.set(userId, socket);
