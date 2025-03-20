@@ -536,17 +536,19 @@ export async function buscarPartidaActiva(userID, socket) {
                 console.log("Notificando al jugador la información de la partida en la que está...");
                 idPartidaEnJuego = gameID;
                 console.log("ID de la partida en juego:", idPartidaEnJuego);
-                
+
                 // Unir a la socket room de la partida el nuevo socket de conexión del jugador
+                console.log("Uniendo socket a la sala de la partida con id:", gameID);
                 socket.join(gameID);
-                socket.emit('existing-game', { gameID, game });
+                const pgn = game.pgn();
+                socket.emit('existing-game', { gameID, pgn });
             }
         }
         // ---------------------------------------------------------------------------------------
-        console.error("Error al buscar la partida activa del jugador");
-        socket.emit('errorMessage', 'Error al buscar la partida activa del jugador');
-        return;
+        if (!idPartidaEnJuego) {
+            console.error("Error al buscar la partida activa del jugador");
+            socket.emit('errorMessage', 'Error al buscar la partida activa del jugador');
+        }
     }
     console.log("El jugador no estaba en ninguna partida activa...");
-    return;
 }

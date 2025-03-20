@@ -125,7 +125,8 @@ function buscarPartida(socket) {
     });
 
     socket.on('existing-game', (data) => {
-        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', JSON.stringify(data.game.pgn()));
+        const pgn = data.pgn;
+        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', JSON.stringify(pgn));
     });
 
     socket.on('gameOver', (gameData) => {
