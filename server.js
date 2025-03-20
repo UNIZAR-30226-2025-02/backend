@@ -137,7 +137,7 @@ async function newConnection(socket) {
     });
 
     //peticion para salir de una partida
-    /*socket.on('cancel-pairing', async (data) => {
+    socket.on('cancel-pairing', async (data) => {
         await cancelarBusquedaPartida(data, socket);
     });
 
@@ -155,7 +155,6 @@ async function newConnection(socket) {
     socket.on('draw-offer', async (data) => {
         await ofertaDeTablas(data, socket);
     });
-    */
 
 }
 // -----------------------------------------------------------------------------------------------

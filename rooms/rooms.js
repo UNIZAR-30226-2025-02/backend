@@ -523,18 +523,26 @@ export async function buscarPartidaActiva(userID, socket) {
     if (jugador.EstadoPartida === 'ingame') {
         console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
 
+        // ESTO TODAVÍA NO FUNCIONAAAAAAAAAAAAAAAA
+        // ---------------------------------------------------------------------------------------
+        let idPartidaEnJuego;
         for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+            console.log("idPartida:", gameID);
+            console.log("jugadores:", gameData.players);
+            console.log("partida:", gameData.chess.pgn());
             if (gameData.players.includes(userID)) {
                 const game = gameData.chess;
 
                 console.log("Notificando al jugador la información de la partida en la que está...");
-
+                idPartidaEnJuego = gameID;
+                console.log("ID de la partida en juego:", idPartidaEnJuego);
+                
                 // Unir a la socket room de la partida el nuevo socket de conexión del jugador
                 socket.join(gameID);
                 socket.emit('existing-game', { gameID, game });
             }
         }
-
+        // ---------------------------------------------------------------------------------------
         console.error("Error al buscar la partida activa del jugador");
         socket.emit('errorMessage', 'Error al buscar la partida activa del jugador');
         return;

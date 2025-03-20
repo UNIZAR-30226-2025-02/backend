@@ -57,7 +57,9 @@ async function realizarMovimientos(socket, color, gameId) {
         if (moves.length > 0) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
             chess.move(randomMove);
-            socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
+            }, 1000);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -100,11 +102,6 @@ function buscarPartida(socket) {
         gameId = data.idPartida;
         console.log('Id de la partida:', gameId);
         console.log('Listo para jugar!');
-
-        // Esperar 5 segundos para que el valor de las variables sea correcto
-        setTimeout(() => {
-            realizarMovimientos(socket, color, gameId);
-        }, 5000);
     });
 
     socket.on('color', (data) => {
@@ -115,6 +112,20 @@ function buscarPartida(socket) {
         }
         color = jugador ? jugador.color : null;
         console.log('Color asignado:', color);
+
+        // Esperar 5 segundos para que el valor de las variables sea correcto
+        setTimeout(() => {
+            realizarMovimientos(socket, color, gameId);
+        }, 5000);
+    });
+
+    socket.on('force-logout', (data) => {
+        console.log('Forzar logout:', data.message);
+        socket.disconnect();
+    });
+
+    socket.on('existing-game', (data) => {
+        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', JSON.stringify(data.game.pgn()));
     });
 
     socket.on('gameOver', (gameData) => {
