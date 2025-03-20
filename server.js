@@ -99,18 +99,20 @@ async function newConnection(socket) {
 
     // Envío de heartbeats de forma periódica (cada 5 segundos) por parte del servidor
     // para asegurar que los sockets de los clientes no se desconecten por inactividad
+    // ------------------------------------------------------------------------------------------
+    setTimeout(() => {
+        io.emit('ping', { message: 'Ping!' });
+    }, 5000);
+    
+    socket.on('pong', () => {
+        console.log('Pong recibido!');
+    });
 
-    // setTimeout(() => {
-    //     io.emit('ping', { message: 'Ping!' });
-    // }, 5000);
-    //
-    // socket.on('pong', () => {
-    //     console.log('Pong recibido!');
-    // });
-    //
-    // socket.on('disconnect', () => {
-    //     console.log("Usuario desconectado")
-    // })
+    // ------------------------------------------------------------------------------------------
+    
+    socket.on('disconnect', () => {
+        console.log("Usuario desconectado")
+    })
 
     // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
     socket.on('send-message', async (data) => {

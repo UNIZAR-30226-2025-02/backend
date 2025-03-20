@@ -40,24 +40,31 @@ async function clientLogin(username, password) {
 }
 
 async function clientLogout(username) {
-    try {
-        // Realiza la petición POST para hacer login
-        await axios.post(logoutUrl, {
-            NombreUser: username,
-        });
-    
-        console.log('Logout exitoso. Adiós!');
-        socket.disconnect();
-    } catch (error) {
-        console.error('Error al hacer logout:', error.message);
+  try {
+    // Realiza la petición POST para hacer logout
+    await axios.post(logoutUrl, {
+        NombreUser: username,
+    });
+
+    if (socket.connected) {
+      console.log('El servidor no ha forzado el logout, desconectando...');
+      socket.disconnect();
     }
+
+  } catch (error) {
+      console.error('Error al hacer logout:', error.message);
+  }
 }
 
 // Intenta hacer login y conectarse con un usuario y contraseña
-const username = 'sammy';  // Sustituir con el nombre de usuario
-const password = '123456';  // Sustituir con la contraseña
+const username = 'Prueba22';  // Sustituir con el nombre de usuario
+const password = '12345a';  // Sustituir con la contraseña
 
-clientLogin(username, password);
-//setTimeout(() => {
-//  clientLogout(username);
-//}, 5000); // Desconectar después de 5 segundos
+await clientLogin(username, password);
+socket.on('force-logout', (data) => {
+  console.log('Sesión abierta en otro dispositivo, cerrando sesion:', data.message);
+  socket.disconnect();
+});
+setTimeout(() => {
+  clientLogout(username);
+}, 6000);  // Desconectar después de 5 segundos
