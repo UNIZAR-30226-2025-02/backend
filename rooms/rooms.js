@@ -277,6 +277,11 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     // MIRAR TAMBIEN EL MODO DE LA PARTIDA PARA COGER SOLO LAS QUE SEAN DE ESE MODO !!!!
 
     // COGER TAMBIEN QUE SEA IGUAL EL TIPO QUE EL QUE ESTA BUSCANDO (guest o normal)
+    console.log("Buscando partida de tipo:", tipoPartida);
+    console.log("Buscando partida de modo:", modo);
+    console.log("ID del jugador nuevo:", idJugadorNuevo);
+    
+    console.log("Obteniendo listado de partidas pendientes...");
     const listadoPartidasPendientes = await db.select()
         .from(partida)
         .where(and(eq(partida.Modo, modo),
@@ -287,6 +292,7 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
     
     // Obtener los jugadores de las partidas pendientes
+    console.log("Obteniendo listado de jugadores pendientes de emparejar...");
     const emparejamientosPendientes = [];
     for (const partida of listadoPartidasPendientes) {
         if (partida.JugadorW !== null) {
@@ -507,3 +513,62 @@ async function resultManager(game, idPartida) {
         return;
     }
 }
+
+export async function buscarPartidaActiva(userID, socket) {    
+    const jugador = await db.select()
+                            .from(usuario)
+                            .where(eq(usuario.id, userID))
+                            .get();
+
+    if (jugador.EstadoPartida === 'ingame') {
+        console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
+
+        let idPartidaEnJuego;
+        for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+            console.log("idPartida:", gameID);
+            console.log("jugadores:", gameData.players);
+            console.log("partida:", gameData.chess.pgn());
+            if (gameData.players.includes(userID)) {
+                const game = gameData.chess;
+
+                console.log("Notificando al jugador la información de la partida en la que está...");
+                idPartidaEnJuego = gameID;
+                console.log("ID de la partida en juego:", idPartidaEnJuego);
+
+                // Unir a la socket room de la partida el nuevo socket de conexión del jugador
+                console.log("Uniendo socket a la sala de la partida con id:", gameID);
+                socket.join(gameID);
+                const pgn = game.pgn();
+                const headers = game.header();
+
+                // Recuperar el color del jugador en la partida
+                const color = headers['White'] === userID ? 'white' : 'black';
+
+                // Notificar al cliente que estaba en una partida activa, proporcionando la info
+                // necesaria para retomarla
+                socket.emit('existing-game', { gameID, pgn, color });
+            }
+        }
+        // ---------------------------------------------------------------------------------------
+        if (!idPartidaEnJuego) {
+            console.error("Error al buscar la partida activa del jugador");
+            socket.emit('errorMessage', 'Error al buscar la partida activa del jugador');
+        }
+    }
+    console.log("El jugador no estaba en ninguna partida activa...");
+}
+
+// FUNCIONALIDADES QUE FALTAN POR IMPLEMENTAR:
+// -----------------------------------------------------------------------------------------------
+export async function cancelarBusquedaPartida(data, socket) {
+    console.log("Cancelando la búsqueda de partida...");
+}
+
+export async function manejarRendicion(data, socket) {
+    console.log("Rendición de la partida...");
+}
+
+export async function ofertaDeTablas(data, socket) {
+    console.log("Oferta de tablas...");
+}
+// -----------------------------------------------------------------------------------------------

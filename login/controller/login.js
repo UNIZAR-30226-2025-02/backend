@@ -11,7 +11,22 @@ import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
 
 const generateVerificationToken = (userId) => {
-    return jwt.sign({ userId }, process.env.EMAIL_FIRMA, { expiresIn: '1h' });
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
+
+// Token de acceso que nos pasarán los clientes frontend cuando quieran conectarse via websocket
+// Variable de entorno en el .env: ACCESS_TOKEN_SECRET
+//
+// FRONTENDS:
+// -----------------------------------------------------------------------------------------------
+// const token = localStorage.getItem('token'); // Recuperar el token del login (se lo pasaremos)
+// const socket = io('http://localhost:3000', {
+//    auth: { token },
+//  });
+// -----------------------------------------------------------------------------------------------
+
+const generateAccessToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
 
 export async function crearUsuario(req, res) {
@@ -121,7 +136,7 @@ export async function verifyEmail(req, res) {
 
     try {
         console.log("Token recibido:", tokenString);
-        const decoded = jwt.verify(tokenString, process.env.EMAIL_FIRMA);
+        const decoded = jwt.verify(tokenString, process.env.JWT_SECRET);
         const id = decoded.userId;
 
         // Actualiza la base de datos para marcar el email como verificado
@@ -165,14 +180,21 @@ export async function login(req, res) {
             res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
             return;
         }
-
+        // Creacion del token de inicio de sesión
+        // ----------------------------------------------------------------------------------------
+        //console.log("Generando token de acceso... para usuario con id: " + user.id);
+        const accessToken = generateAccessToken(user.id);
+        // ----------------------------------------------------------------------------------------
         // Actualizar el estado de sesión
         await db.update(usuario).set({ estadoUser: 'logged' }).where(eq(usuario.NombreUser, NombreUser));
         // Establecer en user el estado de sesión
         user.estadoUser = 'logged';
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
 
-        res.send(publicUser);
+        // Enviar el usuario y el token de acceso
+        // ----------------------------------------------------------------------------------------
+        res.send({publicUser, accessToken});
+        // ----------------------------------------------------------------------------------------
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
     }
