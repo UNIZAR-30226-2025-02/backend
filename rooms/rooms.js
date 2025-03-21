@@ -445,9 +445,12 @@ async function resultManager(game, idPartida) {
             result,
             40
         );
-
+        // ACTUALIZAR PGN DE LA PARTIDA EN LA BASE DE DATOS
         db.update(partida)
-            .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .set({ Ganador: winner,
+                   Variacion_JW: variacionW,
+                   Variacion_JB: variacionB,
+                   PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
@@ -492,7 +495,7 @@ async function resultManager(game, idPartida) {
         );
 
         db.update(partida)
-            .set({Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .set({Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
@@ -568,7 +571,23 @@ export async function manejarRendicion(data, socket) {
     console.log("Rendición de la partida...");
 }
 
+// jugador1: manda socket.emit('draw-offer', { gameID }); al servidor
+// servidor: recibe draw-offer, ejecuta oferta de tablas, y hace socket.to(gameID).emit('draw-offered', { gameID }); al otro jugador
+// jugador2: recibe draw-offered, y manda al servidor 
+//      --- socket.emit('draw-accepted', { gameID }); si acepta tablas o
+//      --- socket.emit('draw-declined', { gameID }); si rechaza tablas
+// servidor: recibe draw-accepted o draw-declined, ejecuta aceptarTablas o rechazarTablas
 export async function ofertaDeTablas(data, socket) {
     console.log("Oferta de tablas...");
+    const gameID = data.gameID;
+    socket.to(gameID).emit('draw-offered', { gameID });
+}
+
+export async function aceptarTablas(data, socket) {
+    console.log("Tablas aceptadas...");
+}
+
+export async function rechazarTablas(data, socket) {
+    console.log("Tablas rechazadas...");
 }
 // -----------------------------------------------------------------------------------------------
