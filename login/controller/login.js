@@ -193,7 +193,7 @@ export async function login(req, res) {
 
         // Enviar el usuario y el token de acceso
         // ----------------------------------------------------------------------------------------
-        res.send({publicUser, accessToken});
+        res.send({ publicUser, accessToken });
         // ----------------------------------------------------------------------------------------
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
@@ -352,6 +352,7 @@ export async function crearInvitado(req, res) {
             return;
         }
 
+        const accessToken = generateAccessToken(id);
 
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
@@ -364,7 +365,7 @@ export async function crearInvitado(req, res) {
             estadoUser: baseName
         });
 
-        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser, estadoUser: baseName });
+        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser, estadoUser: baseName, accessToken: accessToken });
 
     }
     catch (error) {
