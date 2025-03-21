@@ -447,7 +447,7 @@ async function resultManager(game, idPartida) {
         );
 
         db.update(partida)
-            .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
@@ -492,7 +492,7 @@ async function resultManager(game, idPartida) {
         );
 
         db.update(partida)
-            .set({Variacion_JW: variacionW, Variacion_JB: variacionB })
+            .set({Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
