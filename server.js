@@ -162,7 +162,7 @@ async function newConnection(socket) {
         await aceptarTablas(data, socket);
     });
 
-    socket.on('draw-decline', async (data) => {
+    socket.on('draw-declined', async (data) => {
         console.log("Se ha rechazado la oferta de tablas")
         await rechazarTablas(data, socket);
     });

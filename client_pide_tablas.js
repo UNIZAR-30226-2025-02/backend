@@ -5,8 +5,8 @@ import axios from 'axios';
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
 //const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
- const BASE_URL = 'http://localhost:3000';
-const loginUrl = `${BASE_URL}/login`;
+ const BASE_URL = "http://localhost:3000";
+const loginUrl = "http://localhost:3000/login";
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
@@ -171,13 +171,15 @@ function buscarPartida(socket) {
     
     socket.on('draw-accepted', (data) => {
         console.log('Tablas aceptadas por el rival:', data);
-        socket.disconnect();
     });
 
-    socket.on('draw-decline', (data) => {
+    socket.on('draw-declined', (data) => {
         console.log('Tablas rechazadas por el rival:', data);
         socket.emit('resign', { idPartida: gameId, idJugador: userId });
-        socket.disconnect();
+    });
+
+    socket.on('player-surrendered', (data) => {
+        console.log('Rival se ha rendido:', data);
     });
 }
 // Ejecutar la función de login y luego buscar partida

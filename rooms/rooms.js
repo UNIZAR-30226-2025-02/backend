@@ -564,15 +564,24 @@ export async function buscarPartidaActiva(userID, socket) {
 // FUNCIONALIDADES QUE FALTAN POR IMPLEMENTAR:
 // -----------------------------------------------------------------------------------------------
 export async function cancelarBusquedaPartida(data, socket) {
+
     console.log("Cancelando la búsqueda de partida...");
-    const idPartida = data.idPartida;
     const idJugador = data.idJugador;
+    let idPartida;
+    // Recorrer ActiveXObjects para encontrar la partida en la que está el jugador
+    for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+        if (gameData.players.includes(idJugador)) {
+            // Guardar el id de la partida en la que está el jugador y parar el bucle
+            idPartida = gameID;
+            break;
     
-    // Verificar si la partida existe y el jugador está en ella
-    if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
+        }
+    }
             
-        console.log("No estás en esta partida");
-        return socket.emit('error', 'No estás en esta partida');
+    if (!idPartida) {
+        console.log("No se ha encontrado la partida en la que está el jugador");
+        socket.emit('errorMessage', 'No se ha encontrado tu emparejamiento activo');
+        return null;
     }
     
     //Verificar si el jugador es el unico en la partida
@@ -583,7 +592,14 @@ export async function cancelarBusquedaPartida(data, socket) {
         await db.delete(partida)
             .where(eq(partida.id, idPartida))
             .run();
-        console.log("La partida ha sido eliminada de memoria");
+
+        await db.update(usuario)
+            .set({ EstadoPartida: null })
+            .where(eq(usuario.id, idJugador))
+            .run();
+
+        //Notificar al jugador que ha salido de la partida
+        console.log("El jugador con id:", idJugador, "ha cancelado el emparejamiento.");
     }else{
         //No puede salir sin rendirse porque ya se ha unido alguien
         console.log("No puedes salir de la partida sin rendirte");
@@ -601,7 +617,7 @@ export async function manejarRendicion(data, socket) {
         return socket.emit('error', 'No estás en esta partida');
     }
     
-    socket.to(idPartida).emit('Player surrendered:', { idJugador });
+    socket.to(idPartida).emit('player-surrendered', { idJugador });
     
     // Obtener el color del jugador que se rinde en base a idJugador
     const game = ActiveXObjects[idPartida].chess;
@@ -627,7 +643,16 @@ export async function manejarRendicion(data, socket) {
         .where(eq(partida.id, idPartida))
         .run();
     // Emitir el evento de fin de partida al oponente
-    socket.broadcast.to(idPartida).emit('gameOver', { winner: oponente });
+    io.to(idPartida).emit('gameOver', { winner: oponente });
+
+    // Poner el estado de partida a null en la bbdd
+    await db.update(usuario)
+    .set({ EstadoPartida: null })
+    .where(or(
+            eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+            eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+    .run();
+
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
     console.log("La partida ha terminado, el ganador es: ", oponente);
@@ -671,17 +696,37 @@ export async function aceptarTablas(data, socket) {
     }
 
     console.log("El jugador  ha aceptado las tablas");
+    const game = ActiveXObjects[idPartida].chess;
+    game.setHeader('Result', '1/2-1/2');
+    // Calcular variacion de rating de los jugadores
+    const { variacionW, variacionB } = await ratingVariation(
+        game.header()['White Elo'],
+        game.header()['Black Elo'],
+        "draw",
+        40
+    );
 
     //Actualizar la base de datos con empate de tablas
     await db.update(partida)
-        .set({ Ganador: 'draw' })
+        .set({ PGN: game.pgn(),  Variacion_JW: variacionW, Variacion_JB: variacionB})
         .where(eq(partida.id, idPartida))
         .run();
+
     // Emitir el evento de fin de partida al oponente
-    socket.broadcast.to(idPartida).emit('gameOver', { winner: 'draw' });
+    socket.to(idPartida).emit('draw-accepted', { idJugador });
+    io.to(idPartida).emit('gameOver', { winner: "draw" });
+
+    // Poner el estadoPartida de los jugadores a null en la base de datos
+    await db.update(usuario)
+    .set({ EstadoPartida: null })
+    .where(or(
+            eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+            eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+    .run();
+
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
-    console.log("La partida ha terminado en empate");
+    console.log("La partida ha terminado en tablas por decisión mutua");
 }
 
 export async function rechazarTablas(data, socket) {
