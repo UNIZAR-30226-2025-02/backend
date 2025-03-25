@@ -447,10 +447,7 @@ async function resultManager(game, idPartida) {
         );
         // ACTUALIZAR PGN DE LA PARTIDA EN LA BASE DE DATOS
         db.update(partida)
-            .set({ Ganador: winner,
-                   Variacion_JW: variacionW,
-                   Variacion_JB: variacionB,
-                   PGN: game.pgn() })
+            .set({ Ganador: winner, Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
