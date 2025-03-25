@@ -4,8 +4,8 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'http://localhost:3000';
+//const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
+ const BASE_URL = 'http://localhost:3000';
 const loginUrl = `${BASE_URL}/login`;
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
@@ -162,6 +162,13 @@ function buscarPartida(socket) {
     socket.on('errorMessage', (error) => {
         console.error('Se ha producido un error: ', error);
         // socket.disconnect();
+    });
+
+    socket.on('requestTie', (data) => {
+        console.log('Petición de tablas recibida:', data);
+        // Aquí puedes decidir si aceptar o rechazar la petición de tablas
+        // Por ejemplo, para rechazarla:
+        socket.emit('draw-decline', { idPartida: gameId, idJugador: userId });
     });
 }
 
