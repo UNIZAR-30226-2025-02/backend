@@ -4,9 +4,9 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'http://localhost:3000';
-const loginUrl = `${BASE_URL}/login`;
+//const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
+ const BASE_URL = "http://localhost:3000";
+const loginUrl = "http://localhost:3000/login";
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
@@ -53,8 +53,13 @@ async function clientLogin(user, password) {
 async function realizarMovimientos(socket, color, gameId) {
     console.log('Realizando movimientos...');
     socket.on('new-move', (data) => {
+
         chess.move(data.movimiento);
         const moves = chess.moves();
+
+        console.log('Pidiendo tablas:');
+        socket.emit('draw-offer', { idPartida: gameId, idJugador: userId });
+
         if (moves.length > 0) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
             chess.move(randomMove);
@@ -163,8 +168,20 @@ function buscarPartida(socket) {
         console.error('Se ha producido un error: ', error);
         // socket.disconnect();
     });
-}
+    
+    socket.on('draw-accepted', (data) => {
+        console.log('Tablas aceptadas por el rival:', data);
+    });
 
+    socket.on('draw-declined', (data) => {
+        console.log('Tablas rechazadas por el rival:', data);
+        socket.emit('resign', { idPartida: gameId, idJugador: userId });
+    });
+
+    socket.on('player-surrendered', (data) => {
+        console.log('Rival se ha rendido:', data);
+    });
+}
 // Ejecutar la función de login y luego buscar partida
 async function main() {
     await clientLogin(user, password);  // Esperar a que el login se complete

@@ -4,7 +4,8 @@ import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages } from './chat/controller/chat.js';
 import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
-         manejarRendicion, ofertaDeTablas } from './rooms/rooms.js';
+         manejarRendicion, ofertaDeTablas, 
+         aceptarTablas, rechazarTablas} from './rooms/rooms.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -156,6 +157,15 @@ async function newConnection(socket) {
         await ofertaDeTablas(data, socket);
     });
 
+    socket.on('draw-accept', async (data) => {
+        console.log("Se ha aceptado la oferta de tablas")
+        await aceptarTablas(data, socket);
+    });
+
+    socket.on('draw-declined', async (data) => {
+        console.log("Se ha rechazado la oferta de tablas")
+        await rechazarTablas(data, socket);
+    });
 }
 // -----------------------------------------------------------------------------------------------
 // Escuchar eventos de conexión al servidor

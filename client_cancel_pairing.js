@@ -4,9 +4,9 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'http://localhost:3000';
-const loginUrl = `${BASE_URL}/login`;
+const BASE_URL = "http://localhost:3000";
+const loginUrl = "http://localhost:3000/login";
+
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
@@ -49,38 +49,6 @@ async function clientLogin(user, password) {
     }
 }
 
-// Función para hacer movimientos aleatorios en la partida
-async function realizarMovimientos(socket, color, gameId) {
-    console.log('Realizando movimientos...');
-    socket.on('new-move', (data) => {
-        chess.move(data.movimiento);
-        const moves = chess.moves();
-        if (moves.length > 0) {
-            const randomMove = moves[Math.floor(Math.random() * moves.length)];
-            chess.move(randomMove);
-            setTimeout(() => {
-                socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 50);
-            console.log('Movimiento realizado:', randomMove);
-        }
-    });
-
-    // Si voy con blancas, hacer el primer movimiento
-    console.log('Color:', color);
-    const turno = chess.turn();
-
-    if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
-        const moves = chess.moves();
-        if (moves.length > 0) {
-            const randomMove = moves[Math.floor(Math.random() * moves.length)];
-            chess.move(randomMove);
-            socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            console.log('Movimiento realizado:', randomMove);
-        } else {
-            console.log('No hay movimientos posibles.');
-        }
-    }
-}
 
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
 function buscarPartida(socket) {
@@ -95,10 +63,17 @@ function buscarPartida(socket) {
                 socket.emit('find-game', { idJugador: userId, mode: mode });
             } else {
                 console.log('Estaba en partida, no se busca nueva partida');
-                realizarMovimientos(socket, color, gameId);
+                //realizarMovimientos(socket, color, gameId);
             }
         }, 1000);
+
+        setTimeout(() => {
+            console.log('Cancelando emparejamiento...');
+            socket.emit('cancel-pairing', { idJugador: userId});
+        }, 10000); // Enviar ping despues de 5 segundos
+
     });
+
 
     socket.on('pong', () => {
         console.log('Pong recibido!');
@@ -125,10 +100,6 @@ function buscarPartida(socket) {
         color = jugador ? jugador.color : null;
         console.log('Color asignado:', color);
 
-        // Esperar 5 segundos para que el valor de las variables sea correcto
-        setTimeout(() => {
-            realizarMovimientos(socket, color, gameId);
-        }, 1000);
     });
 
     socket.on('force-logout', (data) => {
