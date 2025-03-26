@@ -96,7 +96,7 @@ export const rankingInsertSchema = createInsertSchema(ranking).partial()
 export const mensaje = sqliteTable('mensaje', {
     Id_mensaje: text('id_mensaje').primaryKey(),
     fecha_envio: text('fecha_envio').default(sql`CURRENT_TIMESTAMP`),
-    Id_partida: integer('id_partida').references(() => usuario.id).notNull(),
+    Id_partida: integer('id_partida').references(() => partida.id).notNull(),
     Id_usuario: integer('id_usuario').references(() => usuario.id).notNull(),
 
     Mensaje: text('mensaje').notNull()

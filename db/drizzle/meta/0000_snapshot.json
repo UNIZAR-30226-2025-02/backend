@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d0fbec25-5369-4480-8b58-9d3d82e1038e",
+  "id": "88d2b61b-fe47-419a-af6c-ba15a70753e3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "amistad": {
@@ -9,7 +9,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -20,7 +20,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Jugador1": {
           "name": "Jugador1",
@@ -89,7 +89,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -100,7 +100,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Nombre_Aper": {
           "name": "Nombre_Aper",
@@ -136,7 +136,7 @@
       "columns": {
         "id_mensaje": {
           "name": "id_mensaje",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -147,7 +147,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "id_partida": {
           "name": "id_partida",
@@ -173,10 +173,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "mensaje_id_partida_usuario_id_fk": {
-          "name": "mensaje_id_partida_usuario_id_fk",
+        "mensaje_id_partida_partida_id_fk": {
+          "name": "mensaje_id_partida_partida_id_fk",
           "tableFrom": "mensaje",
-          "tableTo": "usuario",
+          "tableTo": "partida",
           "columnsFrom": [
             "id_partida"
           ],
@@ -209,7 +209,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -220,20 +220,20 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "JugadorW": {
           "name": "JugadorW",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "JugadorB": {
           "name": "JugadorB",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "Modo": {
@@ -247,7 +247,7 @@
           "name": "Ganador",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "PGN": {
@@ -267,6 +267,13 @@
         "Variacion_JB": {
           "name": "Variacion_JB",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "Tipo": {
+          "name": "Tipo",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -323,7 +330,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -334,7 +341,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Modo": {
           "name": "Modo",
@@ -369,7 +376,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -380,7 +387,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "Retador": {
           "name": "Retador",
@@ -478,7 +485,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -489,7 +496,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "'CURRENT_TIMESTAMP'"
+          "default": "CURRENT_TIMESTAMP"
         },
         "FotoPerfil": {
           "name": "FotoPerfil",
@@ -505,30 +512,9 @@
           "notNull": false,
           "autoincrement": false
         },
-        "NombreCompleto": {
-          "name": "NombreCompleto",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "Apellidos": {
-          "name": "Apellidos",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "Correo": {
           "name": "Correo",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "Edad": {
-          "name": "Edad",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -559,39 +545,105 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 1000
         },
         "Punt_5": {
           "name": "Punt_5",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 1000
         },
         "Punt_10": {
           "name": "Punt_10",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 1000
         },
         "Punt_30": {
           "name": "Punt_30",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 1000
         },
         "Punt_3_2": {
           "name": "Punt_3_2",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 1000
         },
         "Punt_5_10": {
           "name": "Punt_5_10",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1000
+        },
+        "totalGames": {
+          "name": "totalGames",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "totalWins": {
+          "name": "totalWins",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "totalLosses": {
+          "name": "totalLosses",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "totalDraws": {
+          "name": "totalDraws",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "correoVerificado": {
+          "name": "correoVerificado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tokenVerificacion": {
+          "name": "tokenVerificacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estadoUser": {
+          "name": "estadoUser",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tokenPasswd": {
+          "name": "tokenPasswd",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
