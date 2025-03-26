@@ -2,7 +2,7 @@ import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
-import { saveMessage, fetchMessages } from './chat/controller/chat.js';
+import { saveMessage, fetchMessages } from './chat/chat.js';
 import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
          manejarRendicion, ofertaDeTablas, 
          aceptarTablas, rechazarTablas} from './rooms/rooms.js';
@@ -101,7 +101,7 @@ async function newConnection(socket) {
     // Envío de heartbeats de forma periódica (cada 5 segundos) por parte del servidor
     // para asegurar que los sockets de los clientes no se desconecten por inactividad
     // ------------------------------------------------------------------------------------------
-    setTimeout(() => {
+    setInterval(() => {
         io.emit('ping', { message: 'Ping!' });
     }, 5000);
     

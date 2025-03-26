@@ -1,5 +1,5 @@
-import { db } from '../../db/db.js';
-import { mensaje } from '../../db/schemas/schemas.js';
+import { db } from '../db/db.js';
+import { mensaje } from '../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
 
 /*
@@ -17,7 +17,7 @@ export async function saveMessage(data) {
         // Notificar al resto de integrantes de la sala correspondiente a la partida (el otro
         // jugador o espectadores) sobre el mensaje eliminado
 
-        // io.to(data.game_id).emit('new-message', data);
+        socket.to(data.game_id).emit('new-message', data);
     } catch (error) {
         console.error("Error al almacenar el mensaje:", error);
     }
