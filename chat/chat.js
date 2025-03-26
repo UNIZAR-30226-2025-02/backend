@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/db.js';
 import { mensaje } from '../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
@@ -8,6 +9,8 @@ import { eq } from 'drizzle-orm';
 export async function saveMessage(data) {
     try {
         await db.insert(mensaje).values({
+            // Genera un uuid para el id de mensaje
+            Id_mensaje: uuidv4(),
             Id_partida: data.game_id,
             Id_usuario: data.user_id,
             Mensaje: data.message,
@@ -29,9 +32,10 @@ export async function saveMessage(data) {
 export async function fetchMessages(data) {
     try {
         console.log("Buscando mensajes para la partida con ID:", data.game_id);
-        const messages =
-            await db.select().from(mensaje).where(eq(mensaje.Id_partida, data.game_id)).all();
-        return messages;
+        const messages = await db.select().from(mensaje).where(eq(mensaje.Id_partida, data.game_id)).all();
+        socket.emit('chat-history', messages);
+        console.log(messages);
+        ;
     } catch (error) {
         console.error("Error al obtener los mensajes:", error);
         return [];

@@ -4,9 +4,9 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'http://localhost:3000';
-const loginUrl = `${BASE_URL}/login`;
+// const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
+const BASE_URL = 'http://localhost:3000';
+const loginUrl = 'http://localhost:3000/login';
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
@@ -60,7 +60,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 50);
+            }, 2000);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -74,8 +74,11 @@ async function realizarMovimientos(socket, color, gameId) {
         if (moves.length > 0) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
             chess.move(randomMove);
-            socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
+            }, 2000);
             console.log('Movimiento realizado:', randomMove);
+            socket.emit('write-message', { message: 'Hola', game_id: gameId, user_id: userId });
         } else {
             console.log('No hay movimientos posibles.');
         }
@@ -133,7 +136,20 @@ function buscarPartida(socket) {
 
     socket.on('force-logout', (data) => {
         console.log('Forzar logout:', data.message);
-        socket.disconnect();
+        // Genera un tiempo aleatorio entre 1 y 3 minutos (con segundos)
+        const time = Math.floor(Math.random() * 120) + 60;
+        console.log('Tiempo restante:', time);
+        console.log('Estado de la partida:', 'ingame');
+
+        socket.emit('game-status', { timeLeft: time, estadoPartida: 'ingame' });
+        setTimeout(() => {
+            socket.disconnect();
+        }, 1000);
+    });
+
+    socket.on('new-message', (data) => {
+        console.log('Nuevo mensaje:', data.message);
+        socket.emit('write-message', { message: 'Adios', game_id: gameId, user_id: userId });
     });
 
     socket.on('existing-game', (data) => {
@@ -143,6 +159,7 @@ function buscarPartida(socket) {
         // el estado del tablero
         color = data.color;
         gameId = data.gameID;
+        const timeLeft = data.timeLeft;
 
         chess = new Chess();
         const isValid = chess.loadPgn(pgn);
@@ -150,10 +167,19 @@ function buscarPartida(socket) {
             console.error('Error al cargar el PGN:', pgn);
         }
 
-        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', pgn);
+        console.log('Partida en curso recuperada: ', pgn);
+        console.log('Color:', color);
+        console.log('ID de la partida:', gameId);
+        console.log('Tiempo restante:', timeLeft);
         estabaEnPartida = true;
+
+        socket.emit('fetch-messages', { game_id: gameId });
     });
 
+    socket.on('chat-history', (messages) => {
+        console.log('Historial de chat:', messages);
+    });
+    
     socket.on('gameOver', (gameData) => {
         console.log('Partida finalizada:', gameData);
         socket.disconnect();

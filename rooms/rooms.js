@@ -514,13 +514,14 @@ async function resultManager(game, idPartida) {
     }
 }
 
-export async function buscarPartidaActiva(userID, socket) {    
-    const jugador = await db.select()
-                            .from(usuario)
-                            .where(eq(usuario.id, userID))
-                            .get();
-
-    if (jugador.EstadoPartida === 'ingame') {
+export async function buscarPartidaActiva(userID, socket, timeLeft, estadoPartida) {    
+    // const jugador = await db.select()
+    //                        .from(usuario)
+    //                        .where(eq(usuario.id, userID))
+    //                       .get();
+    // 
+    // if (jugador.EstadoPartida === 'ingame') {
+    if (estadoPartida === 'ingame') {
         console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
 
         let idPartidaEnJuego;
@@ -546,7 +547,7 @@ export async function buscarPartidaActiva(userID, socket) {
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla
-                socket.emit('existing-game', { gameID, pgn, color });
+                socket.emit('existing-game', { gameID, pgn, color, timeLeft });
             }
         }
         // ---------------------------------------------------------------------------------------

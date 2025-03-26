@@ -57,10 +57,21 @@ async function authenticate(socket) {
 
         // Si ya existe un socket activo para este usuario (sesión activa), lo desconectamos
         // (solo permitimos una sesión por usuario)
+        let timeLeft;
+        let estadoPartida;
+
         if (activeSockets.has(userId)) {
             console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
             const oldSocket = activeSockets.get(userId);
             oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
+
+            // -----------------------------------------------------------------------------------------------
+            ({ timeLeft, estadoPartida } = await new Promise((resolve) => {
+                oldSocket.once('game-status', (data) => {
+                    resolve({ timeLeft: data.timeLeft, estadoPartida: data.estadoPartida });
+                });
+            }));
+            // -----------------------------------------------------------------------------------------------
 
             // Se supone que lo desconectarán ellos, aquí nos aseguramos de que se desconecte
             // tras 5 segundos si no lo hacen
@@ -72,13 +83,10 @@ async function authenticate(socket) {
             }, 5000);
         }
         // Almacenar el nuevo socket
-        
         activeSockets.set(userId, socket);
         console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
-
         console.log("Buscando si el usuario tiene una partida activa...")
-
-        await buscarPartidaActiva(userId, socket);
+        await buscarPartidaActiva(userId, socket, timeLeft, estadoPartida);
 
     } catch (error) {
         console.error('Error al autenticar el socket:', error.message);
@@ -122,13 +130,12 @@ async function newConnection(socket) {
 
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
-        const messages = await fetchMessages(data);
-        //socket.emit('chat-history', messages);
-        console.log(messages)
+        await fetchMessages(data);
     });
 
-    socket.on('new-message', async (data) => {
+    socket.on('write-message', async (data) => {
         console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
+        await saveMessage(data);
     });
 
     //peticion para salir de una partida
