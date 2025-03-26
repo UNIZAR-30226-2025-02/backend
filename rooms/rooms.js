@@ -458,8 +458,42 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
     return { variacionW, variacionB };
 }
 
-async function resultManager(game, idPartida) {
-    if (game.isCheckmate()) {
+async function resultManager(game, idPartida, resign = false, draw = false) {
+    if (resign) {
+        console.log("Rendición");
+        // El ganador es el jugador que no ha renunciado
+        const winner = game.turn() === 'w' ? game.header()['Black'] : game.header()['White'];
+        const result = winner === 'white' ? '1-0' : '0-1';
+        // Actualizar el resultado de la partida en la base de datos
+        game.setHeader('Result', result);
+        db.update(partida)
+            .set({ Ganador: winner })
+            .where(eq(partida.id, idPartida))
+            .run();
+        //Notificacion
+        io.to(idPartida).emit('gameOver', { winner });
+        console.log("La partida ha terminado, el ganador es: ", winner);
+
+        //Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+        return;
+    }
+
+    else if (draw) {
+        console.log("Tablas");
+        const result = "draw";
+        game.setHeader('Result', '1/2-1/2');
+        //Notificacion
+        io.to(idPartida).emit('gameOver', { result });
+        console.log("La partida ha terminado en tablas");
+
+        //Eliminar la partida de memoria
+        delete ActiveXObjects[idPartida];
+        return;
+    }
+
+
+    else if (game.isCheckmate()) {
         console.log("Jaque mate");
         // El ganador es el jugador que hizo el último movimiento
         const lastMove = game.history({ verbose: true }).pop();
@@ -528,10 +562,24 @@ async function resultManager(game, idPartida) {
             .set({ Variacion_JW: variacionW, Variacion_JB: variacionB })
             .where(eq(partida.id, idPartida))
             .run();
-        // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
+
+        // Actualizar puntuaciones
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+            })
+            .where(eq(usuario.id, game.header()['White']))
+            .run();
+
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+            })
+            .where(eq(usuario.id, game.header()['Black']))
+            .run();
 
         //Notificacion
         io.to(idPartida).emit('gameOver', { result });
