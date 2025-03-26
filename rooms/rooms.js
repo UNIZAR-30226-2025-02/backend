@@ -1,7 +1,7 @@
 import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
-import { eq, or, and, isNull } from "drizzle-orm";
+import { eq, or, and, sql,  isNull } from "drizzle-orm";
 import { io } from '../server.js';
 import crypto from 'crypto';
 //import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
@@ -457,19 +457,19 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador negro:", variacionB);
 
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
-        const modoJuego = partidaEncontrada.Modo;
 
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
-                [modoJuego]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
+
         await db.update(usuario)
             .set({
-                [modoJuego]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
@@ -523,18 +523,18 @@ async function resultManager(game, idPartida) {
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
-
+            
         //Notificacion
         io.to(idPartida).emit('gameOver', { result });
         console.log("La partida ha terminado en tablas");
@@ -674,14 +674,14 @@ export async function manejarRendicion(data, socket) {
     // Actualizar puntuaciones
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
@@ -766,14 +766,14 @@ export async function aceptarTablas(data, socket) {
     // Actualizar puntuaciones
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
