@@ -456,17 +456,20 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+        const modoJuego = partidaEncontrada.Modo;
+
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+                [modoJuego]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+                [modoJuego]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
@@ -516,6 +519,7 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
@@ -666,6 +670,7 @@ export async function manejarRendicion(data, socket) {
     console.log("Variación de elo del jugador blanco:", variacionW);
     console.log("Variación de elo del jugador negro:", variacionB);
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
     // Actualizar puntuaciones
     await db.update(usuario)
         .set({
@@ -751,6 +756,7 @@ export async function aceptarTablas(data, socket) {
         40
     );
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
     //Actualizar la base de datos con empate de tablas
     await db.update(partida)
         .set({ PGN: game.pgn(), Variacion_JW: variacionW, Variacion_JB: variacionB })
