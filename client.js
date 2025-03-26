@@ -10,7 +10,7 @@ const loginUrl = 'http://localhost:3000/login';
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
 
-const user = process.argv[2]; 
+const user = process.argv[2];
 const password = process.argv[3];
 let userId = '';                                        // Se actualizará una vez logueado
 const mode = 'Punt_3';                                  // Modo de juego 
@@ -60,7 +60,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 50);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -76,7 +76,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 50);
             console.log('Movimiento realizado:', randomMove);
             socket.emit('write-message', { message: 'Hola', game_id: gameId, user_id: userId });
         } else {
@@ -131,7 +131,7 @@ function buscarPartida(socket) {
         // Esperar 5 segundos para que el valor de las variables sea correcto
         setTimeout(() => {
             realizarMovimientos(socket, color, gameId);
-        }, 1000);
+        }, 0);
     });
 
     socket.on('force-logout', (data) => {
@@ -149,7 +149,9 @@ function buscarPartida(socket) {
 
     socket.on('new-message', (data) => {
         console.log('Nuevo mensaje:', data.message);
-        socket.emit('write-message', { message: 'Adios', game_id: gameId, user_id: userId });
+        setTimeout(() => {
+            socket.emit('write-message', { message: 'Adios', game_id: gameId, user_id: userId });
+        }, 5000);
     });
 
     socket.on('existing-game', (data) => {
@@ -173,13 +175,13 @@ function buscarPartida(socket) {
         console.log('Tiempo restante:', timeLeft);
         estabaEnPartida = true;
 
-        socket.emit('fetch-messages', { game_id: gameId });
+        socket.emit('fetch-msgs', { game_id: gameId });
     });
 
     socket.on('chat-history', (messages) => {
         console.log('Historial de chat:', messages);
     });
-    
+
     socket.on('gameOver', (gameData) => {
         console.log('Partida finalizada:', gameData);
         socket.disconnect();
@@ -194,7 +196,7 @@ function buscarPartida(socket) {
 // Ejecutar la función de login y luego buscar partida
 async function main() {
     await clientLogin(user, password);  // Esperar a que el login se complete
-    
+
 }
 
 main();  // Ejecutar el programa principal

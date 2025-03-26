@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 /*
  * Almacena un nuevo mensaje en la base de datos, y lo notifica al otro jugador
  */
-export async function saveMessage(data) {
+export async function saveMessage(data, socket) {
     try {
         await db.insert(mensaje).values({
             // Genera un uuid para el id de mensaje
@@ -29,7 +29,7 @@ export async function saveMessage(data) {
 /*
  * Obtiene todos los mensajes enviados/recibidos de una partida específica
  */
-export async function fetchMessages(data) {
+export async function fetchMessages(data, socket) {
     try {
         console.log("Buscando mensajes para la partida con ID:", data.game_id);
         const messages = await db.select().from(mensaje).where(eq(mensaje.Id_partida, data.game_id)).all();
@@ -45,7 +45,7 @@ export async function fetchMessages(data) {
 /*
  * Elimina un mensaje previamente enviado por el usuario
  */
-export async function deleteMessage(data) {
+export async function deleteMessage(data, socket) {
     try {
         console.log("Eliminando mensaje seleccionado de la base de datos...")
         const message = await db.delete(mensaje).where(eq(mensaje.Id_mensaje, data.message_id));

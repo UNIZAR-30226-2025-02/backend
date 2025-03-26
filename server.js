@@ -3,9 +3,11 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { app } from './app.js'
 import { saveMessage, fetchMessages } from './chat/chat.js';
-import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
-         manejarRendicion, ofertaDeTablas, 
-         aceptarTablas, rechazarTablas} from './rooms/rooms.js';
+import {
+    findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
+    manejarRendicion, ofertaDeTablas,
+    aceptarTablas, rechazarTablas
+} from './rooms/rooms.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -112,30 +114,30 @@ async function newConnection(socket) {
     setInterval(() => {
         io.emit('ping', { message: 'Ping!' });
     }, 5000);
-    
+
     socket.on('pong', () => {
         console.log('Pong recibido!');
     });
 
     // ------------------------------------------------------------------------------------------
-    
+
     socket.on('disconnect', () => {
         console.log("Usuario desconectado")
     })
 
     // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
-    socket.on('send-message', async (data) => {
-        await saveMessage(data);
-    });
+    // socket.on('send-message', async (data) => {
+    //     await saveMessage(data, socket);
+    // });
 
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
-        await fetchMessages(data);
+        await fetchMessages(data, socket);
     });
 
     socket.on('write-message', async (data) => {
         console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
-        await saveMessage(data);
+        await saveMessage(data, socket);
     });
 
     //peticion para salir de una partida
