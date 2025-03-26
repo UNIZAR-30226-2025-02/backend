@@ -30,10 +30,10 @@ CREATE TABLE `mensaje` (
 CREATE TABLE `partida` (
 	`id` text PRIMARY KEY NOT NULL,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP,
-	`JugadorW` integer,
-	`JugadorB` integer,
+	`JugadorW` text,
+	`JugadorB` text,
 	`Modo` text,
-	`Ganador` integer,
+	`Ganador` text,
 	`PGN` text,
 	`Variacion_JW` integer,
 	`Variacion_JB` integer,
@@ -80,14 +80,14 @@ CREATE TABLE `usuario` (
 	`Punt_30` integer DEFAULT 1000,
 	`Punt_3_2` integer DEFAULT 1000,
 	`Punt_5_10` integer DEFAULT 1000,
+	`correoVerificado` text,
+	`estadoUser` text,
+	`tokenVerificacion` text,
+	`tokenPasswd` text,
 	`totalGames` integer DEFAULT 0,
 	`totalWins` integer DEFAULT 0,
 	`totalLosses` integer DEFAULT 0,
-	`totalDraws` integer DEFAULT 0,
-	`correoVerificado` text,
-	`tokenVerificacion` text,
-	`estadoUser` text,
-	`tokenPasswd` text
+	`totalDraws` integer DEFAULT 0
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `usuario_NombreUser_unique` ON `usuario` (`NombreUser`);--> statement-breakpoint

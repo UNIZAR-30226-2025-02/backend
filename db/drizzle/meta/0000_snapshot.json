@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "88d2b61b-fe47-419a-af6c-ba15a70753e3",
+  "id": "42da8ee1-9a61-4014-a467-b3c824bb093f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "amistad": {
@@ -224,14 +224,14 @@
         },
         "JugadorW": {
           "name": "JugadorW",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
         "JugadorB": {
           "name": "JugadorB",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -245,7 +245,7 @@
         },
         "Ganador": {
           "name": "Ganador",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -588,6 +588,34 @@
           "autoincrement": false,
           "default": 1000
         },
+        "correoVerificado": {
+          "name": "correoVerificado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "estadoUser": {
+          "name": "estadoUser",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tokenVerificacion": {
+          "name": "tokenVerificacion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tokenPasswd": {
+          "name": "tokenPasswd",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "totalGames": {
           "name": "totalGames",
           "type": "integer",
@@ -619,34 +647,6 @@
           "notNull": false,
           "autoincrement": false,
           "default": 0
-        },
-        "correoVerificado": {
-          "name": "correoVerificado",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "tokenVerificacion": {
-          "name": "tokenVerificacion",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "estadoUser": {
-          "name": "estadoUser",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "tokenPasswd": {
-          "name": "tokenPasswd",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {
