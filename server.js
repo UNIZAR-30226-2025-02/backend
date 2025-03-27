@@ -6,7 +6,8 @@ import { saveMessage, fetchMessages } from './chat/controller/chat.js';
 import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
          manejarRendicion, ofertaDeTablas, 
          aceptarTablas, rechazarTablas} from './rooms/rooms.js';
-import { addFriend, removeFriend, challengeFriend, createDuelGame } from './friendship/friends.js';
+import { addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
+            rejectFriendRequest} from './friendship/friends.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
