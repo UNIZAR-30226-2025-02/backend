@@ -211,14 +211,15 @@ export async function logout(req, res) {
 
         await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
         // Recuperar el id del usuario
-        const usuario = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        const socket = activeSockets.get(usuario[0].id);
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        if (usuarios.length === 0) {
+            res.status(400).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+        const usuario = usuarios[0];
 
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
-        delete activeSockets[usuario[0].id];
-        socket.disconnect();
-
-        // Desconectar el socket del usuario
+        delete activeSockets[usuario.id];
 
         res.send('Usuario deslogueado correctamente');
     } catch (error) {

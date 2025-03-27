@@ -67,6 +67,9 @@ async function authenticate(socket) {
             const oldSocket = activeSockets.get(userId);
             oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
             oldSocket.emit('get-game-status');
+            
+            // Eliminar el socket antiguo del mapa de conexiones activas
+            delete activeSockets[userId];
             // -----------------------------------------------------------------------------------------------
             ({ timeLeft, estadoPartida } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
