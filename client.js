@@ -60,7 +60,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 50);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -78,11 +78,14 @@ async function realizarMovimientos(socket, color, gameId) {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
             }, 50);
             console.log('Movimiento realizado:', randomMove);
-            socket.emit('send-message', { message: 'Hola', game_id: gameId, user_id: userId });
         } else {
             console.log('No hay movimientos posibles.');
         }
     }
+
+    setInterval(() => {
+        socket.emit('send-message', { message: 'Soy el jugador: ' + userId + '.', game_id: gameId, user_id: userId });
+    }, 5000);
 }
 
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
@@ -131,7 +134,7 @@ function buscarPartida(socket) {
         // Esperar 5 segundos para que el valor de las variables sea correcto
         setTimeout(() => {
             realizarMovimientos(socket, color, gameId);
-        }, 2000);
+        }, 50);
     });
 
     socket.on('force-logout', (data) => {
@@ -155,7 +158,7 @@ function buscarPartida(socket) {
     socket.on('new-message', (data) => {
         console.log('Nuevo mensaje:', data.message);
         setTimeout(() => {
-            socket.emit('send-message', { message: 'Adios', game_id: gameId, user_id: userId });
+            socket.emit('send-message', { message: 'Respuesta al mensaje recibido. Soy: '+ userId +'.', game_id: gameId, user_id: userId });
         }, 5000);
     });
 
