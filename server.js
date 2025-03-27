@@ -66,7 +66,7 @@ async function authenticate(socket) {
             console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
             const oldSocket = activeSockets.get(userId);
             oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
-
+            oldSocket.emit('get-game-status');
             // -----------------------------------------------------------------------------------------------
             ({ timeLeft, estadoPartida } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
@@ -123,19 +123,14 @@ async function newConnection(socket) {
 
     socket.on('disconnect', () => {
         console.log("Usuario desconectado")
-    })
-
-    // Envío de mensaje por parte de uno de los jugadores (y notificación al resto)
-    // socket.on('send-message', async (data) => {
-    //     await saveMessage(data, socket);
-    // });
+    });
 
     // Petición para recuperar toda la conversación entre los jugadores de una partida
     socket.on('fetch-msgs', async (data) => {
         await fetchMessages(data, socket);
     });
 
-    socket.on('write-message', async (data) => {
+    socket.on('send-message', async (data) => {
         console.log("Nuevo mensaje recibido!" + JSON.stringify(data))
         await saveMessage(data, socket);
     });

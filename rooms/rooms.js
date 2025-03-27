@@ -459,9 +459,11 @@ async function resultManager(game, idPartida) {
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
 
         // Actualizar puntuaciones
+        const eloW = game.header()['White Elo'];
+        const eloB = game.header()['Black Elo']
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
+                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
@@ -469,7 +471,7 @@ async function resultManager(game, idPartida) {
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
@@ -520,21 +522,25 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador negro:", variacionB);
 
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
         // Actualizar puntuaciones
+        const eloW = game.header()['White Elo'];
+        const eloB = game.header()['Black Elo']
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
+                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
+
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
-            
+    
         //Notificacion
         io.to(idPartida).emit('gameOver', { result });
         console.log("La partida ha terminado en tablas");
@@ -594,7 +600,9 @@ export async function buscarPartidaActiva(userID, socket, timeLeft, estadoPartid
     console.log("El jugador no estaba en ninguna partida activa...");
 }
 
-// FUNCIONALIDADES QUE FALTAN POR IMPLEMENTAR:
+// -----------------------------------------------------------------------------------------------
+// FINALIZACIÓN DE PARTIDA POR MOTIVOS EXTERNOS A LA PROPIA PARTIDA (RENDICIÓN, ACUERDO DE TABLAS,
+// ETC)
 // -----------------------------------------------------------------------------------------------
 export async function cancelarBusquedaPartida(data, socket) {
 
@@ -671,17 +679,21 @@ export async function manejarRendicion(data, socket) {
     console.log("Variación de elo del jugador negro:", variacionB);
 
     const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
     // Actualizar puntuaciones
+    const eloW = game.header()['White Elo'];
+    const eloB = game.header()['Black Elo']
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
+
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
@@ -764,16 +776,19 @@ export async function aceptarTablas(data, socket) {
         .run();
 
     // Actualizar puntuaciones
+    const eloW = game.header()['White Elo'];
+    const eloB = game.header()['Black Elo']
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionW}`
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
+
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: sql`${partidaEncontrada.Modo} + ${variacionB}`
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
