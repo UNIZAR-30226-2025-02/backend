@@ -5,85 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1741386743262,
-      "tag": "0000_same_synch",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1741387537527,
-      "tag": "0001_brown_proteus",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1741387977748,
-      "tag": "0002_unique_texas_twister",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1741389954471,
-      "tag": "0003_abnormal_synch",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1741451871418,
-      "tag": "0004_thick_morg",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1741536619831,
-      "tag": "0005_conscious_klaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1741638155296,
-      "tag": "0006_windy_stranger",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1741769032128,
-      "tag": "0007_tricky_wiccan",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1742064703234,
-      "tag": "0008_brainy_invisible_woman",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1742081205711,
-      "tag": "0009_small_ken_ellis",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "6",
-      "when": 1742081235866,
-      "tag": "0010_unique_deathbird",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "6",
-      "when": 1742081292497,
-      "tag": "0011_majestic_solo",
+      "when": 1743030654190,
+      "tag": "0000_warm_mach_iv",
       "breakpoints": true
     }
   ]

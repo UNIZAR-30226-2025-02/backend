@@ -19,16 +19,16 @@ export const usuario = sqliteTable('usuario', {
     Punt_30: integer('Punt_30').default(1000),
     Punt_3_2: integer('Punt_3_2').default(1000),
     Punt_5_10: integer('Punt_5_10').default(1000),
-
+    correoVerificado: text('correoVerificado'),
+    estadoUser: text('estadoUser'),
+    tokenVerificacion: text('tokenVerificacion'),
+    tokenPasswd: text('tokenPasswd'),
     totalGames: integer('totalGames').default(0),
     totalWins: integer('totalWins').default(0),
     totalLosses: integer('totalLosses').default(0),
-    totalDraws: integer('totalDraws').default(0),
+    totalDraws: integer('totalDraws').default(0)
 
-    correoVerificado: text('correoVerificado'),
-    tokenVerificacion: text('tokenVerificacion'),
-    estadoUser: text('estadoUser'),
-    tokenPasswd: text('tokenPasswd')
+
 })
 
 // Uso de zod internamente para validar los datos
@@ -67,10 +67,10 @@ export const retoInsertSchema = createInsertSchema(reto).partial()
 export const partida = sqliteTable('partida', {
     id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-    JugadorW: integer('JugadorW').references(() => usuario.id),
-    JugadorB: integer('JugadorB').references(() => usuario.id),
+    JugadorW: text('JugadorW').references(() => usuario.id),
+    JugadorB: text('JugadorB').references(() => usuario.id),
     Modo: text('Modo'),
-    Ganador: integer('Ganador').references(() => usuario.id),
+    Ganador: text('Ganador').references(() => usuario.id),
     PGN: text('PGN'),
     Variacion_JW: integer('Variacion_JW'),
     Variacion_JB: integer('Variacion_JB'),
@@ -96,7 +96,7 @@ export const rankingInsertSchema = createInsertSchema(ranking).partial()
 export const mensaje = sqliteTable('mensaje', {
     Id_mensaje: text('id_mensaje').primaryKey(),
     fecha_envio: text('fecha_envio').default(sql`CURRENT_TIMESTAMP`),
-    Id_partida: integer('id_partida').references(() => usuario.id).notNull(),
+    Id_partida: integer('id_partida').references(() => partida.id).notNull(),
     Id_usuario: integer('id_usuario').references(() => usuario.id).notNull(),
 
     Mensaje: text('mensaje').notNull()

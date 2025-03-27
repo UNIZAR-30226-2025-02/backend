@@ -1,6 +1,6 @@
 CREATE TABLE `amistad` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`Jugador1` integer NOT NULL,
 	`Jugador2` integer NOT NULL,
 	`HistorialAmistad` text,
@@ -10,49 +10,50 @@ CREATE TABLE `amistad` (
 );
 --> statement-breakpoint
 CREATE TABLE `apertura` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`Nombre_Aper` text NOT NULL,
 	`PGN` text
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `apertura_Nombre_Aper_unique` ON `apertura` (`Nombre_Aper`);--> statement-breakpoint
 CREATE TABLE `mensaje` (
-	`id_mensaje` integer PRIMARY KEY NOT NULL,
-	`fecha_envio` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id_mensaje` text PRIMARY KEY NOT NULL,
+	`fecha_envio` text DEFAULT CURRENT_TIMESTAMP,
 	`id_partida` integer NOT NULL,
 	`id_usuario` integer NOT NULL,
 	`mensaje` text NOT NULL,
-	FOREIGN KEY (`id_partida`) REFERENCES `usuario`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`id_partida`) REFERENCES `partida`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`id_usuario`) REFERENCES `usuario`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `partida` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
-	`JugadorW` integer NOT NULL,
-	`JugadorB` integer NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
+	`JugadorW` text,
+	`JugadorB` text,
 	`Modo` text,
-	`Ganador` integer NOT NULL,
+	`Ganador` text,
 	`PGN` text,
 	`Variacion_JW` integer,
 	`Variacion_JB` integer,
+	`Tipo` text,
 	FOREIGN KEY (`JugadorW`) REFERENCES `usuario`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`JugadorB`) REFERENCES `usuario`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`Ganador`) REFERENCES `usuario`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `ranking` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`Modo` text NOT NULL,
 	`Puntuacion` integer NOT NULL,
 	`Posicion` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `reto` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`Retador` integer NOT NULL,
 	`Retado` integer NOT NULL,
 	`Activo` integer DEFAULT 1,
@@ -65,23 +66,28 @@ CREATE TABLE `reto` (
 );
 --> statement-breakpoint
 CREATE TABLE `usuario` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`id` text PRIMARY KEY NOT NULL,
+	`created_at` text DEFAULT CURRENT_TIMESTAMP,
 	`FotoPerfil` text,
 	`NombreUser` text,
-	`NombreCompleto` text,
-	`Apellidos` text,
 	`Correo` text,
-	`Edad` integer,
 	`Contrasena` text NOT NULL,
 	`EstadoPartida` text,
 	`Amistades` integer,
-	`Punt_3` integer,
-	`Punt_5` integer,
-	`Punt_10` integer,
-	`Punt_30` integer,
-	`Punt_3_2` integer,
-	`Punt_5_10` integer
+	`Punt_3` integer DEFAULT 1000,
+	`Punt_5` integer DEFAULT 1000,
+	`Punt_10` integer DEFAULT 1000,
+	`Punt_30` integer DEFAULT 1000,
+	`Punt_3_2` integer DEFAULT 1000,
+	`Punt_5_10` integer DEFAULT 1000,
+	`correoVerificado` text,
+	`estadoUser` text,
+	`tokenVerificacion` text,
+	`tokenPasswd` text,
+	`totalGames` integer DEFAULT 0,
+	`totalWins` integer DEFAULT 0,
+	`totalLosses` integer DEFAULT 0,
+	`totalDraws` integer DEFAULT 0
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `usuario_NombreUser_unique` ON `usuario` (`NombreUser`);--> statement-breakpoint

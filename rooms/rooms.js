@@ -1,8 +1,9 @@
 import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
-import { eq, or, and, isNull } from "drizzle-orm";
+import { eq, or, and, sql,  isNull } from "drizzle-orm";
 import { io } from '../server.js';
+import crypto from 'crypto';
 //import { v4 as uuidv4 } from 'uuid'; // Para generar IDs únicos
 
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
@@ -39,7 +40,7 @@ export async function createNewGame(idJugador, mode, socket) {
             chess.setHeader('White Elo', puntuacionModo);
         } else {
             chess.setHeader('Black', idJugador);
-            chess.setHeader('Black Elo', puntuacionModo); 
+            chess.setHeader('Black Elo', puntuacionModo);
         }
         // Crear una nueva partida en la base de datos
         await db.insert(partida).values({
@@ -61,9 +62,9 @@ export async function createNewGame(idJugador, mode, socket) {
 
         // Cambiar el estado de la partida del jugador a 'pairing'
         await db.update(usuario)
-                .set({EstadoPartida: 'pairing'})
-                .where(eq(usuario.id, idJugador))
-                .run();
+            .set({ EstadoPartida: 'pairing' })
+            .where(eq(usuario.id, idJugador))
+            .run();
 
         ActiveXObjects[gameId] = {
             players: [idJugador], // Inicializamos el array de jugadores con el primer jugador
@@ -89,7 +90,7 @@ export async function loadGame(idPartida, idJugador, socket) {
         // const idPartida = data.idPartida;
         // const idJugador = data.idJugador;
         const existingGame = ActiveXObjects[idPartida].chess;
-        
+
         //console.log(existingGame.header());
         // Buscar la partida en la base de datos
         const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
@@ -100,14 +101,14 @@ export async function loadGame(idPartida, idJugador, socket) {
         }
 
         //Verificar si la partida esta terminada
-        if(partidaEncontrada.Ganador != null){
+        if (partidaEncontrada.Ganador != null) {
             console.log("Partida terminada");
             socket.emit('errorMessage', 'Partida terminada');
             return null;
         }
 
         //Verificar si ya hay dos jugadores en la partida
-        if(partidaEncontrada.JugadorW != null && partidaEncontrada.JugadorB != null){
+        if (partidaEncontrada.JugadorW != null && partidaEncontrada.JugadorB != null) {
             console.log("Partida llena");
             socket.emit('errorMessage', 'Partida llena');
             return null;
@@ -124,7 +125,7 @@ export async function loadGame(idPartida, idJugador, socket) {
         //Completar el header de la partida
         //Cargar el estado del juego desde el PGN almacenado en la base de datos
         //existingGame.loadPgn(partidaEncontrada.PGN);
-        
+
         // Obtener las puntuaciones guardadas en el header
         //REVISAR ESTO, DUPLICA LOS CAMPOS DE ELO DEL HEADER
         // const headers = existingGame.header();
@@ -141,20 +142,20 @@ export async function loadGame(idPartida, idJugador, socket) {
             existingGame.setHeader('Black', idJugador);
             existingGame.setHeader('Black Elo', puntuacionModo);
         }
-        
+
         // Guardar el nuevo PGN con el header actualizado
         const updatedPGN = existingGame.pgn();
         // Actualizar la base de datos con el nuevo jugador
         await db.update(partida)
             //el hueco libre puede ser JugadorW o JugadorB, pero el otro que no es null hay que dejarlo igual
-            .set({ 
+            .set({
                 JugadorW: partidaEncontrada.JugadorW === null ? idJugador : partidaEncontrada.JugadorW,
                 JugadorB: partidaEncontrada.JugadorB === null ? idJugador : partidaEncontrada.JugadorB,
                 PGN: updatedPGN
             })
             .where(eq(partida.id, idPartida))
             .run();
-        
+
         //Guardar la partida en memoria
         ActiveXObjects[idPartida].players.push(idJugador);
 
@@ -167,7 +168,7 @@ export async function loadGame(idPartida, idJugador, socket) {
         const idNegras = existingGame.header()['Black'];
 
         // Notificar a los jugadores que la partida está lista a través de la sala
-        io.to(idPartida).emit('game-ready', {idPartida});
+        io.to(idPartida).emit('game-ready', { idPartida });
         // Notificar a cada jugador su color en la partida
 
         console.log("ID jugador blanco:", idBlancas);
@@ -175,15 +176,15 @@ export async function loadGame(idPartida, idJugador, socket) {
         // Pasarles el ID del usuario tambien ? o solo eso
         io.to(idPartida).emit('color', {
             jugadores: [
-            { id: idBlancas, color: 'white' },
-            { id: idNegras, color: 'black' }
+                { id: idBlancas, color: 'white' },
+                { id: idNegras, color: 'black' }
             ]
         });
 
-        console.log("El jugador, "+ idJugador +", se ha unido a la partida con ID:", idPartida);
+        console.log("El jugador, " + idJugador + ", se ha unido a la partida con ID:", idPartida);
         console.log("Jugadores en la partida: " + String(ActiveXObjects[idPartida].players));
-        
-    }catch (error) {
+
+    } catch (error) {
         console.error("Error al cargar la partida:", error);
     }
 }
@@ -209,8 +210,8 @@ export async function manejarMovimiento(data, socket) {
     // console.log("Partidas en  memoria: ", ActiveXObjects);
 
     try {
-       //Verificar primero si la partida esta activa
-       if (!ActiveXObjects[idPartida]) {
+        //Verificar primero si la partida esta activa
+        if (!ActiveXObjects[idPartida]) {
             console.log("Partida no activa");
             socket.emit('errorMessage', 'Partida no activa');
             return null;
@@ -235,11 +236,11 @@ export async function manejarMovimiento(data, socket) {
         //console.log("Tablero de la partida:", game.board());
         //console.log("PGN de la partida:", game.pgn());
 
-        socket.broadcast.to(idPartida).emit('new-move', {movimiento, board: game.board()});
+        socket.broadcast.to(idPartida).emit('new-move', { movimiento, board: game.board() });
 
         //Actualizar el PGN en la base de datos
         //esto en principio no hace falta porque el PGN se actualiza automaticamente al hacer un movimiento
-        
+
         db.update(partida)
             .set({ PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
@@ -251,11 +252,11 @@ export async function manejarMovimiento(data, socket) {
             resultManager(game, idPartida);
             // NO SOLO SE ACABAN LAS PARTIDAS POR JAQUE MATE, DISTINGUIR AHOGADO, RENDICION, ETC
             await db.update(usuario)
-                    .set({ EstadoPartida: null })
-                    .where(or(
-                            eq(usuario.id, ActiveXObjects[idPartida].players[0]),
-                            eq(usuario.id, ActiveXObjects[idPartida].players[1])))
-                    .run();
+                .set({ EstadoPartida: null })
+                .where(or(
+                    eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+                    eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+                .run();
         }
 
     } catch (error) {
@@ -280,17 +281,17 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     console.log("Buscando partida de tipo:", tipoPartida);
     console.log("Buscando partida de modo:", modo);
     console.log("ID del jugador nuevo:", idJugadorNuevo);
-    
+
     console.log("Obteniendo listado de partidas pendientes...");
     const listadoPartidasPendientes = await db.select()
         .from(partida)
         .where(and(eq(partida.Modo, modo),
-                   eq(partida.Tipo, tipoPartida),
-                   or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
+            eq(partida.Tipo, tipoPartida),
+            or(isNull(partida.JugadorW), isNull(partida.JugadorB))))
         .all();
-    
+
     //console.log("Listado de partidas pendientes: ", listadoPartidasPendientes);
-    
+
     // Obtener los jugadores de las partidas pendientes
     console.log("Obteniendo listado de jugadores pendientes de emparejar...");
     const emparejamientosPendientes = [];
@@ -304,7 +305,7 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
             emparejamientosPendientes.push(emparejamiento);
         }
     }
-    
+
     //console.log("Emparejamientos pendientes: ", emparejamientosPendientes);
 
     // Para cada jugador pendiente, comprobar si es posible emparejarlo con el jugador actual
@@ -314,7 +315,7 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
             .from(usuario)
             .where(eq(usuario.id, emparejamiento.jugador))
             .get();
-        
+
         //console.log("Puntuación del jugador pendiente: ", jugadorExistente[modo]);
         // Obtener la puntuación del jugador actual
         const jugadorNuevo = await db.select().from(usuario).where(eq(usuario.id, idJugadorNuevo)).get();
@@ -337,20 +338,20 @@ export async function emparejamiento(idJugadorNuevo, modo, tipoPartida) {
     // Si no ha encontrado ninguna partida pendiente con la que emparejar al jugador, devuelve null
     console.log("No se ha encontrado rival para el jugador, se creará una nueva partida");
     return null;
-}   
+}
 
 // Buscar una partida de entre las activas donde el jugador pueda ser emparejado, y si no la 
 // hay, crear una nueva partida para el jugador
 export async function findGame(data, socket) {
-    const idJugador = data.idJugador;       
+    const idJugador = data.idJugador;
     const modo = data.mode;
     let tipoPartida;
 
     // Comprobar si el jugador ya está en una partida
     const jugador = await db.select()
-                            .from(usuario)
-                            .where(eq(usuario.id, idJugador))
-                            .get();
+        .from(usuario)
+        .where(eq(usuario.id, idJugador))
+        .get();
 
     if (jugador.EstadoPartida === 'pairing') {
         console.log("El jugador ya está buscando partida");
@@ -377,18 +378,18 @@ export async function findGame(data, socket) {
             tipoPartida = 'ranked';
         }
     }
-      
+
     let idPartida = await emparejamiento(idJugador, modo, tipoPartida);
 
     if (idPartida) {
         await loadGame(idPartida, idJugador, socket);
         // Poner el EstadoPartida de los dos jugadores en 'ingame'
         await db.update(usuario)
-                .set({ EstadoPartida: 'ingame' })
-                .where(or(
-                        eq(usuario.id, ActiveXObjects[idPartida].players[0]),
-                        eq(usuario.id, ActiveXObjects[idPartida].players[1])))
-                .run();
+            .set({ EstadoPartida: 'ingame' })
+            .where(or(
+                eq(usuario.id, ActiveXObjects[idPartida].players[0]),
+                eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+            .run();
         return idPartida;
     } else {
         idPartida = await createNewGame(idJugador, modo, socket);
@@ -419,8 +420,8 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
     }
 
     // Calcular la variación de puntuación para cada jugador
-    const variacionW = Math.round(((k_factor * (resultadoW - expectativaW)) * 100)) /100;
-    const variacionB = Math.round(((k_factor * (resultadoB - expectativaB)) * 100)) /100;
+    const variacionW = Math.round(((k_factor * (resultadoW - expectativaW)) * 100)) / 100;
+    const variacionB = Math.round(((k_factor * (resultadoB - expectativaB)) * 100)) / 100;
 
     return { variacionW, variacionB };
 }
@@ -455,6 +456,26 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+        // Actualizar puntuaciones
+        const eloW = game.header()['White Elo'];
+        const eloB = game.header()['Black Elo']
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+            })
+            .where(eq(usuario.id, game.header()['White']))
+            .run();
+
+
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+            })
+            .where(eq(usuario.id, game.header()['Black']))
+            .run();
+
         //Notificacion
         io.to(idPartida).emit('gameOver', { winner });
         console.log("La partida ha terminado, el ganador es: ", winner);
@@ -465,7 +486,7 @@ async function resultManager(game, idPartida) {
 
     } else if (game.isDraw()) {
         console.log("Tablas");
-        
+
         const drawReasons = {
             isStalemate: "Ahogado",
             isThreefoldRepetition: "Tablas por repetición de movimientos",
@@ -492,7 +513,7 @@ async function resultManager(game, idPartida) {
         );
 
         db.update(partida)
-            .set({Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
+            .set({ Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
             .where(eq(partida.id, idPartida))
             .run();
         // DEBERIAMOS ACTUALIZAR LAS PUNTUACIONES DE LOS JUGADORES EN LA TABLA USUARIO
@@ -500,6 +521,26 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+        // Actualizar puntuaciones
+        const eloW = game.header()['White Elo'];
+        const eloB = game.header()['Black Elo']
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+            })
+            .where(eq(usuario.id, game.header()['White']))
+            .run();
+
+
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+            })
+            .where(eq(usuario.id, game.header()['Black']))
+            .run();
+    
         //Notificacion
         io.to(idPartida).emit('gameOver', { result });
         console.log("La partida ha terminado en tablas");
@@ -514,13 +555,14 @@ async function resultManager(game, idPartida) {
     }
 }
 
-export async function buscarPartidaActiva(userID, socket) {    
-    const jugador = await db.select()
-                            .from(usuario)
-                            .where(eq(usuario.id, userID))
-                            .get();
-
-    if (jugador.EstadoPartida === 'ingame') {
+export async function buscarPartidaActiva(userID, socket, timeLeft, estadoPartida) {
+    // const jugador = await db.select()
+    //                        .from(usuario)
+    //                        .where(eq(usuario.id, userID))
+    //                       .get();
+    // 
+    // if (jugador.EstadoPartida === 'ingame') {
+    if (estadoPartida === 'ingame') {
         console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
 
         let idPartidaEnJuego;
@@ -546,7 +588,7 @@ export async function buscarPartidaActiva(userID, socket) {
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla
-                socket.emit('existing-game', { gameID, pgn, color });
+                socket.emit('existing-game', { gameID, pgn, color, timeLeft });
             }
         }
         // ---------------------------------------------------------------------------------------
@@ -558,7 +600,9 @@ export async function buscarPartidaActiva(userID, socket) {
     console.log("El jugador no estaba en ninguna partida activa...");
 }
 
-// FUNCIONALIDADES QUE FALTAN POR IMPLEMENTAR:
+// -----------------------------------------------------------------------------------------------
+// FINALIZACIÓN DE PARTIDA POR MOTIVOS EXTERNOS A LA PROPIA PARTIDA (RENDICIÓN, ACUERDO DE TABLAS,
+// ETC)
 // -----------------------------------------------------------------------------------------------
 export async function cancelarBusquedaPartida(data, socket) {
 
@@ -571,18 +615,18 @@ export async function cancelarBusquedaPartida(data, socket) {
             // Guardar el id de la partida en la que está el jugador y parar el bucle
             idPartida = gameID;
             break;
-    
+
         }
     }
-            
+
     if (!idPartida) {
         console.log("No se ha encontrado la partida en la que está el jugador");
         socket.emit('errorMessage', 'No se ha encontrado tu emparejamiento activo');
         return null;
     }
-    
+
     //Verificar si el jugador es el unico en la partida
-    if(ActiveXObjects[idPartida].players.length === 1){
+    if (ActiveXObjects[idPartida].players.length === 1) {
         //Eliminar la partida de memoria
         delete ActiveXObjects[idPartida];
         //Eliminar la partida de la base de datos
@@ -597,7 +641,7 @@ export async function cancelarBusquedaPartida(data, socket) {
 
         //Notificar al jugador que ha salido de la partida
         console.log("El jugador con id:", idJugador, "ha cancelado el emparejamiento.");
-    }else{
+    } else {
         //No puede salir sin rendirse porque ya se ha unido alguien
         console.log("No puedes salir de la partida sin rendirte");
     }
@@ -607,18 +651,18 @@ export async function manejarRendicion(data, socket) {
     console.log("Rendición de la partida...");
     const idPartida = data.idPartida;
     const idJugador = data.idJugador;
-    
+
     // Verificar si la partida existe y el jugador está en ella
     if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
         console.log("No estás en esta partida");
         return socket.emit('error', 'No estás en esta partida');
     }
-    
+
     socket.to(idPartida).emit('player-surrendered', { idJugador });
-    
+
     // Obtener el color del jugador que se rinde en base a idJugador
     const game = ActiveXObjects[idPartida].chess;
-        
+
     const headers = game.header();
     const color = headers['White'] === idJugador ? 'white' : 'black';
     // El oponente es el jugador que no se ha rendido
@@ -630,10 +674,31 @@ export async function manejarRendicion(data, socket) {
         color === 'white' ? 'black' : 'white',
         40
     );
-    
+
     console.log("Variación de elo del jugador blanco:", variacionW);
     console.log("Variación de elo del jugador negro:", variacionB);
-    
+
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+    // Actualizar puntuaciones
+    const eloW = game.header()['White Elo'];
+    const eloB = game.header()['Black Elo']
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+        })
+        .where(eq(usuario.id, game.header()['White']))
+        .run();
+
+
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+        })
+        .where(eq(usuario.id, game.header()['Black']))
+        .run();
+
+
     // Actualizar la base de datos con el ganador
     await db.update(partida)
         .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB })
@@ -644,11 +709,11 @@ export async function manejarRendicion(data, socket) {
 
     // Poner el estado de partida a null en la bbdd
     await db.update(usuario)
-    .set({ EstadoPartida: null })
-    .where(or(
+        .set({ EstadoPartida: null })
+        .where(or(
             eq(usuario.id, ActiveXObjects[idPartida].players[0]),
             eq(usuario.id, ActiveXObjects[idPartida].players[1])))
-    .run();
+        .run();
 
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
@@ -703,10 +768,29 @@ export async function aceptarTablas(data, socket) {
         40
     );
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
     //Actualizar la base de datos con empate de tablas
     await db.update(partida)
-        .set({ PGN: game.pgn(),  Variacion_JW: variacionW, Variacion_JB: variacionB})
+        .set({ PGN: game.pgn(), Variacion_JW: variacionW, Variacion_JB: variacionB })
         .where(eq(partida.id, idPartida))
+        .run();
+
+    // Actualizar puntuaciones
+    const eloW = game.header()['White Elo'];
+    const eloB = game.header()['Black Elo']
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+        })
+        .where(eq(usuario.id, game.header()['White']))
+        .run();
+
+
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+        })
+        .where(eq(usuario.id, game.header()['Black']))
         .run();
 
     // Emitir el evento de fin de partida al oponente
@@ -715,11 +799,11 @@ export async function aceptarTablas(data, socket) {
 
     // Poner el estadoPartida de los jugadores a null en la base de datos
     await db.update(usuario)
-    .set({ EstadoPartida: null })
-    .where(or(
+        .set({ EstadoPartida: null })
+        .where(or(
             eq(usuario.id, ActiveXObjects[idPartida].players[0]),
             eq(usuario.id, ActiveXObjects[idPartida].players[1])))
-    .run();
+        .run();
 
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
