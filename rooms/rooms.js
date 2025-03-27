@@ -9,6 +9,15 @@ import crypto from 'crypto';
 //tenemos que crear un objeto que mantenga las partidas activas en memoria
 let ActiveXObjects = {};
 
+//Obtener del pgn la puntuación de la que parten jugadorW y jugadorB
+async function getInitialRating(PGN) {
+    const puntW = PGN.match(/\[WhiteElo \"(\d+)\"\]/);
+    const puntB = PGN.match(/\[BlackElo \"(\d+)\"\]/);
+    return { puntW, puntB };
+};
+
+
+
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
  */
@@ -456,17 +465,24 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+        //Obtener del pgn la puntuación de la que parten jugadorW y jugadorB
+        let puntW, puntB = getInitialRating(game.pgn());
+        puntW += variacionW;
+        puntB += variacionB;
+
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+                [partidaEncontrada.Modo]: puntW
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+                [partidaEncontrada.Modo]: puntB
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
@@ -516,17 +532,24 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
+        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+        //Obtener del pgn la puntuación de la que parten jugadorW y jugadorB
+        let puntW, puntB = getInitialRating(game.pgn());
+        puntW += variacionW;
+        puntB += variacionB;
+
         // Actualizar puntuaciones
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+                [partidaEncontrada.Modo]: puntW
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+                [partidaEncontrada.Modo]: puntB
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
@@ -666,17 +689,24 @@ export async function manejarRendicion(data, socket) {
     console.log("Variación de elo del jugador blanco:", variacionW);
     console.log("Variación de elo del jugador negro:", variacionB);
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+    //Obtener del pgn la puntuación de la que parten jugadorW y jugadorB
+    let puntW, puntB = getInitialRating(game.pgn());
+    puntW += variacionW;
+    puntB += variacionB;
+
     // Actualizar puntuaciones
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+            [partidaEncontrada.Modo]: puntW
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+            [partidaEncontrada.Modo]: puntB
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
@@ -757,17 +787,25 @@ export async function aceptarTablas(data, socket) {
         .where(eq(partida.id, idPartida))
         .run();
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+
+    //Obtener del pgn la puntuación de la que parten jugadorW y jugadorB
+    let puntW, puntB = getInitialRating(game.pgn());
+    puntW += variacionW;
+    puntB += variacionB;
+
     // Actualizar puntuaciones
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionW}`)
+            [partidaEncontrada.Modo]: puntW
         })
         .where(eq(usuario.id, game.header()['White']))
         .run();
 
     await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: db.raw(`${partidaEncontrada.Modo} + ${variacionB}`)
+            [partidaEncontrada.Modo]: puntB
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
