@@ -9,6 +9,7 @@ import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
 import { Console } from 'node:console';
 import { dot } from 'node:test/reporters';
+import { activeSockets } from '../../server.js';
 
 const generateVerificationToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -209,6 +210,16 @@ export async function logout(req, res) {
         }
 
         await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        // Recuperar el id del usuario
+        const usuario = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        const socket = activeSockets.get(usuario[0].id);
+
+        // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
+        delete activeSockets[usuario[0].id];
+        socket.disconnect();
+
+        // Desconectar el socket del usuario
+
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
         res.status(500).json({ error: 'Error al desloguear el usuario' });

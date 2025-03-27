@@ -4,8 +4,8 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'http://localhost:3000';
+// const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
+const BASE_URL = 'http://localhost:3000';
 const loginUrl = `${BASE_URL}/login`;
 let chess = new Chess();
 // ID del usuario (pasa este valor como argumento o variable global)
