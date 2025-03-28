@@ -213,8 +213,21 @@ export async function logout(req, res) {
             return;
         }
 
-        const resultado = await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
-        console.log("Resultado de la actualizacion: ", resultado);
+        //const resultado = await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        //console.log("Resultado de la actualizacion: ", resultado);
+         // Bloque para detectar error exacto aquí:
+        try {
+            const resultado = await db
+                .update(usuario)
+                .set({ estadoUser: 'unlogged' })
+                .where(eq(usuario.NombreUser, NombreUser));
+
+            console.log("Resultado de la actualización:", resultado);
+        } catch (updateError) {
+            console.error("❌ Error durante la actualización:", updateError);
+            res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
+            return;
+        }
         // Recuperar el id del usuario
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
@@ -222,8 +235,8 @@ export async function logout(req, res) {
             res.status(400).json({ error: 'Usuario no encontrado' });
             return;
         }
-        const usuario = usuarios[0];
-        console.log("Usuario encontrado");
+        const usuarioEncontrado = usuarios[0];
+        console.log("Usuario encontrado:",usuarioEncontrado);
 
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
         delete activeSockets[usuario.id];
