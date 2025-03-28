@@ -3,6 +3,7 @@ import { partida, usuario, amistad } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
 import { eq, or, and, isNull } from "drizzle-orm";
 import { io } from '../server.js';
+import {activeSockets} from '../server.js';
 
 
 //Funcion para añadir un amigo
@@ -10,9 +11,15 @@ import { io } from '../server.js';
 export async function addFriend(data, socket) {
     const idJugador = data.idJugador;
     const idAmigo = data.idAmigo;
-    // Verificar si la amistad ya existe
+    const socketAmigo = activeSockets.get(idAmigo); // Obtener el socket del amigo
 
-    socket.to(idAmigo).emit('friendRequest', { idJugador, idAmigo });
+    if (!socketAmigo) {
+        console.log("El amigo no está conectado.");
+        return socket.emit('errorMessage', "El amigo no está conectado.");
+    }
+
+    //Mandar evento de friendRequest al socket del amigo
+    io.to(socketAmigo.id).emit('friendRequest' , { idJugador, idAmigo });
     console.log("Solicitud de amistad enviada de ", data.idJugador,  "a " , data.idAmigo);
    
 }
@@ -51,8 +58,15 @@ export async function acceptFriendRequest(data, socket) {
     });
 
     //comunicar con un socket al jugador que la solicitud ha sido aceptada
-    socket.to(idJugador).emit('friendRequestAccepted', { idJugador, idAmigo });
-
+    //socket.to(idJugador).emit('friendRequestAccepted', { idJugador, idAmigo });
+    socketJugador = activeSockets.get(idJugador); // Obtener el socket del jugador
+    if (!socketJugador) {
+        console.log("El jugador no está conectado.");
+        return socket.emit('errorMessage', "El jugador no está conectado.");
+    }
+    
+    io.to(socketJugador.id).emit('friendRequestAccepted', { idJugador, idAmigo });
+    console.log(`Solicitud de amistad aceptada de ${idAmigo} a ${idJugador}`);
 }
 
 //Funcion para rechazar una solicitud de amistad

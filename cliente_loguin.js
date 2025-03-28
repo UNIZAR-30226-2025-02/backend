@@ -62,13 +62,15 @@ function esperar(socket) {
         //Hace un consol log de estoy esperando cada 5 segundos
         setInterval(() => {
             console.log("Estoy esperando...")
-            socket.on('friendRequest', (data) => {
+           
+        }, 5000);
+    });
+
+    socket.on('friendRequest', (data) => {
                 console.log("Solicitud de amistad recibida de " ,  data.idJugador , " a " , data.idAmigo);
                 //Por defecto aceptar la solicitud de amistad
                 socket.emit('accept-request', { idJugador: data.Jugador, idAmigo: data.idAmigo });
                 //socket.emit('reject-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
-            });
-        }, 5000);
     });
 
    

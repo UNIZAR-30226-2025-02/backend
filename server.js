@@ -11,7 +11,7 @@ import { addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendR
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
-let activeSockets = new Map();
+export let activeSockets = new Map();
 
 // Crear el servidor manualmente para poder utilizar WebSockets
 export const server = http.createServer(app);
