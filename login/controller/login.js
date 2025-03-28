@@ -203,26 +203,34 @@ export async function login(req, res) {
 
 export async function logout(req, res) {
     try {
+        console.log("Solicitud de logout recibida");
+
         const NombreUser = req.body.NombreUser;
+        console.log("NombreUser recibido: ", NombreUser);
+
         if (!NombreUser) {
             res.status(400).json({ error: 'Faltan campos' });
             return;
         }
 
-        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        const resultado = await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        console.log("Resultado de la actualizacion: ", resultado);
         // Recuperar el id del usuario
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
+            console.error("Usuario no encontrado en la base de datos");
             res.status(400).json({ error: 'Usuario no encontrado' });
             return;
         }
         const usuario = usuarios[0];
+        console.log("Usuario encontrado");
 
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
         delete activeSockets[usuario.id];
-
+        console.log("Socket eliminado para el usuario");
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
+        console.error("Error en el backend durante logout");
         res.status(500).json({ error: 'Error al desloguear el usuario' });
     }
 }
