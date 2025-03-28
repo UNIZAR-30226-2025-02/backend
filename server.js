@@ -71,7 +71,7 @@ async function authenticate(socket) {
             oldSocket.emit('get-game-status');
             
             // Eliminar el socket antiguo del mapa de conexiones activas
-            delete activeSockets[userId];
+            activeSockets.delete(userId);
             // -----------------------------------------------------------------------------------------------
             ({ timeLeft, estadoPartida } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
