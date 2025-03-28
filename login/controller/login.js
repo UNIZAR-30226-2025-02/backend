@@ -247,7 +247,7 @@ export async function logout(req, res) {
         }
         
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
-        delete activeSockets[usuarioEncontrado.id];
+        activeSockets.delete(usuarioEncontrado.id);
         console.log("Socket eliminado para el usuario");
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
