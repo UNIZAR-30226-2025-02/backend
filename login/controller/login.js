@@ -237,9 +237,17 @@ export async function logout(req, res) {
         }
         const usuarioEncontrado = usuarios[0];
         console.log("Usuario encontrado:",usuarioEncontrado);
-
+        
+        const socketActivo = activeSockets[usuarioEncontrado.id];
+        if (socketActivo) {
+            console.log("Socket activo encontrado:", socketActivo);
+            console.log("ID del socket:", socketActivo.id); // 👈 Aquí es donde sacas el ID real del socket
+        } else {
+            console.log("No hay socket activo para este usuario");
+        }
+        
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
-        delete activeSockets[usuario.id];
+        delete activeSockets[usuarioEncontrado.id];
         console.log("Socket eliminado para el usuario");
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
