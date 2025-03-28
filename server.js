@@ -65,8 +65,6 @@ async function authenticate(socket) {
         if (activeSockets.has(userId)) {
             console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
             const oldSocket = activeSockets.get(userId);
-            // 👉 Log del ID real del socket que vas a desconectar
-            console.log(`ID del socket anterior de ${userId}:`, oldSocket.id);
             oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
             oldSocket.emit('get-game-status');
             

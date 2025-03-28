@@ -1,5 +1,5 @@
-import { db } from '../../db/db.js';
-import { usuario } from '../../db/schemas/schemas.js';
+import { db } from '../db/db.js';
+import { usuario } from '../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
 import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
@@ -7,9 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
-import { Console } from 'node:console';
-import { dot } from 'node:test/reporters';
-import { activeSockets } from '../../server.js';
+import { activeSockets } from '../server.js';
 
 const generateVerificationToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -203,31 +201,14 @@ export async function login(req, res) {
 
 export async function logout(req, res) {
     try {
-        console.log("Solicitud de logout recibida");
-
         const NombreUser = req.body.NombreUser;
-        console.log("NombreUser recibido: ", NombreUser);
+        console.log('Usuario: ', NombreUser, ' cerrando sesión...');
 
         if (!NombreUser) {
             res.status(400).json({ error: 'Faltan campos' });
             return;
         }
 
-        //const resultado = await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
-        //console.log("Resultado de la actualizacion: ", resultado);
-         // Bloque para detectar error exacto aquí:
-        try {
-            const resultado = await db
-                .update(usuario)
-                .set({ estadoUser: 'unlogged' })
-                .where(eq(usuario.NombreUser, NombreUser));
-
-            console.log("Resultado de la actualización:", resultado);
-        } catch (updateError) {
-            console.error("❌ Error durante la actualización:", updateError);
-            res.status(500).json({ error: 'Error al actualizar el estado del usuario' });
-            return;
-        }
         // Recuperar el id del usuario
         const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
         if (usuarios.length === 0) {
@@ -236,22 +217,11 @@ export async function logout(req, res) {
             return;
         }
         const usuarioEncontrado = usuarios[0];
-        console.log("Usuario encontrado:",usuarioEncontrado);
-        
-        const socketActivo = activeSockets[usuarioEncontrado.id];
-        if (socketActivo) {
-            console.log("Socket activo encontrado:", socketActivo);
-            console.log("ID del socket:", socketActivo.id); // 👈 Aquí es donde sacas el ID real del socket
-        } else {
-            console.log("No hay socket activo para este usuario");
-        }
         
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
         activeSockets.delete(usuarioEncontrado.id);
-        console.log("Socket eliminado para el usuario");
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
-        console.error("Error en el backend durante logout");
         res.status(500).json({ error: 'Error al desloguear el usuario' });
     }
 }

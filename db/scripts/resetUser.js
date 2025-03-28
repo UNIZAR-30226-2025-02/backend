@@ -1,6 +1,6 @@
-import { usuario } from './db/schemas/schemas.js';
-import { partida } from './db/schemas/schemas.js';
-import { db } from './db/db.js';
+import { usuario } from '../schemas/schemas.js';
+import { partida } from '../schemas/schemas.js';
+import { db } from '../db.js';
 import { eq, or } from 'drizzle-orm';
 
 console.log("Reseteando usuario " + process.argv[2]);
