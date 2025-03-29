@@ -71,9 +71,9 @@ async function authenticate(socket) {
             // Eliminar el socket antiguo del mapa de conexiones activas
             activeSockets.delete(userId);
             // -----------------------------------------------------------------------------------------------
-            ({ timeLeft, estadoPartida } = await new Promise((resolve) => {
+            ({ timeLeftW, timeLeftB, estadoPartida } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
-                    resolve({ timeLeft: data.timeLeft, estadoPartida: data.estadoPartida });
+                    resolve({ timeLeftW: data.timeLeftW, timeLeftB: data.timeLeftB, estadoPartida: data.estadoPartida });
                 });
             }));
             // -----------------------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ async function authenticate(socket) {
         activeSockets.set(userId, socket);
         console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
         console.log("Buscando si el usuario tiene una partida activa...")
-        await buscarPartidaActiva(userId, socket, timeLeft, estadoPartida);
+        await buscarPartidaActiva(userId, socket, timeLeftW, timeLeftB, estadoPartida);
 
     } catch (error) {
         console.error('Error al autenticar el socket:', error.message);
