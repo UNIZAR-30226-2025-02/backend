@@ -59,7 +59,7 @@ async function authenticate(socket) {
 
         // Si ya existe un socket activo para este usuario (sesión activa), lo desconectamos
         // (solo permitimos una sesión por usuario)
-        let timeLeft;
+        let timeLeftW, timeLeftB;
         let estadoPartida;
 
         if (activeSockets.has(userId)) {
@@ -116,10 +116,10 @@ async function newConnection(socket) {
     // ------------------------------------------------------------------------------------------
     setInterval(() => {
         io.emit('ping', { message: 'Ping!' });
-    }, 5000);
+    }, 1000);
 
-    socket.on('pong', () => {
-        console.log('Pong recibido!');
+    socket.on('pong', (data) => {
+        console.log('Pong recibido!' + data.message);
     });
 
     // ------------------------------------------------------------------------------------------
