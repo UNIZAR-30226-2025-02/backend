@@ -33,7 +33,17 @@ async function clientLogin(username, password) {
     socket.on('disconnect', () => {
       console.log('Desconectado del servidor WebSocket');
     });
+    
+    socket.on('ping', (data) => {
+      console.log('Ping recibido: ' + data.message);
+      socket.emit('pong', { message: 'Pong!' });
+    });
 
+    socket.on('force-logout', (data) => {
+      console.log('Sesión abierta en otro dispositivo, cerrando sesion:', data.message);
+      socket.disconnect();
+    });
+    
   } catch (error) {
     console.error('Error al hacer login o conectar al WebSocket:', error.message);
   }
@@ -61,10 +71,7 @@ const username = 'Prueba22';  // Sustituir con el nombre de usuario
 const password = '12345a';  // Sustituir con la contraseña
 
 await clientLogin(username, password);
-socket.on('force-logout', (data) => {
-  console.log('Sesión abierta en otro dispositivo, cerrando sesion:', data.message);
-  socket.disconnect();
-});
+
 setTimeout(() => {
   clientLogout(username);
-}, 6000);  // Desconectar después de 5 segundos
+}, 10000);  // Desconectar después de 5 segundos

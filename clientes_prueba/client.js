@@ -4,7 +4,6 @@ import axios from 'axios';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
-// const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
 const BASE_URL = 'http://localhost:3000';
 const loginUrl = `${BASE_URL}/login`;
 let chess = new Chess();
@@ -60,7 +59,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 50);
+            }, 2000);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -76,7 +75,7 @@ async function realizarMovimientos(socket, color, gameId) {
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 50);
+            }, 2000);
             console.log('Movimiento realizado:', randomMove);
         } else {
             console.log('No hay movimientos posibles.');
@@ -139,20 +138,23 @@ function buscarPartida(socket) {
 
     socket.on('force-logout', (data) => {
         console.log('Forzar logout:', data.message);
-
         setTimeout(() => {
             socket.disconnect();
-        }, 1000);
+        }, 500);
+        return;
     });
 
     socket.on('get-game-status', () => {
         console.log('Obteniendo estado de la partida...');
         // Genera un tiempo aleatorio entre 1 y 3 minutos (con segundos)
-        const time = Math.floor(Math.random() * 120) + 60;
-        console.log('Tiempo restante:', time);
+        const timeW = Math.floor(Math.random() * 120) + 60;
+        const timeB = Math.floor(Math.random() * 120) + 60;
+
+        console.log('Tiempo restante del blaco: ', timeW);
+        console.log('Tiempo restante del negro: ', timeB);
         console.log('Estado de la partida:', 'ingame');
 
-        socket.emit('game-status', { timeLeft: time, estadoPartida: 'ingame' });
+        socket.emit('game-status', { timeLeftW: timeW, timeLeftB: timeB, estadoPartida: 'ingame' });
     });
 
     socket.on('new-message', (data) => {
@@ -163,14 +165,13 @@ function buscarPartida(socket) {
     });
 
     socket.on('existing-game', (data) => {
+        const timeLeftW = data.timeLeftW;
+        const timeLeftB = data.timeLeftB;
         const pgn = data.pgn;
-
-        // Actualizar color e id de la partida al recuperar una partida en curso, y recuperar
-        // el estado del tablero
         color = data.color;
         gameId = data.gameID;
-        const timeLeft = data.timeLeft;
 
+        // Cargar el PGN en el objeto Chess
         chess = new Chess();
         const isValid = chess.loadPgn(pgn);
         if (isValid === false) {
@@ -180,7 +181,8 @@ function buscarPartida(socket) {
         console.log('Partida en curso recuperada: ', pgn);
         console.log('Color:', color);
         console.log('ID de la partida:', gameId);
-        console.log('Tiempo restante:', timeLeft);
+        console.log('Tiempo restante del blanco:', timeLeftW);
+        console.log('Tiempo restante del negro:', timeLeftB);
         estabaEnPartida = true;
 
         socket.emit('fetch-msgs', { game_id: gameId });
