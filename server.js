@@ -1,14 +1,12 @@
 import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
-import { app } from './app.js'
+import { app } from './app.js';
+import { authenticate } from './login/login.js';
 import { saveMessage, fetchMessages } from './chat/chat.js';
-import {
-    findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaPartida,
-    manejarRendicion, ofertaDeTablas,
-    aceptarTablas, rechazarTablas
+import { findGame, manejarMovimiento, cancelarBusquedaPartida,
+        manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
 } from './rooms/rooms.js';
-import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -34,70 +32,6 @@ server.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
 
-// Función para autenticar un socket, comprobando que el token JWT es válido para ese usuario
-// (este token se envía al cliente cuando el login ha sido exitoso)
-// -----------------------------------------------------------------------------------------------
-async function authenticate(socket) {
-    console.log("Autenticando usuario... con socket: " + socket.id);
-    try {
-        // Extraer el token de las query params (ej: io('http://localhost:3000?token=abc123'))
-        const token = socket.handshake.query.token;
-
-        // Si no se ha proporcionado un token, desconectar el socket
-        if (!token) {
-            console.error('No se ha proporcionado un token de autenticación, enviando desconexión...');
-            socket.disconnect();
-            return;
-        }
-
-        // Verificar y decodificar el token
-        const decoded = jwt.decode(token);
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Token verificado, el id del usuario es: " + JSON.stringify(verified.userId));
-
-        const userId = decoded.userId;
-
-        // Si ya existe un socket activo para este usuario (sesión activa), lo desconectamos
-        // (solo permitimos una sesión por usuario)
-        let timeLeftW, timeLeftB;
-        let estadoPartida;
-
-        if (activeSockets.has(userId)) {
-            console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
-            const oldSocket = activeSockets.get(userId);
-            oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
-            oldSocket.emit('get-game-status');
-            
-            // Eliminar el socket antiguo del mapa de conexiones activas
-            activeSockets.delete(userId);
-            // -----------------------------------------------------------------------------------------------
-            ({ timeLeftW, timeLeftB, estadoPartida } = await new Promise((resolve) => {
-                oldSocket.once('game-status', (data) => {
-                    resolve({ timeLeftW: data.timeLeftW, timeLeftB: data.timeLeftB, estadoPartida: data.estadoPartida });
-                });
-            }));
-            // -----------------------------------------------------------------------------------------------
-
-            // Se supone que lo desconectarán ellos, aquí nos aseguramos de que se desconecte
-            // tras 5 segundos si no lo hacen
-            setTimeout(() => {
-                if (oldSocket.connected) {
-                    console.log(`Desconectando socket antiguo de usuario ${userId} después del timeout.`);
-                    oldSocket.disconnect();
-                }
-            }, 5000);
-        }
-        // Almacenar el nuevo socket
-        activeSockets.set(userId, socket);
-        console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
-        console.log("Buscando si el usuario tiene una partida activa...")
-        await buscarPartidaActiva(userId, socket, timeLeftW, timeLeftB, estadoPartida);
-
-    } catch (error) {
-        console.error('Error al autenticar el socket:', error.message);
-        socket.disconnect();
-    }
-}
 // -----------------------------------------------------------------------------------------------
 
 // Función que se ejecuta cada vez que un nuevo cliente se conecta al servidor
