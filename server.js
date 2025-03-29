@@ -33,7 +33,6 @@ server.listen(PORT, () => {
 });
 
 // -----------------------------------------------------------------------------------------------
-
 // Función que se ejecuta cada vez que un nuevo cliente se conecta al servidor
 // (manejo de conexiones y eventos)
 // -----------------------------------------------------------------------------------------------
