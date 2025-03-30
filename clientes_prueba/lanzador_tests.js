@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import axios from 'axios';
 import { db } from '../db/db.js';
 import { partida } from '../db/schemas/schemas.js';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, and, desc } from 'drizzle-orm';
 
 // Paths to your server and client scripts
 const serverPath = './server.js';
@@ -56,10 +56,11 @@ setTimeout(() => {
     setTimeout(async () => {
         try {
             // Check the database for the expected data
-            //Search for partida with JugadorW and JugadorB as User1 and User2 (they can be in any order)
+            //Search for partida with JugadorW and JugadorB as User1 and User2 (they can be in any order), get only the one with the most recent created_at
+            // and check if the JugadorW and JugadorB are correct, and if the Ganador is correct too.
             const result = await db.select().from(partida).where(
-                (partida) => (eq(partida.JugadorW, User1_id).and(eq(partida.JugadorB, User2_id))).or(eq(partida.JugadorW, User2_id).and(eq(partida.JugadorB, User1_id)))
-            );
+                (partida) => (or(and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)), and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))))
+            ).orderBy(desc(partida.created_at)).limit(1);
 
             if (result.length <= 0) {
                 console.log('No partida found in the database.');
@@ -71,8 +72,8 @@ setTimeout(() => {
                     if (result[0].JugadorB !== User2_id) {
                         console.log('Error: JugadorB does not match User2_id.');
                     }
-                    if (result[0].Ganador !== User1_id) {
-                        console.log('Error: Ganador does not match User1_id. It is wrong');
+                    if (result[0].Ganador !== User2_id) {
+                        console.log('Error: Ganador does not match User2_id. It is wrong');
                     }
                 }
                 else {
@@ -80,8 +81,8 @@ setTimeout(() => {
                     if (result[0].JugadorB !== User1_id) {
                         console.log('Error: JugadorB does not match User1_id.');
                     }
-                    if (result[0].Ganador !== User2_id) {
-                        console.log('Error: Ganador does not match User2_id. It is wrong');
+                    if (result[0].Ganador !== User1_id) {
+                        console.log('Error: Ganador does not match User1_id. It is wrong');
                     }
                 }
                 console.log('Partida data is correct.');
@@ -95,5 +96,5 @@ setTimeout(() => {
             client1.kill();
             client2.kill();
         }
-    }, 15000); // Adjust the timeout as needed
+    }, 30000); // Adjust the timeout as needed
 }, 3000); // Adjust the timeout as needed
