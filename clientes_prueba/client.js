@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 import { Chess } from 'chess.js';
 import axios from 'axios';
+import { index } from 'drizzle-orm/gel-core';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
@@ -49,7 +50,7 @@ async function clientLogin(user, password) {
 }
 
 // Función para hacer movimientos aleatorios en la partida
-async function realizarMovimientos(socket, color, gameId) {
+async function realizarMovimientosRandom(socket, color, gameId) {
     console.log('Realizando movimientos...');
     socket.on('new-move', (data) => {
         chess.move(data.movimiento);
@@ -86,6 +87,64 @@ async function realizarMovimientos(socket, color, gameId) {
         socket.emit('send-message', { message: 'Soy el jugador: ' + userId + '.', game_id: gameId, user_id: userId });
     }, 5000);
 }
+
+
+const movimientosBlancas = [
+    "e4", "Nf3", "Bc4", "O-O", "d4", "e5", "exf6", "fxg7", "Re1+", "Ng5",
+    "Nxe6", "Qh5+", "Qxc5", "Qxc4", "Re2", "Kxg2", "Kf1"
+];
+const movimientosNegras = [
+    "e5", "Nc6", "Bc5", "Nf6", "exd4", "d5", "dxc4", "Rg8", "Be6", "Qf6",
+    "fxe6", "Kd7", "Rxg7", "Rf8", "Rxg2+", "Qf3+", "Qh1#"
+];
+
+let ind = 0; // Índice para el movimiento actual
+
+// Función para hacer movimientos aleatorios en la partida
+async function realizarMovimientos(socket, color, gameId) {
+    console.log('Realizando movimientos...');
+    socket.on('new-move', (data) => {
+        chess.move(data.movimiento);
+        const moves = chess.moves();
+        if (moves.length > 0) {
+            const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
+            ind = (ind + 1);
+            chess.move(movimiento);
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
+            }, 700);
+            console.log('Movimiento realizado:', movimiento);
+        }
+    });
+
+    // Si voy con blancas, hacer el primer movimiento
+    console.log('Color:', color);
+    const turno = chess.turn();
+
+    if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
+        const moves = chess.moves();
+        if (moves.length > 0) {
+            const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
+            ind = (ind + 1);
+            chess.move(movimiento);
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
+            }, 700);
+            console.log('Movimiento realizado:', movimiento);
+        } else {
+            console.log('No hay movimientos posibles.');
+        }
+    }
+
+    setInterval(() => {
+        socket.emit('send-message', { message: 'Soy el jugador: ' + userId + '.', game_id: gameId, user_id: userId });
+    }, 5000);
+}
+
+
+
+
+
 
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
 function buscarPartida(socket) {
@@ -160,7 +219,7 @@ function buscarPartida(socket) {
     socket.on('new-message', (data) => {
         console.log('Nuevo mensaje:', data.message);
         setTimeout(() => {
-            socket.emit('send-message', { message: 'Respuesta al mensaje recibido. Soy: '+ userId +'.', game_id: gameId, user_id: userId });
+            socket.emit('send-message', { message: 'Respuesta al mensaje recibido. Soy: ' + userId + '.', game_id: gameId, user_id: userId });
         }, 5000);
     });
 
