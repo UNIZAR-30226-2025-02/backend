@@ -253,7 +253,16 @@ function buscarPartida(socket) {
 
     socket.on('gameOver', (gameData) => {
         console.log('Partida finalizada:', gameData);
-        socket.disconnect();
+        // Realizar logout
+        axios.post(`${BASE_URL}/logout`, { NombreUser: user })
+            .then(() => {
+                console.log('Logout exitoso.');
+                socket.disconnect();
+            })
+            .catch((error) => {
+                console.error('Error al hacer logout:', error.message);
+                socket.disconnect();
+            });
     });
 
     socket.on('errorMessage', (error) => {
