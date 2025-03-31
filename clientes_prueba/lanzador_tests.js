@@ -19,7 +19,7 @@ const User2_id = '51bc4c2c-9918-489a-a29c-a8b2fe035558';
 
 const logInfo = (message) => console.log(`ℹ️   [INFO] ${message}`);
 const logSuccess = (message) => console.log(`✅   [SUCCESS] ${'='.repeat(40)}\n${message}\n${'='.repeat(40)}`);
-const logFinalSuccess = (message) => console.log(`✅   [SUCCESS] ${'✅'.repeat(40)}\n${message}\n${'✅'.repeat(40)}`);
+const logFinalSuccess = (message) => console.log(`\n\n✅   [SUCCESS]\n${'✅'.repeat(40)}\n${message}\n${'✅'.repeat(40)}`);
 const logWarning = (message) => console.log(`⚠️   [WARNING] ${'-'.repeat(40)}\n${message}\n${'-'.repeat(40)}`);
 const logError = (message) => {
     console.error(`❌   [ERROR] ${'*'.repeat(40)}\n${message}\n${'*'.repeat(40)}`);
