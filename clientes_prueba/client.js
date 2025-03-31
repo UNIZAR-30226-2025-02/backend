@@ -12,10 +12,15 @@ let chess = new Chess();
 
 const user = process.argv[2];
 const password = process.argv[3];
+// Tercer argumento opcional para saber si hacer movimientos aleatorios o no
+const randomMoves = process.argv[4] === 'rand' ? true : false; // Si es true, se hacen movimientos aleatorios
+console.log('Random moves:', randomMoves);
 let userId = '';                                        // Se actualizará una vez logueado
 const mode = 'Punt_3';                                  // Modo de juego 
 let gameId = '';                                        // Se actualizará una vez emparejado
 let color = '';                                         // Se actualizará una vez emparejado
+
+let stopMoving = false;                               // Variable para detener los movimientos aleatorios
 
 async function clientLogin(user, password) {
     try {
@@ -51,16 +56,18 @@ async function clientLogin(user, password) {
 
 // Función para hacer movimientos aleatorios en la partida
 async function realizarMovimientosRandom(socket, color, gameId) {
-    console.log('Realizando movimientos...');
+    console.log('Realizando movimientos aleatorios...');
     socket.on('new-move', (data) => {
         chess.move(data.movimiento);
         const moves = chess.moves();
-        if (moves.length > 0) {
+        console.log('Movimientos posibles:', moves);
+        if (moves.length > 0 && !stopMoving) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            console.log(chess.history());
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 3000);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -71,12 +78,13 @@ async function realizarMovimientosRandom(socket, color, gameId) {
 
     if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
         const moves = chess.moves();
+        console.log('Movimientos posibles:', moves);
         if (moves.length > 0) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 3000);
             console.log('Movimiento realizado:', randomMove);
         } else {
             console.log('No hay movimientos posibles.');
@@ -106,9 +114,11 @@ async function realizarMovimientos(socket, color, gameId) {
     socket.on('new-move', (data) => {
         chess.move(data.movimiento);
         const moves = chess.moves();
-        if (moves.length > 0) {
+        console.log('Movimientos posibles:', moves);
+        if (moves.length > 0 && !stopMoving) {
             const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
             ind = (ind + 1);
+            console.log(chess.history());
             chess.move(movimiento);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
@@ -126,6 +136,7 @@ async function realizarMovimientos(socket, color, gameId) {
         if (moves.length > 0) {
             const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
             ind = (ind + 1);
+            console.log(chess.history());
             chess.move(movimiento);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
@@ -157,9 +168,6 @@ function buscarPartida(socket) {
         setTimeout(() => {
             if (!estabaEnPartida) {
                 socket.emit('find-game', { idJugador: userId, mode: mode });
-            } else {
-                console.log('Estaba en partida, no se busca nueva partida');
-                realizarMovimientos(socket, color, gameId);
             }
         }, 1000);
     });
@@ -191,12 +199,22 @@ function buscarPartida(socket) {
 
         // Esperar 5 segundos para que el valor de las variables sea correcto
         setTimeout(() => {
-            realizarMovimientos(socket, color, gameId);
+            if (randomMoves) {
+                socket.once('requestTie', (data) => {
+                    console.log('Se ha ofrecido un empate:', data);
+                    socket.emit('draw-accept', { idPartida: gameId, idJugador: userId });
+                });
+                realizarMovimientosRandom(socket, color, gameId);
+            }
+            else {
+                realizarMovimientos(socket, color, gameId);
+            }
         }, 50);
     });
 
     socket.on('force-logout', (data) => {
         console.log('Forzar logout:', data.message);
+        stopMoving = true;
         setTimeout(() => {
             socket.disconnect();
         }, 500);
@@ -245,6 +263,14 @@ function buscarPartida(socket) {
         estabaEnPartida = true;
 
         socket.emit('fetch-msgs', { game_id: gameId });
+
+        console.log('Estaba en partida, no se busca nueva partida');
+        if (randomMoves) {
+            realizarMovimientosRandom(socket, color, gameId);
+        }
+        else {
+            realizarMovimientos(socket, color, gameId);
+        }
     });
 
     socket.on('chat-history', (messages) => {
