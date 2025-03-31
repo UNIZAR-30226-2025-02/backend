@@ -69,14 +69,18 @@ function esperar(socket) {
     socket.on('friendRequest', (data) => {
                 console.log("Solicitud de amistad recibida de " ,  data.idJugador , " a " , data.idAmigo);
                 //Por defecto aceptar la solicitud de amistad
-                socket.emit('accept-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
-                //socket.emit('reject-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
+                //socket.emit('accept-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
+                socket.emit('reject-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
     });
 
    
 
     socket.on('friendRequestAccepted', (data) => {
         console.log(`Solicitud de amistad aceptada de ${data.idAmigo} a ${data.idJugador}`);
+    });
+
+    socket.on('friendRequestRejected', (data) => {
+        console.log(`Solicitud de amistad rechazada de ${data.idAmigo} a ${data.idJugador}`);
     });
 
 }

@@ -89,7 +89,13 @@ export async function rejectFriendRequest(data, socket) {
     const idAmigo = data.idAmigo;
     // emitir con un socket al jugador que la solicitud ha sido rechazada
     //el que lo tiene que emitir es el amigo
-    socket.to(idJugador).emit('friendRequestRejected', { idJugador, idAmigo });
+    const socketJugador = activeSockets.get(idJugador); // Obtener el socket del jugador
+    if (!socketJugador) {
+        console.log("El jugador no está conectado.");
+        return socket.emit('errorMessage', "El jugador no está conectado.");
+    }
+    
+    io.to(socketJugador.id).emit('friendRequestRejected', { idJugador, idAmigo });
     console.log(`Solicitud de amistad rechazada de ${idAmigo} a ${idJugador}`);
 }
 
