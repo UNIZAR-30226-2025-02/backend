@@ -151,8 +151,8 @@ export async function loadGame(idPartida, idJugador, socket) {
         const nombreNegras = jugadorNegras.NombreUser;
 
         // Obtener el elo de los jugadores
-        const eloBlancas = existingGame.header()['White Elo'];
-        const eloNegras = existingGame.header()['Black Elo'];
+        const eloBlancas = Math.trunc(existingGame.header()['White Elo']);
+        const eloNegras = Math.trunc(existingGame.header()['Black Elo']);
 
         // Notificar a los jugadores que la partida está lista a través de la sala
         io.to(idPartida).emit('game-ready', { idPartida });
