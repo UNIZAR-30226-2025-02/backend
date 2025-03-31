@@ -4,9 +4,13 @@ import { db } from '../db/db.js';
 import { partida } from '../db/schemas/schemas.js';
 import { eq, or, and, desc } from 'drizzle-orm';
 
-// Paths to your server and client scripts
+
 const serverPath = './server.js';
 const clientPath = './clientes_prueba/client.js';
+const client_cancel_pairing_path = './clientes_prueba/client_cancel_pairing.js';
+const client_pide_tabals_path = './clientes_prueba/client_pide_tablas.js';
+const client_acepta_tablas_path = './clientes_prueba/client_accept_tablas.js';
+const client_rechaza_tablas_path = './clientes_prueba/client_rechaza_tablas.js';
 const User1_name = 'Prueba11';
 const User2_name = 'Prueba22';
 const User1_password = '12345a';
@@ -23,6 +27,7 @@ server.stdout.on('data', (data) => {
 server.stderr.on('data', (data) => {
     console.error(`Server Error: ${data}`);
 });
+
 
 // Wait a bit to ensure the server is running
 setTimeout(() => {
@@ -50,7 +55,7 @@ setTimeout(() => {
             console.error(`Client2 Error: ${data}`);
         });
 
-    }, 3000); // Adjust the timeout as needed
+    }, 3000);
 
     // Wait for clients to finish their tasks
     setTimeout(async () => {
@@ -91,10 +96,9 @@ setTimeout(() => {
         } catch (error) {
             console.error('Error checking the database:', error);
         } finally {
-            // Kill the server and clients
-            server.kill();
+            // Kill the clients
             client1.kill();
             client2.kill();
         }
-    }, 30000); // Adjust the timeout as needed
-}, 3000); // Adjust the timeout as needed
+    }, 30000);
+}, 3000); 
