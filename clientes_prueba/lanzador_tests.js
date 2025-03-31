@@ -494,7 +494,7 @@ async function main() {
     if (HayErrores) {
         logError(' ❌ ❌ ❌ There were errors during the tests. ❌ ❌ ❌');
     } else {
-        logFinalSuccess('\n\n\n 🎆 🎆 🎆 🎉 🎉 🎖️    All tests completed successfully!   🎖️ 🎉 🎉 🎆 🎆 🎆  \n\n\n');
+        logFinalSuccess('\n 🎆 🎆 🎆 🎉 🎉 🎖️    All tests completed successfully!   🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
     }
 }
 main().catch((error) => {
