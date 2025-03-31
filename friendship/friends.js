@@ -27,9 +27,19 @@ export async function addFriend(data, socket) {
 //funcion para aceptar una solicitud de amistad
 export async function acceptFriendRequest(data, socket) {
     console.log("Aceptando solicitud de amistad...")
-    const idJugador = data.idJugador;
-    const idAmigo = data.idAmigo;
+    //const idJugador = data.idJugador;
+    //const idAmigo = data.idAmigo;
     // Verificar si la amistad ya existe
+    console.log("Datos recibidos:", data);
+    let idJugador = data.idJugador;
+    let idAmigo = data.idAmigo;
+
+    // Intentar convertir a número si es posible
+    if (!isNaN(idJugador)) idJugador = Number(idJugador);
+    if (!isNaN(idAmigo)) idAmigo = Number(idAmigo);
+
+    console.log("IDs procesados:", idJugador, idAmigo);
+    console.log("Verificando si la amistad ya existe...")
     const existingFriendship = await db.select()
     .from(amistad)
     .where(
@@ -48,18 +58,22 @@ export async function acceptFriendRequest(data, socket) {
     //Generar un nuevo ID para la amistad
     const newFriendshipId = crypto.randomUUID();
 
+    console.log("Voy a añadir la amistad a la base de datos");
+
     // Insertar nueva amistad en la BD
     await db.insert(amistad).values({
         id: newFriendshipId,
         Jugador1: idJugador,
         Jugador2: idAmigo,
-        HistorialAmistad: JSON.stringify([]), // Historial vacío al inicio
+        
         Retos: 0
     });
 
+    // HistorialAmistad: JSON.stringify([]), // Historial vacío al inicio
+
     //comunicar con un socket al jugador que la solicitud ha sido aceptada
     //socket.to(idJugador).emit('friendRequestAccepted', { idJugador, idAmigo });
-    socketJugador = activeSockets.get(idJugador); // Obtener el socket del jugador
+    const socketJugador = activeSockets.get(idJugador); // Obtener el socket del jugador
     if (!socketJugador) {
         console.log("El jugador no está conectado.");
         return socket.emit('errorMessage', "El jugador no está conectado.");
