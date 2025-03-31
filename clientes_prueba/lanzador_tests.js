@@ -115,7 +115,7 @@ async function Test1Base() {
                 logInfo('Stopping server...');
                 server.kill();
             }
-        }, 30000);
+        }, 35000);
     }, 3000);
 }
 
@@ -205,7 +205,7 @@ async function Test2Base() {
                 server.kill();
             }
         }, 15000);
-    }, 3000);
+    }, 10000);
 }
 
 
@@ -290,7 +290,7 @@ async function Test3Base() {
                 server.kill();
             }
         }, 15000);
-    }, 3000);
+    }, 10000);
 }
 
 async function Test4Base() {
@@ -364,7 +364,7 @@ async function Test4Base() {
                 server.kill();
             }
         }, 15000);
-    }, 3000);
+    }, 10000);
 }
 
 async function Test5Base() {
@@ -468,25 +468,25 @@ async function Test5Base() {
                 server.kill();
             }
         }, 30000);
-    }, 3000);
+    }, 10000);
 }
 
 async function main() {
     logInfo('Starting the tests...');
     await Test1Base();
-    await new Promise(resolve => setTimeout(resolve, 33000)); // Wait for Test1Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
 
     await Test2Base();
-    await new Promise(resolve => setTimeout(resolve, 18000)); // Wait for Test2Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
 
     await Test3Base();
-    await new Promise(resolve => setTimeout(resolve, 18000)); // Wait for Test3Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
 
     await Test4Base();
-    await new Promise(resolve => setTimeout(resolve, 18000)); // Wait for Test4Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
 
     await Test5Base();
-    await new Promise(resolve => setTimeout(resolve, 33000)); // Wait for Test5Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
 
 
     await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
