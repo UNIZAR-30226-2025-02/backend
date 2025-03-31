@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
-import { db } from '../db/db.js';
-import { partida, mensaje } from '../db/schemas/schemas.js';
+import { db } from './db/db.js';
+import { partida, mensaje } from './db/schemas/schemas.js';
 import { eq, or, and, desc } from 'drizzle-orm';
 import { log } from 'console';
 

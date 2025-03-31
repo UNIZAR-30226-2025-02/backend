@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "node ./clientes_prueba/lanzador_tests.js",
+    "test": "node ./lanzador_tests.js",
     "start": "node server.js"
   },
   "repository": {
