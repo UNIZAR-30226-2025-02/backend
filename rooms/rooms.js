@@ -1,7 +1,7 @@
 import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
-import { eq, or, and, sql,  isNull } from "drizzle-orm";
+import { eq, or, and, sql, isNull } from "drizzle-orm";
 import { io } from '../server.js';
 import crypto from 'crypto';
 
@@ -501,7 +501,7 @@ async function resultManager(game, idPartida) {
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
-    
+
         //Notificacion
         io.to(idPartida).emit('gameOver', { result });
         console.log("La partida ha terminado en tablas");
@@ -623,6 +623,7 @@ export async function manejarRendicion(data, socket) {
     const color = headers['White'] === idJugador ? 'white' : 'black';
     // El oponente es el jugador que no se ha rendido
     const oponente = color === 'white' ? headers['Black'] : headers['White'];
+    game.setHeader('Result', color === 'black' ? '1-0' : '0-1');
     //Hay que calcular la variacion de elo
     const { variacionW, variacionB } = await ratingVariation(
         game.header()['White Elo'],
@@ -655,9 +656,10 @@ export async function manejarRendicion(data, socket) {
         .run();
 
 
+
     // Actualizar la base de datos con el ganador
     await db.update(partida)
-        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB })
+        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB, })
         .where(eq(partida.id, idPartida))
         .run();
     // Emitir el evento de fin de partida al oponente
@@ -667,8 +669,8 @@ export async function manejarRendicion(data, socket) {
     await db.update(usuario)
         .set({ EstadoPartida: null })
         .where(or(
-            eq(usuario.id, ActiveXObjects[idPartida].players[0]),
-            eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+            eq(usuario.id, game.header()['White']),
+            eq(usuario.id, game.header()['Black'])))
         .run();
 
     // Eliminar la partida de memoria
@@ -757,8 +759,8 @@ export async function aceptarTablas(data, socket) {
     await db.update(usuario)
         .set({ EstadoPartida: null })
         .where(or(
-            eq(usuario.id, ActiveXObjects[idPartida].players[0]),
-            eq(usuario.id, ActiveXObjects[idPartida].players[1])))
+            eq(usuario.id, game.header()['White']),
+            eq(usuario.id, game.header()['Black'])))
         .run();
 
     // Eliminar la partida de memoria

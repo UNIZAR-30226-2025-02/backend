@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 import { Chess } from 'chess.js';
 import axios from 'axios';
+import { index } from 'drizzle-orm/gel-core';
 
 // Configuración del servidor
 // const BASE_URL = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net';
@@ -11,10 +12,15 @@ let chess = new Chess();
 
 const user = process.argv[2];
 const password = process.argv[3];
+// Tercer argumento opcional para saber si hacer movimientos aleatorios o no
+const randomMoves = process.argv[4] === 'rand' ? true : false; // Si es true, se hacen movimientos aleatorios
+console.log('Random moves:', randomMoves);
 let userId = '';                                        // Se actualizará una vez logueado
 const mode = 'Punt_3';                                  // Modo de juego 
 let gameId = '';                                        // Se actualizará una vez emparejado
 let color = '';                                         // Se actualizará una vez emparejado
+
+let stopMoving = false;                               // Variable para detener los movimientos aleatorios
 
 async function clientLogin(user, password) {
     try {
@@ -49,17 +55,19 @@ async function clientLogin(user, password) {
 }
 
 // Función para hacer movimientos aleatorios en la partida
-async function realizarMovimientos(socket, color, gameId) {
-    console.log('Realizando movimientos...');
+async function realizarMovimientosRandom(socket, color, gameId) {
+    console.log('Realizando movimientos aleatorios...');
     socket.on('new-move', (data) => {
         chess.move(data.movimiento);
         const moves = chess.moves();
-        if (moves.length > 0) {
+        console.log('Movimientos posibles:', moves);
+        if (moves.length > 0 && !stopMoving) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
+            console.log(chess.history());
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 3000);
             console.log('Movimiento realizado:', randomMove);
         }
     });
@@ -70,12 +78,13 @@ async function realizarMovimientos(socket, color, gameId) {
 
     if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
         const moves = chess.moves();
+        console.log('Movimientos posibles:', moves);
         if (moves.length > 0) {
             const randomMove = moves[Math.floor(Math.random() * moves.length)];
             chess.move(randomMove);
             setTimeout(() => {
                 socket.emit('make-move', { movimiento: randomMove, idPartida: gameId, idJugador: userId });
-            }, 2000);
+            }, 3000);
             console.log('Movimiento realizado:', randomMove);
         } else {
             console.log('No hay movimientos posibles.');
@@ -86,6 +95,67 @@ async function realizarMovimientos(socket, color, gameId) {
         socket.emit('send-message', { message: 'Soy el jugador: ' + userId + '.', game_id: gameId, user_id: userId });
     }, 5000);
 }
+
+
+const movimientosBlancas = [
+    "e4", "Nf3", "Bc4", "O-O", "d4", "e5", "exf6", "fxg7", "Re1+", "Ng5",
+    "Nxe6", "Qh5+", "Qxc5", "Qxc4", "Re2", "Kxg2", "Kf1"
+];
+const movimientosNegras = [
+    "e5", "Nc6", "Bc5", "Nf6", "exd4", "d5", "dxc4", "Rg8", "Be6", "Qf6",
+    "fxe6", "Kd7", "Rxg7", "Rf8", "Rxg2+", "Qf3+", "Qh1#"
+];
+
+let ind = 0; // Índice para el movimiento actual
+
+// Función para hacer movimientos aleatorios en la partida
+async function realizarMovimientos(socket, color, gameId) {
+    console.log('Realizando movimientos...');
+    socket.on('new-move', (data) => {
+        chess.move(data.movimiento);
+        const moves = chess.moves();
+        console.log('Movimientos posibles:', moves);
+        if (moves.length > 0 && !stopMoving) {
+            const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
+            ind = (ind + 1);
+            console.log(chess.history());
+            chess.move(movimiento);
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
+            }, 700);
+            console.log('Movimiento realizado:', movimiento);
+        }
+    });
+
+    // Si voy con blancas, hacer el primer movimiento
+    console.log('Color:', color);
+    const turno = chess.turn();
+
+    if ((color === 'white' && turno === 'w') || (color === 'black' && turno === 'b')) {
+        const moves = chess.moves();
+        if (moves.length > 0) {
+            const movimiento = color === 'white' ? movimientosBlancas[ind] : movimientosNegras[ind];
+            ind = (ind + 1);
+            console.log(chess.history());
+            chess.move(movimiento);
+            setTimeout(() => {
+                socket.emit('make-move', { movimiento: movimiento, idPartida: gameId, idJugador: userId });
+            }, 700);
+            console.log('Movimiento realizado:', movimiento);
+        } else {
+            console.log('No hay movimientos posibles.');
+        }
+    }
+
+    setInterval(() => {
+        socket.emit('send-message', { message: 'Soy el jugador: ' + userId + '.', game_id: gameId, user_id: userId });
+    }, 5000);
+}
+
+
+
+
+
 
 // Función para conectar con el servidor y buscar una partida utilizando socket.io
 function buscarPartida(socket) {
@@ -98,9 +168,6 @@ function buscarPartida(socket) {
         setTimeout(() => {
             if (!estabaEnPartida) {
                 socket.emit('find-game', { idJugador: userId, mode: mode });
-            } else {
-                console.log('Estaba en partida, no se busca nueva partida');
-                realizarMovimientos(socket, color, gameId);
             }
         }, 1000);
     });
@@ -132,12 +199,22 @@ function buscarPartida(socket) {
 
         // Esperar 5 segundos para que el valor de las variables sea correcto
         setTimeout(() => {
-            realizarMovimientos(socket, color, gameId);
+            if (randomMoves) {
+                socket.once('requestTie', (data) => {
+                    console.log('Se ha ofrecido un empate:', data);
+                    socket.emit('draw-accept', { idPartida: gameId, idJugador: userId });
+                });
+                realizarMovimientosRandom(socket, color, gameId);
+            }
+            else {
+                realizarMovimientos(socket, color, gameId);
+            }
         }, 50);
     });
 
     socket.on('force-logout', (data) => {
         console.log('Forzar logout:', data.message);
+        stopMoving = true;
         setTimeout(() => {
             socket.disconnect();
         }, 500);
@@ -160,7 +237,7 @@ function buscarPartida(socket) {
     socket.on('new-message', (data) => {
         console.log('Nuevo mensaje:', data.message);
         setTimeout(() => {
-            socket.emit('send-message', { message: 'Respuesta al mensaje recibido. Soy: '+ userId +'.', game_id: gameId, user_id: userId });
+            socket.emit('send-message', { message: 'Respuesta al mensaje recibido. Soy: ' + userId + '.', game_id: gameId, user_id: userId });
         }, 5000);
     });
 
@@ -186,6 +263,14 @@ function buscarPartida(socket) {
         estabaEnPartida = true;
 
         socket.emit('fetch-msgs', { game_id: gameId });
+
+        console.log('Estaba en partida, no se busca nueva partida');
+        if (randomMoves) {
+            realizarMovimientosRandom(socket, color, gameId);
+        }
+        else {
+            realizarMovimientos(socket, color, gameId);
+        }
     });
 
     socket.on('chat-history', (messages) => {
@@ -194,7 +279,16 @@ function buscarPartida(socket) {
 
     socket.on('gameOver', (gameData) => {
         console.log('Partida finalizada:', gameData);
-        socket.disconnect();
+        // Realizar logout
+        axios.post(`${BASE_URL}/logout`, { NombreUser: user })
+            .then(() => {
+                console.log('Logout exitoso.');
+                socket.disconnect();
+            })
+            .catch((error) => {
+                console.error('Error al hacer logout:', error.message);
+                socket.disconnect();
+            });
     });
 
     socket.on('errorMessage', (error) => {
