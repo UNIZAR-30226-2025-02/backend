@@ -105,7 +105,7 @@ export async function removeFriend(data, socket) {
     const idJugador = data.idJugador;
     const idAmigo = data.idAmigo;
 
-    await db.delete(amistad)
+    const deleted = await db.delete(amistad)
     .where(
         or(
             and(eq(amistad.Jugador1, idJugador), eq(amistad.Jugador2, idAmigo)),
@@ -116,8 +116,19 @@ export async function removeFriend(data, socket) {
 
     if (deleted.changes === 0) {
         console.log(`No se encontró la amistad entre ${idJugador} y ${idAmigo}.`);
-        return socket.emit('error', "No se encontró la amistad entre " + idJugador + " y " + idAmigo);
+        
     }
+
+    const socketAmigo = activeSockets.get(idAmigo); // Obtener el socket del amigo
+
+    if (!socketAmigo) {
+        console.log("El amigo no está conectado.");
+        return socket.emit('errorMessage', "El amigo no está conectado.");
+    }
+
+    //Mandar evento de que se ha elimnado la amistad al socket del amigo
+    io.to(socketAmigo.id).emit('friendRemoved' , { idJugador, idAmigo });
+    console.log("Eliminación de la amistad de ", data.idJugador,  "a " , data.idAmigo);
 }
 
 //PENDIENTE COMPLETAR

@@ -45,7 +45,7 @@ async function clientLogin(user, password) {
             query: { token: token }  // Enviar el token a través del query en la conexión
         });
 
-        esperar(socket); 
+        eliminarAmigo(socket); 
 
 
     } catch (error) {
@@ -55,37 +55,32 @@ async function clientLogin(user, password) {
 
 }
 
-function esperar(socket) {
+function eliminarAmigo(socket) {
     
 
     socket.on('connect', () => {
-        //Hace un consol log de estoy esperando cada 5 segundos
-        setInterval(() => {
-            console.log("Estoy esperando...")
-           
-        }, 5000);
+        console.log('Conectado al servidor WebSocket con ID de socket:', socket.id);
+        
+        //Esperar 10 segundos antes de enviar la petición de amistad
+        setTimeout(() => {
+            console.log('Eliminando amistad...');
+            //Imprimimos los parametros que manda para ver que no son indefinidos
+            console.log("idAmigo: ", idamigo);
+            console.log("idJugador: ", userId);
+            socket.emit('remove-friend', { idJugador: userId, idAmigo: idamigo });
+        }, 10000);
+        
     });
 
     socket.on('friendRequest', (data) => {
-                console.log("Solicitud de amistad recibida de " ,  data.idJugador , " a " , data.idAmigo);
-                //Por defecto aceptar la solicitud de amistad
-                //socket.emit('accept-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
-                socket.emit('reject-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
+        console.log(`Solicitud de amistad recibida de ${data.idJugador} a ${data.idAmigo}`);
+        //Por defecto aceptar la solicitud de amistad
+        socket.emit('accept-request', { idJugador: data.Jugador, idAmigo: data.idAmigo });
+        //socket.emit('reject-request', { idJugador: data.idJugador, idAmigo: data.idAmigo });
     });
-
-    socket.on('friendRemoved', (data) => {
-        console.log("El jugador " ,  data.idJugador , " ha eliminado la amistad contigo" );
-    
-    });
-
-   
 
     socket.on('friendRequestAccepted', (data) => {
         console.log(`Solicitud de amistad aceptada de ${data.idAmigo} a ${data.idJugador}`);
-    });
-
-    socket.on('friendRequestRejected', (data) => {
-        console.log(`Solicitud de amistad rechazada de ${data.idAmigo} a ${data.idJugador}`);
     });
 
 }
