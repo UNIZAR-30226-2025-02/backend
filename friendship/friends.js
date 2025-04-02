@@ -1,5 +1,5 @@
 import { db } from '../db/db.js';
-import { partida, usuario, amistad } from '../db/schemas/schemas.js';
+import { partida, usuario, amistad, reto } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
 import { eq, or, and, isNull } from "drizzle-orm";
 import { io } from '../server.js';
@@ -142,25 +142,31 @@ export async function challengeFriend(data, socket) {
         const existingChallenge = await db.select()
             .from(reto)
             .where(
-                sql`Retador = ${idRetador} AND Retado = ${idRetado} AND Pendiente = 1`
+                and(
+                    eq(reto.Retador, idRetador),
+                    eq(reto.Retado, idRetado),
+                    eq(reto.Activo, 1)
+                )
             )
             .get();
 
         if (existingChallenge) {
-            return { success: false, message: "Ya tienes un reto pendiente con este amigo." };
+            console.log("Ya tienes un reto activo con este amigo.");
         }
 
         // Verificar si son amigos
         const friendship = await db.select()
             .from(amistad)
             .where(
-                sql`(Jugador1 = ${idRetador} AND Jugador2 = ${idRetado}) 
-                OR (Jugador1 = ${idRetado} AND Jugador2 = ${idRetador})`
+                or(
+                    and(eq(amistad.Jugador1, idRetador), eq(amistad.Jugador2, idRetado)),
+                    and(eq(amistad.Jugador1, idRetado), eq(amistad.Jugador2, idRetador))
+                )
             )
             .get();
 
         if (!friendship) {
-            return { success: false, message: "No puedes retar a alguien que no es tu amigo." };
+           console.log("No son amigos.");
         }
 
         // Crear un reto
@@ -169,35 +175,60 @@ export async function challengeFriend(data, socket) {
             id: retoId,
             Retador: idRetador,
             Retado: idRetado,
-            Activo: 1,
+            Activo: 0,
             Pendiente: 1,
             Modo: modo,
             Amistad: friendship.id
         });
 
-        return { success: true, message: "Reto enviado con éxito." };
+        console.log(`Reto enviado de ${idRetador} a ${idRetado} a jugar partida ${modo}`);
+        // Emitir evento al jugador
+
+        const socketRetado = activeSockets.get(idRetado); // Obtener el socket del amigo
+
+        if (!socketRetado) {
+            console.log("La persona retada no está conectado.");
+            return socket.emit('errorMessage', "La persona retada no está conectado.");
+        }
+
+        //Mandar evento de friendRequest al socket del amigo
+        io.to(socketRetado.id).emit('challengeSent' , { idRetador, idRetado, modo });
+        console.log("Reto ha sido enviado de ", data.idRetador,  "a " , data.idRetado);
+   
     } catch (error) {
         console.error("Error al retar amigo:", error);
-        return { success: false, message: "Error al enviar el reto." };
+        
     }
 }
 
 
 //CUANDO EL OTRO ACEPTE EL RETO LANZAR ESTA FUNCION
-export async function createDuelGame(idRetador, idRetado, mode, socket) {
+export async function createDuelGame(data, socket) {
     try {
-        // Verificar si el reto sigue pendiente
+        const idRetador = data.idRetador;
+        const idRetado = data.idRetado;
+        const modo = data.modo;
+        console.log("Aceptando reto...")
+        console.log("Valores recibidos:", { idRetador, idRetado, modo });
+
         const challenge = await db.select()
             .from(reto)
             .where(
-                sql`Retador = ${idRetador} AND Retado = ${idRetado} AND Pendiente = 1`
+                and(
+                    eq(reto.Retador, idRetador),
+                    eq(reto.Retado, idRetado),
+                    eq(reto.Pendiente, 1)
+                )
             )
             .get();
-
+        
         if (!challenge) {
-            return { success: false, message: "No hay un reto pendiente con este amigo." };
+            console.log("No hay un reto pendiente con este amigo.");
         }
 
+        console.log("Reto encontrado: ", challenge);
+
+       
         // Crear la partida de ajedrez
         const chess = new Chess();
         const gameId = crypto.randomUUID();
@@ -209,26 +240,64 @@ export async function createDuelGame(idRetador, idRetado, mode, socket) {
             id: gameId,
             JugadorW: randomColor === 'white' ? idRetador : idRetado,
             JugadorB: randomColor === 'black' ? idRetador : idRetado,
-            Modo: mode,
+            Modo: modo,
             PGN: chess.pgn(),
             Ganador: null,
             Variacion_JW: 0,
-            Variacion_JB: 0
+            Variacion_JB: 0,
+            Tipo: "reto",
         });
+
+        console.log("La partida ha sido creada", partida);
 
         // Marcar el reto como aceptado
         await db.update(reto)
             .set({ Pendiente: 0, Activo: 1 })
             .where(eq(reto.id, challenge.id))
             .run();
+        
+        console.log('Reto actualizado')
 
         // Crear sala en socket
         socket.join(gameId);
 
-        return { success: true, gameId, message: "Partida creada con éxito." };
+        console.log(`Partida creada entre ${idRetador} y ${idRetado}. ID de partida: ${gameId}`);
+
+        // Emitir evento de partida creada a ambos jugadores
+        const socketRetador = activeSockets.get(idRetador); // Obtener el socket del retador
+        const socketRetado = activeSockets.get(idRetado); // Obtener el socket del retador
+
+        if (!socketRetador || !socketRetado) {
+            console.log("Uno de los jugadores no está conectado.");
+            return socket.emit('errorMessage', "Uno de los jugadores no está conectado.");
+        }
+
+        //Mandar evento de partida creada al socket del retador
+        //Hay que meter en la partida con socket.join
+        //Ahora borramos el reto de la base de datos antes de entrar a partida
+
+        const result = await db.delete(reto)
+        .where(
+            eq(reto.Retador, idRetador) && eq(reto.Retado, idRetado)
+        )
+        .run();
+
+        if (result.changes > 0) {
+            console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
+        } else {
+            console.log(`No se encontró un reto entre ${data.idRetador} y ${data.idRetado}.`);
+        }
+
+        console.log("La partida se ha creado bien y el reto se ha eliminado")
+
+        socketRetador.join(gameId);
+        socketRetado.join(gameId);
+
+
+        return gameId;
+
     } catch (error) {
-        console.error("Error al crear partida de duelo:", error);
-        return { success: false, message: "Error al crear partida." };
+        console.log ("Error al crear partida");
     }
 }
 

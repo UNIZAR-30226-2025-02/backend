@@ -7,7 +7,8 @@ import { findGame, manejarMovimiento, buscarPartidaActiva, cancelarBusquedaParti
          manejarRendicion, ofertaDeTablas, 
          aceptarTablas, rechazarTablas} from './rooms/rooms.js';
 import { addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
-            rejectFriendRequest} from './friendship/friends.js';
+            rejectFriendRequest,
+            deleteChallenge} from './friendship/friends.js';
 import jwt from 'jsonwebtoken';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
@@ -198,10 +199,16 @@ async function newConnection(socket) {
         await challengeFriend(data, socket);
     });
 
-    socket.on('create-duel-game', async (data) => {
-        console.log("Recibido evento create-duel-game...");
+    socket.on('accept-challenge', async (data) => {
+        console.log("Recibido evento accept-challenge...");
         await createDuelGame(data, socket);
     });
+
+    socket.on('reject-challenge', async (data) => {
+        console.log("Recibido evento reject-challenge...");
+        await deleteChallenge(data, socket);
+    });
+
 
 }
 // -----------------------------------------------------------------------------------------------
