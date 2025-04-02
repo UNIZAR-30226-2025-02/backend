@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/controller/login.js';
+import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/login.js';
 import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida, getUserInfo } from './db_requests.js/db_requests.js';
 
 export const app = express()

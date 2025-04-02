@@ -1,5 +1,5 @@
-import { db } from '../../db/db.js';
-import { usuario } from '../../db/schemas/schemas.js';
+import { db } from '../db/db.js';
+import { usuario } from '../db/schemas/schemas.js';
 import { eq } from 'drizzle-orm';
 import crypto, { randomUUID } from 'node:crypto';
 import bcrypt from 'bcrypt';
@@ -7,23 +7,12 @@ import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
-import { Console } from 'node:console';
-import { dot } from 'node:test/reporters';
+import { activeSockets } from '../server.js';
+import { buscarPartidaActiva } from '../rooms/rooms.js';
 
 const generateVerificationToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
-
-// Token de acceso que nos pasarán los clientes frontend cuando quieran conectarse via websocket
-// Variable de entorno en el .env: ACCESS_TOKEN_SECRET
-//
-// FRONTENDS:
-// -----------------------------------------------------------------------------------------------
-// const token = localStorage.getItem('token'); // Recuperar el token del login (se lo pasaremos)
-// const socket = io('http://localhost:3000', {
-//    auth: { token },
-//  });
-// -----------------------------------------------------------------------------------------------
 
 const generateAccessToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -200,15 +189,93 @@ export async function login(req, res) {
     }
 }
 
+// Función para autenticar un socket, comprobando que el token JWT es válido para ese usuario
+// (este token se envía al cliente cuando el login ha sido exitoso)
+// -----------------------------------------------------------------------------------------------
+export async function authenticate(socket) {
+    console.log("Autenticando usuario... con socket: " + socket.id);
+    try {
+        // Extraer el token de las query params (ej: io('http://localhost:3000?token=abc123'))
+        const token = socket.handshake.query.token;
+
+        // Si no se ha proporcionado un token, desconectar el socket
+        if (!token) {
+            console.error('No se ha proporcionado un token de autenticación, enviando desconexión...');
+            socket.disconnect();
+            return;
+        }
+
+        // Verificar y decodificar el token
+        const decoded = jwt.decode(token);
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Token verificado, el id del usuario es: " + JSON.stringify(verified.userId));
+
+        const userId = decoded.userId;
+
+        // Si ya existe un socket activo para este usuario (sesión activa), lo desconectamos
+        // (solo permitimos una sesión por usuario)
+        let timeLeftW, timeLeftB;
+        let estadoPartida;
+
+        if (activeSockets.has(userId)) {
+            console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
+            const oldSocket = activeSockets.get(userId);
+            oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
+            oldSocket.emit('get-game-status');
+            
+            // Eliminar el socket antiguo del mapa de conexiones activas
+            activeSockets.delete(userId);
+            // -----------------------------------------------------------------------------------------------
+            ({ timeLeftW, timeLeftB, estadoPartida } = await new Promise((resolve) => {
+                oldSocket.once('game-status', (data) => {
+                    resolve({ timeLeftW: data.timeLeftW, timeLeftB: data.timeLeftB, estadoPartida: data.estadoPartida });
+                });
+            }));
+            // -----------------------------------------------------------------------------------------------
+
+            // Se supone que lo desconectarán ellos, aquí nos aseguramos de que se desconecte
+            // tras 5 segundos si no lo hacen
+            setTimeout(() => {
+                if (oldSocket.connected) {
+                    console.log(`Desconectando socket antiguo de usuario ${userId} después del timeout.`);
+                    oldSocket.disconnect();
+                }
+            }, 5000);
+        }
+        // Almacenar el nuevo socket
+        activeSockets.set(userId, socket);
+        console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
+        console.log("Buscando si el usuario tiene una partida activa...")
+        await buscarPartidaActiva(userId, socket, timeLeftW, timeLeftB, estadoPartida);
+
+    } catch (error) {
+        console.error('Error al autenticar el socket:', error.message);
+        socket.disconnect();
+    }
+}
+// -----------------------------------------------------------------------------------------------
+
 export async function logout(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
+        console.log('Usuario: ', NombreUser, ' cerrando sesión...');
+
         if (!NombreUser) {
             res.status(400).json({ error: 'Faltan campos' });
             return;
         }
 
-        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        // Recuperar el id del usuario
+        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+        if (usuarios.length === 0) {
+            console.error("Usuario no encontrado en la base de datos");
+            res.status(400).json({ error: 'Usuario no encontrado' });
+            return;
+        }
+        const usuarioEncontrado = usuarios[0];
+        
+        // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
+        activeSockets.delete(usuarioEncontrado.id);
         res.send('Usuario deslogueado correctamente');
     } catch (error) {
         res.status(500).json({ error: 'Error al desloguear el usuario' });
