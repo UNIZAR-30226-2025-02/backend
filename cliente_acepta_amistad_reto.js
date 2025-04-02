@@ -81,8 +81,8 @@ function esperar(socket) {
     socket.on('challengeSent', (data) => {
         console.log(`Reto enviado de ${data.idRetador} a ${data.idRetado}`);
         // Por defecto aceptar el reto
-        //socket.emit('accept-challenge', { idRetador: data.idRetador, idRetado: data.idRetado, modo: data.modo });
-        socket.emit('reject-challenge', { idRetador: data.idRetador, idRetado: data.idRetado, modo: data.modo });
+        socket.emit('accept-challenge', { idRetador: data.idRetador, idRetado: data.idRetado, modo: data.modo });
+        //socket.emit('reject-challenge', { idRetador: data.idRetador, idRetado: data.idRetado, modo: data.modo });
     });
 
 
