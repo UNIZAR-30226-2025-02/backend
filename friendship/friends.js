@@ -319,6 +319,8 @@ export async function deleteChallenge(data, socket) {
         } else {
             console.log(`No se encontró un reto entre ${data.idRetador} y ${data.idRetado}.`);
         }
+        
+        console.log("Se ha boorado correctamente el reto correspondiente");
     } catch (error) {
         console.error("Error al eliminar el reto:", error);
     }
