@@ -273,7 +273,7 @@ export async function logout(req, res) {
             return;
         }
         const usuarioEncontrado = usuarios[0];
-        db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+        await db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
 
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
         activeSockets.delete(usuarioEncontrado.id);
