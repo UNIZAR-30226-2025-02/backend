@@ -7,6 +7,9 @@ import { saveMessage, fetchMessages } from './chat/chat.js';
 import { findGame, manejarMovimiento, cancelarBusquedaPartida,
         manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
 } from './rooms/rooms.js';
+import { addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
+    rejectFriendRequest,
+    deleteChallenge} from './friendship/friends.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -106,6 +109,46 @@ async function newConnection(socket) {
         console.log("Se ha rechazado la oferta de tablas")
         await rechazarTablas(data, socket);
     });
+
+    //AMIGOS
+    
+        socket.on('add-friend', async (data) => {
+            console.log("Recibido evento add-friend...");
+            //imprimimos el data para ver que todo esta bien
+            console.log("data de evento add-friend: ", data);
+            await addFriend(data, socket);
+        });
+    
+        socket.on('accept-request', async (data) => {
+            console.log("Recibido evento friendRequestAccepted...");
+            await acceptFriendRequest(data, socket);
+        });
+    
+        socket.on('reject-request', async (data) => {
+            console.log("Recibido evento friendRequestRejected...");
+            await rejectFriendRequest(data, socket);
+        });
+    
+        socket.on('remove-friend', async (data) => {
+            console.log("Recibido evento remove-friend...");
+            await removeFriend(data, socket);
+        });
+    
+        socket.on('challenge-friend', async (data) => {
+            console.log("Recibido evento challenge-friend...");
+            await challengeFriend(data, socket);
+        });
+    
+        socket.on('accept-challenge', async (data) => {
+            console.log("Recibido evento accept-challenge...");
+            await createDuelGame(data, socket);
+        });
+    
+        socket.on('reject-challenge', async (data) => {
+            console.log("Recibido evento reject-challenge...");
+            await deleteChallenge(data, socket);
+        });
+    
 }
 // -----------------------------------------------------------------------------------------------
 // Escuchar eventos de conexión al servidor
