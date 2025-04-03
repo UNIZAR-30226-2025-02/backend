@@ -26,7 +26,9 @@ export const usuario = sqliteTable('usuario', {
     totalGames: integer('totalGames').default(0),
     totalWins: integer('totalWins').default(0),
     totalLosses: integer('totalLosses').default(0),
-    totalDraws: integer('totalDraws').default(0)
+    totalDraws: integer('totalDraws').default(0),
+    actualStreak: integer('actualStreak').default(0),
+    maxStreak: integer('maxStreak').default(0),
 
 
 })
