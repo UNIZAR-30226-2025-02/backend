@@ -395,6 +395,7 @@ async function resultManager(game, idPartida) {
         // El ganador es el jugador que hizo el último movimiento
         const lastMove = game.history({ verbose: true }).pop();
         const winner = lastMove.color === 'w' ? game.header()['White'] : game.header()['Black'];
+        const loser = lastMove.color === 'w' ? game.header()['Black'] : game.header()['White'];
         const result = lastMove.color === 'w' ? 'white' : 'black';
         // Actualizar el resultado de la partida en la base de datos
         if (result === 'white') {
@@ -436,6 +437,21 @@ async function resultManager(game, idPartida) {
                 [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
             })
             .where(eq(usuario.id, game.header()['Black']))
+            .run();
+
+        await db.update(usuario)
+            .set({
+                maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+                actualStreak: sql`actualStreak + 1`
+            })
+            .where(eq(usuario.id, winner))
+            .run();
+
+        await db.update(usuario)
+            .set({
+                actualStreak: 0
+            })
+            .where(eq(usuario.id, loser))
             .run();
 
         //Notificacion

@@ -182,7 +182,7 @@ export async function login(req, res) {
 
         // Enviar el usuario y el token de acceso
         // ----------------------------------------------------------------------------------------
-        res.send({publicUser, accessToken});
+        res.send({ publicUser, accessToken });
         // ----------------------------------------------------------------------------------------
     } catch (error) {
         res.status(500).json({ error: 'Error al loguear el usuario' });
@@ -222,7 +222,7 @@ export async function authenticate(socket) {
             const oldSocket = activeSockets.get(userId);
             oldSocket.emit('force-logout', { message: 'Se ha iniciado sesión en otro dispositivo.' });
             oldSocket.emit('get-game-status');
-            
+
             // Eliminar el socket antiguo del mapa de conexiones activas
             activeSockets.delete(userId);
             // -----------------------------------------------------------------------------------------------
@@ -273,7 +273,8 @@ export async function logout(req, res) {
             return;
         }
         const usuarioEncontrado = usuarios[0];
-        
+        db.update(usuario).set({ estadoUser: 'unlogged' }).where(eq(usuario.NombreUser, NombreUser));
+
         // Desconectar el socket del usuario y eliminarlo de la lista de sockets activos
         activeSockets.delete(usuarioEncontrado.id);
         res.send('Usuario deslogueado correctamente');
