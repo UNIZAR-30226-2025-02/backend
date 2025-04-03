@@ -442,14 +442,18 @@ async function resultManager(game, idPartida) {
         await db.update(usuario)
             .set({
                 maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
-                actualStreak: sql`actualStreak + 1`
+                actualStreak: sql`actualStreak + 1`,
+                totalWins: sql`totalWins + 1`,
+                totalGames: sql`totalGames + 1`
             })
             .where(eq(usuario.id, winner))
             .run();
 
         await db.update(usuario)
             .set({
-                actualStreak: 0
+                actualStreak: 0,
+                totalLosses: sql`totalLosses + 1`,
+                totalGames: sql`totalGames + 1`
             })
             .where(eq(usuario.id, loser))
             .run();
@@ -505,7 +509,9 @@ async function resultManager(game, idPartida) {
         const eloB = game.header()['Black Elo']
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+                [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
+                totalDraws: sql`totalDraws + 1`,
+                totalGames: sql`totalGames + 1`
             })
             .where(eq(usuario.id, game.header()['White']))
             .run();
@@ -513,7 +519,9 @@ async function resultManager(game, idPartida) {
 
         await db.update(usuario)
             .set({
-                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
+                totalDraws: sql`totalDraws + 1`,
+                totalGames: sql`totalGames + 1`
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
