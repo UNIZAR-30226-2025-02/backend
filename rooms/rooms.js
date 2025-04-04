@@ -568,10 +568,15 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
                 const miElo = color === 'white' ? Math.trunc(headers['White Elo']) : Math.trunc(headers['Black Elo']);
                 const eloRival = color === 'white' ? Math.trunc(headers['Black Elo']) : Math.trunc(headers['White Elo']);
                 const idRival = color === 'white' ? headers['Black'] : headers['White'];
+                
+                console.log("Mi elo:", miElo);
+                console.log("Elo rival:", eloRival);
+                console.log('id rival:', idRival);
 
                 // Obtener el nombre del rival
                 const rival = await db.select().from(usuario).where(eq(usuario.id, idRival)).get()
                 const nombreRival = rival.NombreUser;
+                console.log("Nombre del rival:", nombreRival);
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla

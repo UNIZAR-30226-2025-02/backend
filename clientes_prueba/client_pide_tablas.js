@@ -142,20 +142,33 @@ function buscarPartida(socket) {
     });
 
     socket.on('existing-game', (data) => {
+        const timeLeftW = data.timeLeftW;
+        const timeLeftB = data.timeLeftB;
         const pgn = data.pgn;
+        const gameMode = data.gameMode;
+        const miElo = data.miElo;
+        const eloRival = data.eloRival;
+        const nombreRival = data.nombreRival;
 
-        // Actualizar color e id de la partida al recuperar una partida en curso, y recuperar
-        // el estado del tablero
         color = data.color;
         gameId = data.gameID;
 
+        // Cargar el PGN en el objeto Chess
         chess = new Chess();
         const isValid = chess.loadPgn(pgn);
         if (isValid === false) {
             console.error('Error al cargar el PGN:', pgn);
         }
 
-        console.log('Partida en curso recuperadaaaaaaa!!!!!!! :', pgn);
+        console.log('Partida en curso recuperada: ', pgn);
+        console.log('Color:', color);
+        console.log('ID de la partida:', gameId);
+        console.log('Tiempo restante del blanco:', timeLeftW);
+        console.log('Tiempo restante del negro:', timeLeftB);
+        console.log('Modo: ', gameMode);
+        console.log('Mi elo: ', miElo);
+        console.log('Elo Rival: ', eloRival);
+        console.log('Nombre rival: ', nombreRival);
         estabaEnPartida = true;
     });
 
