@@ -230,8 +230,9 @@ function buscarPartida(socket) {
         console.log('Tiempo restante del blaco: ', timeW);
         console.log('Tiempo restante del negro: ', timeB);
         console.log('Estado de la partida:', 'ingame');
+        console.log('Modo de la partida: ', mode);
 
-        socket.emit('game-status', { timeLeftW: timeW, timeLeftB: timeB, estadoPartida: 'ingame' });
+        socket.emit('game-status', { timeLeftW: timeW, timeLeftB: timeB, estadoPartida: 'ingame', gameMode: mode });
     });
 
     socket.on('new-message', (data) => {
@@ -245,6 +246,11 @@ function buscarPartida(socket) {
         const timeLeftW = data.timeLeftW;
         const timeLeftB = data.timeLeftB;
         const pgn = data.pgn;
+        const gameMode = data.gameMode;
+        const miElo = data.miElo;
+        const eloRival = data.eloRival;
+        const nombreRival = data.nombreRival;
+
         color = data.color;
         gameId = data.gameID;
 
@@ -260,6 +266,10 @@ function buscarPartida(socket) {
         console.log('ID de la partida:', gameId);
         console.log('Tiempo restante del blanco:', timeLeftW);
         console.log('Tiempo restante del negro:', timeLeftB);
+        console.log('Modo: ', gameMode);
+        console.log('Mi elo: ', miElo);
+        console.log('Elo Rival: ', eloRival);
+        console.log('Nombre rival: ', nombreRival);
         estabaEnPartida = true;
 
         socket.emit('fetch-msgs', { game_id: gameId });

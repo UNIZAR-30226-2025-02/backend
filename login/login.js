@@ -216,6 +216,7 @@ export async function authenticate(socket) {
         // (solo permitimos una sesión por usuario)
         let timeLeftW, timeLeftB;
         let estadoPartida;
+        let gameMode;
 
         if (activeSockets.has(userId)) {
             console.log(`Usuario ${userId} ya tiene una sesión activa, desconectando socket anterior...`);
@@ -226,9 +227,12 @@ export async function authenticate(socket) {
             // Eliminar el socket antiguo del mapa de conexiones activas
             activeSockets.delete(userId);
             // -----------------------------------------------------------------------------------------------
-            ({ timeLeftW, timeLeftB, estadoPartida } = await new Promise((resolve) => {
+            ({ timeLeftW, timeLeftB, estadoPartida, gameMode } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
-                    resolve({ timeLeftW: data.timeLeftW, timeLeftB: data.timeLeftB, estadoPartida: data.estadoPartida });
+                    resolve({ timeLeftW: data.timeLeftW,
+                              timeLeftB: data.timeLeftB,
+                              estadoPartida: data.estadoPartida,
+                              gameMode: data.gameMode });
                 });
             }));
             // -----------------------------------------------------------------------------------------------
@@ -246,7 +250,7 @@ export async function authenticate(socket) {
         activeSockets.set(userId, socket);
         console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
         console.log("Buscando si el usuario tiene una partida activa...")
-        await buscarPartidaActiva(userId, socket, timeLeftW, timeLeftB, estadoPartida);
+        await buscarPartidaActiva(userId, socket, timeLeftW, timeLeftB, estadoPartida, gameMode);
 
     } catch (error) {
         console.error('Error al autenticar el socket:', error.message);

@@ -540,7 +540,7 @@ async function resultManager(game, idPartida) {
     }
 }
 
-export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, estadoPartida) {
+export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, estadoPartida, gameMode) {
     if (estadoPartida === 'ingame') {
         console.log("El jugador estaba en partida, devolviendo gameID al cliente...");
 
@@ -564,11 +564,19 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
 
                 // Recuperar el color del jugador en la partida
                 const color = headers['White'] === userID ? 'white' : 'black';
+                
+                const miElo = color === 'white' ? Math.trunc(headers['White Elo']) : Math.trunc(headers['Black Elo']);
+                const eloRival = color === 'white' ? Math.trunc(headers['Black Elo']) : Math.trunc(headers['White Elo']);
+                const idRival = color === 'white' ? headers['Black'] : headers['White'];
+
+                // Obtener el nombre del rival
+                const rival = await db.select().from(usuario).where(eq(usuario.id, idRival)).get()
+                const nombreRival = rival.NombreUser;
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla
                 console.log("Enviando datos de la partida activa al cliente...");
-                socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB });
+                socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB, gameMode, miElo, eloRival, nombreRival });
             }
         }
         // ---------------------------------------------------------------------------------------
