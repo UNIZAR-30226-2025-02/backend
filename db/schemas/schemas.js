@@ -29,8 +29,6 @@ export const usuario = sqliteTable('usuario', {
     totalDraws: integer('totalDraws').default(0),
     actualStreak: integer('actualStreak').default(0),
     maxStreak: integer('maxStreak').default(0),
-
-
 })
 
 // Uso de zod internamente para validar los datos

@@ -1,7 +1,6 @@
 import { db } from '../db/db.js';
 import { eq, like, or, desc } from 'drizzle-orm';
-import { usuario } from '../db/schemas/schemas.js';
-import { partida } from '../db/schemas/schemas.js';
+import { usuario, partida, amistad } from '../db/schemas/schemas.js';
 
 export async function buscarUsuarioPorUser(req, res) {
     const user = req.query.NombreUser;
@@ -77,4 +76,18 @@ export async function buscarPartida(req, res) {
     }
 }
 
-
+export async function buscarAmigos(req, res) {
+    const id = req.query.id;
+    try {
+        const amigos = await db.select().from(amistad)
+            .where(or(eq(amistad.Jugador1, id)), eq(amistad.Jugador2, id));
+        if (amigos.length === 0) {
+            res.status(400).json({ error: 'No tienes amigos' });
+            return;
+        }
+        res.json(amigos); // Devolver los amigos encontrados
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Error al buscar los amigos' });
+    }
+}
