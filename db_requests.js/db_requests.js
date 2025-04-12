@@ -1,5 +1,5 @@
 import { db } from '../db/db.js';
-import { eq, like, or, desc } from 'drizzle-orm';
+import { eq, like, or, desc, and, ne } from 'drizzle-orm';
 import { usuario, partida, amistad } from '../db/schemas/schemas.js';
 
 export async function buscarUsuarioPorUser(req, res) {
@@ -76,18 +76,40 @@ export async function buscarPartida(req, res) {
     }
 }
 
+
 export async function buscarAmigos(req, res) {
     const id = req.query.id;
     try {
-        const amigos = await db.select().from(amistad)
-            .where(or(eq(amistad.Jugador1, id)), eq(amistad.Jugador2, id));
-        if (amigos.length === 0) {
-            res.status(400).json({ error: 'No tienes amigos' });
+        // Buscar amistades donde el usuario sea Jugador1 o Jugador2
+        const amistades = await db
+            .select({
+                amistadId: amistad.id,
+                amigoId: usuario.id,
+                nombreAmigo: usuario.NombreUser,
+                fotoAmigo: usuario.FotoPerfil,
+                estadoUser: usuario.estadoUser,
+                historialAmistad: amistad.HistorialAmistad,
+                retos: amistad.Retos,
+                created_at: amistad.created_at
+            })
+            .from(amistad)
+            .leftJoin(usuario, or(
+                and(eq(amistad.Jugador1, id), eq(usuario.id, amistad.Jugador2)),
+                and(eq(amistad.Jugador2, id), eq(usuario.id, amistad.Jugador1))
+            ))
+            .where(or(
+                eq(amistad.Jugador1, id),
+                eq(amistad.Jugador2, id)
+            ));
+
+        if (amistades.length === 0) {
+            res.json({ Message: 'No tienes amigos' });
             return;
         }
-        res.json(amigos); // Devolver los amigos encontrados
-    }
-    catch (error) {
+
+        res.json(amistades);
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error al buscar los amigos' });
     }
 }

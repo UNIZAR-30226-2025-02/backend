@@ -3,7 +3,7 @@ import { partida, usuario, amistad, reto } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
 import { eq, or, and, isNull } from "drizzle-orm";
 import { io } from '../server.js';
-import {activeSockets} from '../server.js';
+import { activeSockets } from '../server.js';
 
 
 //Funcion para añadir un amigo
@@ -19,9 +19,9 @@ export async function addFriend(data, socket) {
     }
 
     //Mandar evento de friendRequest al socket del amigo
-    io.to(socketAmigo.id).emit('friendRequest' , { idJugador, idAmigo });
-    console.log("Solicitud de amistad enviada de ", data.idJugador,  "a " , data.idAmigo);
-   
+    io.to(socketAmigo.id).emit('friendRequest', { idJugador, idAmigo });
+    console.log("Solicitud de amistad enviada de ", data.idJugador, "a ", data.idAmigo);
+
 }
 
 //funcion para aceptar una solicitud de amistad
@@ -41,18 +41,18 @@ export async function acceptFriendRequest(data, socket) {
     console.log("IDs procesados:", idJugador, idAmigo);
     console.log("Verificando si la amistad ya existe...")
     const existingFriendship = await db.select()
-    .from(amistad)
-    .where(
-        or(
-            and(eq(amistad.Jugador1, idJugador), eq(amistad.Jugador2, idAmigo)),
-            and(eq(amistad.Jugador1, idAmigo), eq(amistad.Jugador2, idJugador))
+        .from(amistad)
+        .where(
+            or(
+                and(eq(amistad.Jugador1, idJugador), eq(amistad.Jugador2, idAmigo)),
+                and(eq(amistad.Jugador1, idAmigo), eq(amistad.Jugador2, idJugador))
+            )
         )
-    )
-    .get();
+        .get();
 
     if (existingFriendship) {
         console.log("Ya son amigos");
-        return socket.emit('error', "Ya son amigos" );
+        return socket.emit('error', "Ya son amigos");
     }
 
     //Generar un nuevo ID para la amistad
@@ -65,11 +65,17 @@ export async function acceptFriendRequest(data, socket) {
         id: newFriendshipId,
         Jugador1: idJugador,
         Jugador2: idAmigo,
-        
+
         Retos: 0
     });
 
     // HistorialAmistad: JSON.stringify([]), // Historial vacío al inicio
+
+    // Aumentar en uno el contador de amigos de ambos jugadores
+    await db.update(usuario)
+        .set({ Amistades: sql`Amistades + 1` })
+        .where(or(eq(usuario.id, idJugador), eq(usuario.id, idAmigo)))
+        .run();
 
     //comunicar con un socket al jugador que la solicitud ha sido aceptada
     //socket.to(idJugador).emit('friendRequestAccepted', { idJugador, idAmigo });
@@ -78,7 +84,7 @@ export async function acceptFriendRequest(data, socket) {
         console.log("El jugador no está conectado.");
         return socket.emit('errorMessage', "El jugador no está conectado.");
     }
-    
+
     io.to(socketJugador.id).emit('friendRequestAccepted', { idJugador, idAmigo });
     console.log(`Solicitud de amistad aceptada de ${idAmigo} a ${idJugador}`);
 }
@@ -94,7 +100,7 @@ export async function rejectFriendRequest(data, socket) {
         console.log("El jugador no está conectado.");
         return socket.emit('errorMessage', "El jugador no está conectado.");
     }
-    
+
     io.to(socketJugador.id).emit('friendRequestRejected', { idJugador, idAmigo });
     console.log(`Solicitud de amistad rechazada de ${idAmigo} a ${idJugador}`);
 }
@@ -106,17 +112,17 @@ export async function removeFriend(data, socket) {
     const idAmigo = data.idAmigo;
 
     const deleted = await db.delete(amistad)
-    .where(
-        or(
-            and(eq(amistad.Jugador1, idJugador), eq(amistad.Jugador2, idAmigo)),
-            and(eq(amistad.Jugador1, idAmigo), eq(amistad.Jugador2, idJugador))
+        .where(
+            or(
+                and(eq(amistad.Jugador1, idJugador), eq(amistad.Jugador2, idAmigo)),
+                and(eq(amistad.Jugador1, idAmigo), eq(amistad.Jugador2, idJugador))
+            )
         )
-    )
-    .run();
+        .run();
 
     if (deleted.changes === 0) {
         console.log(`No se encontró la amistad entre ${idJugador} y ${idAmigo}.`);
-        
+
     }
 
     const socketAmigo = activeSockets.get(idAmigo); // Obtener el socket del amigo
@@ -127,8 +133,8 @@ export async function removeFriend(data, socket) {
     }
 
     //Mandar evento de que se ha elimnado la amistad al socket del amigo
-    io.to(socketAmigo.id).emit('friendRemoved' , { idJugador, idAmigo });
-    console.log("Eliminación de la amistad de ", data.idJugador,  "a " , data.idAmigo);
+    io.to(socketAmigo.id).emit('friendRemoved', { idJugador, idAmigo });
+    console.log("Eliminación de la amistad de ", data.idJugador, "a ", data.idAmigo);
 }
 
 //PENDIENTE COMPLETAR
@@ -166,7 +172,7 @@ export async function challengeFriend(data, socket) {
             .get();
 
         if (!friendship) {
-           console.log("No son amigos.");
+            console.log("No son amigos.");
         }
 
         // Crear un reto
@@ -192,12 +198,12 @@ export async function challengeFriend(data, socket) {
         }
 
         //Mandar evento de friendRequest al socket del amigo
-        io.to(socketRetado.id).emit('challengeSent' , { idRetador, idRetado, modo });
-        console.log("Reto ha sido enviado de ", data.idRetador,  "a " , data.idRetado);
-   
+        io.to(socketRetado.id).emit('challengeSent', { idRetador, idRetado, modo });
+        console.log("Reto ha sido enviado de ", data.idRetador, "a ", data.idRetado);
+
     } catch (error) {
         console.error("Error al retar amigo:", error);
-        
+
     }
 }
 
@@ -221,14 +227,14 @@ export async function createDuelGame(data, socket) {
                 )
             )
             .get();
-        
+
         if (!challenge) {
             console.log("No hay un reto pendiente con este amigo.");
         }
 
         console.log("Reto encontrado: ", challenge);
 
-       
+
         // Crear la partida de ajedrez
         const chess = new Chess();
         const gameId = crypto.randomUUID();
@@ -255,7 +261,7 @@ export async function createDuelGame(data, socket) {
             .set({ Pendiente: 0, Activo: 1 })
             .where(eq(reto.id, challenge.id))
             .run();
-        
+
         console.log('Reto actualizado')
 
         // Crear sala en socket
@@ -277,10 +283,10 @@ export async function createDuelGame(data, socket) {
         //Ahora borramos el reto de la base de datos antes de entrar a partida
 
         const result = await db.delete(reto)
-        .where(
-            eq(reto.Retador, idRetador) && eq(reto.Retado, idRetado)
-        )
-        .run();
+            .where(
+                eq(reto.Retador, idRetador) && eq(reto.Retado, idRetado)
+            )
+            .run();
 
         if (result.changes > 0) {
             console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
@@ -297,7 +303,7 @@ export async function createDuelGame(data, socket) {
         return gameId;
 
     } catch (error) {
-        console.log ("Error al crear partida");
+        console.log("Error al crear partida");
     }
 }
 
@@ -319,7 +325,7 @@ export async function deleteChallenge(data, socket) {
         } else {
             console.log(`No se encontró un reto entre ${data.idRetador} y ${data.idRetado}.`);
         }
-        
+
         console.log("Se ha boorado correctamente el reto correspondiente");
     } catch (error) {
         console.error("Error al eliminar el reto:", error);
