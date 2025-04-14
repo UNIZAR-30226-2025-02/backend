@@ -1,15 +1,28 @@
 import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
+import schedule from 'node-schedule';
 import { app } from './app.js';
 import { authenticate } from './login/login.js';
+
+// Funciones del módulo de chat
 import { saveMessage, fetchMessages } from './chat/chat.js';
-import { findGame, manejarMovimiento, cancelarBusquedaPartida,
-        manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
+
+// Funciones del módulo de cronjobs
+import { deleteInactiveGuests } from './cronjobs/cronjobs.js';
+
+// Funciones del módulo de partidas
+import {
+    findGame, manejarMovimiento, cancelarBusquedaPartida,
+    manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
 } from './rooms/rooms.js';
-import { addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
+
+// Funciones del módulo de amistad
+import {
+    addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
     rejectFriendRequest,
-    deleteChallenge} from './friendship/friends.js';
+    deleteChallenge
+} from './friendship/friends.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -34,6 +47,18 @@ const PORT = app.get('port');
 server.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
+
+// -----------------------------------------------------------------------------------------------
+// Borrado de guests inactivos
+// Se ejecuta cada día a las 14:30 (2:30 PM)
+// -----------------------------------------------------------------------------------------------
+schedule.scheduleJob('30 22 * * *', async function () {
+    console.log('This cronjob runs every day at 22:30 PM');
+    console.log('INICIO DEL CRONJOB');
+    await deleteInactiveGuests();
+    console.log('FIN DEL CRONJOB');
+});
+// -----------------------------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------------------------
 // Función que se ejecuta cada vez que un nuevo cliente se conecta al servidor
@@ -111,44 +136,44 @@ async function newConnection(socket) {
     });
 
     //AMIGOS
-    
-        socket.on('add-friend', async (data) => {
-            console.log("Recibido evento add-friend...");
-            //imprimimos el data para ver que todo esta bien
-            console.log("data de evento add-friend: ", data);
-            await addFriend(data, socket);
-        });
-    
-        socket.on('accept-request', async (data) => {
-            console.log("Recibido evento friendRequestAccepted...");
-            await acceptFriendRequest(data, socket);
-        });
-    
-        socket.on('reject-request', async (data) => {
-            console.log("Recibido evento friendRequestRejected...");
-            await rejectFriendRequest(data, socket);
-        });
-    
-        socket.on('remove-friend', async (data) => {
-            console.log("Recibido evento remove-friend...");
-            await removeFriend(data, socket);
-        });
-    
-        socket.on('challenge-friend', async (data) => {
-            console.log("Recibido evento challenge-friend...");
-            await challengeFriend(data, socket);
-        });
-    
-        socket.on('accept-challenge', async (data) => {
-            console.log("Recibido evento accept-challenge...");
-            await createDuelGame(data, socket);
-        });
-    
-        socket.on('reject-challenge', async (data) => {
-            console.log("Recibido evento reject-challenge...");
-            await deleteChallenge(data, socket);
-        });
-    
+
+    socket.on('add-friend', async (data) => {
+        console.log("Recibido evento add-friend...");
+        //imprimimos el data para ver que todo esta bien
+        console.log("data de evento add-friend: ", data);
+        await addFriend(data, socket);
+    });
+
+    socket.on('accept-request', async (data) => {
+        console.log("Recibido evento friendRequestAccepted...");
+        await acceptFriendRequest(data, socket);
+    });
+
+    socket.on('reject-request', async (data) => {
+        console.log("Recibido evento friendRequestRejected...");
+        await rejectFriendRequest(data, socket);
+    });
+
+    socket.on('remove-friend', async (data) => {
+        console.log("Recibido evento remove-friend...");
+        await removeFriend(data, socket);
+    });
+
+    socket.on('challenge-friend', async (data) => {
+        console.log("Recibido evento challenge-friend...");
+        await challengeFriend(data, socket);
+    });
+
+    socket.on('accept-challenge', async (data) => {
+        console.log("Recibido evento accept-challenge...");
+        await createDuelGame(data, socket);
+    });
+
+    socket.on('reject-challenge', async (data) => {
+        console.log("Recibido evento reject-challenge...");
+        await deleteChallenge(data, socket);
+    });
+
 }
 // -----------------------------------------------------------------------------------------------
 // Escuchar eventos de conexión al servidor

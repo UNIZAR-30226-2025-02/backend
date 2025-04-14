@@ -1,7 +1,7 @@
 import { db } from '../db/db.js';
 import { partida, usuario, amistad, reto } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
-import { eq, or, and, isNull } from "drizzle-orm";
+import { eq, or, and, sql } from "drizzle-orm";
 import { io } from '../server.js';
 import { activeSockets } from '../server.js';
 

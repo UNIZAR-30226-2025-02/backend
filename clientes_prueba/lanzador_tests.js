@@ -417,7 +417,7 @@ async function Test5Base() {
                 logError(`NEW Client1 Error: ${data}`);
             });
         }
-            , 12000);
+            , 14000);
 
         setTimeout(async () => {
             try {
@@ -473,17 +473,17 @@ async function Test5Base() {
 
 async function main() {
     logInfo('Starting the tests...');
-    //await Test1Base();
-    //await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
+    await Test1Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
 
-    //await Test2Base();
-    //await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
+    await Test2Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
 
-    //await Test3Base();
-    //await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
+    await Test3Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
 
-    //await Test4Base();
-    //await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
+    await Test4Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
 
     await Test5Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
@@ -499,6 +499,4 @@ async function main() {
 }
 main().catch((error) => {
     logError(`Error in main: ${error}`);
-
-
 });

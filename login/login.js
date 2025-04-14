@@ -229,10 +229,12 @@ export async function authenticate(socket) {
             // -----------------------------------------------------------------------------------------------
             ({ timeLeftW, timeLeftB, estadoPartida, gameMode } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
-                    resolve({ timeLeftW: data.timeLeftW,
-                              timeLeftB: data.timeLeftB,
-                              estadoPartida: data.estadoPartida,
-                              gameMode: data.gameMode });
+                    resolve({
+                        timeLeftW: data.timeLeftW,
+                        timeLeftB: data.timeLeftB,
+                        estadoPartida: data.estadoPartida,
+                        gameMode: data.gameMode
+                    });
                 });
             }));
             // -----------------------------------------------------------------------------------------------
@@ -412,17 +414,28 @@ export async function crearInvitado(req, res) {
     try {
         const baseName = "guest";
         const id = uuidv4();
-        const NombreUser = req.body.NombreUser;
+        let NombreUser = req.body.NombreUser;
         if (!NombreUser) {
-            NombreUser = baseName + uuidv4();
+            NombreUser = baseName + uuidv4().slice(0, 6);
         }
 
+        let nombreUnico = false;
+
         // COMPROBAR QUE NO EXISTA UN USUARIO CON EL MISMO NOMBRE
-        const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        if (usuarios.length > 0) {
-            res.status(400).json({ error: 'El nombre de usuario está ocupado, prueba con otro.' });
-            return;
+        while (!nombreUnico) {
+            const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
+            if (usuarios.length > 0) {
+                //res.status(400).json({ error: 'El nombre de usuario está ocupado, se te asignará otro.' });
+                NombreUser = baseName + uuidv4().slice(0, 6);
+                //return;
+            }
+            else {
+                nombreUnico = true;
+            }
         }
+
+        // Creacion del token de inicio de sesión
+        const accessToken = generateAccessToken(id);
 
 
         // Insertar el usuario en la base de datos
@@ -436,7 +449,16 @@ export async function crearInvitado(req, res) {
             estadoUser: baseName
         });
 
-        res.json({ message: 'Invitado creado correctamente', id: id, NombreUser: NombreUser, estadoUser: baseName });
+        const publicUser = {
+            id: id,
+            NombreUser: NombreUser,
+            Correo: NombreUser,
+            FotoPerfil: "none",
+            estadoUser: baseName,
+            correoVerificado: "no",
+        };
+
+        res.json({ message: 'Invitado creado correctamente', publicUser: publicUser, accessToken: accessToken });
 
     }
     catch (error) {
@@ -448,6 +470,7 @@ export async function crearInvitado(req, res) {
 export async function borrarInvitado(req, res) {
     try {
         const id = req.body.id;
+        console.log('Invitado: ', id, ' cerrando sesión...');
         if (!id) {
             res.status(400).json({ error: 'Falta el id del invitado' });
             return;
@@ -457,9 +480,13 @@ export async function borrarInvitado(req, res) {
             res.status(400).json({ error: 'Invitado no encontrado' });
             return;
         }
+        console.log("Invitado encontrado:", usuarios[0]);
+        // Se actualiza el lastOnline del invitado a la fecha actual
+        let fechaActual = Math.floor(Date.now() / 1000); // Convertir a segundos desde la época Unix
+        await db.update(usuario).set({ lastOnline: fechaActual }).where(eq(usuario.id, id));
 
 
-        await db.delete(usuario).where(eq(usuario.id, id));
+        // await db.delete(usuario).where(eq(usuario.id, id));
         res.send('Invitado eliminado correctamente');
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el invitado' });
