@@ -3,9 +3,11 @@ import { db } from '../db/db.js';
 import { usuario, mensaje, partida } from '../db/schemas/schemas.js';
 
 export async function deleteInactiveGuests() {
+    // Obtener el timestamp actual en segundos
     const timeStampActual = Math.floor(Date.now() / 1000);
     console.log('Buscando invitados inactivos...');
 
+    // Obtener los usuarios inactivos que no han jugado en las últimas 24 horas y son invitados
     const usersToDelete = await db.select
     ({
         mensajeId: mensaje.Id_mensaje,
@@ -22,7 +24,8 @@ export async function deleteInactiveGuests() {
                 eq(usuario.estadoUser, "guest")
             )
         );
-
+    
+    // Agregar los ids de los mensajes, partidas y usuarios a borrar
     const messageIds = [...new Set(usersToDelete.map(user => user.mensajeId).filter(id => id !== null))];
     const gameIds = [...new Set(usersToDelete.map(user => user.partidaId).filter(id => id !== null))];
     const userIds = [...new Set(usersToDelete.map(user => user.usuarioId).filter(id => id !== null))];

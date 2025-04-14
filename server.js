@@ -55,8 +55,6 @@ server.listen(PORT, () => {
 schedule.scheduleJob('30 22 * * *', async function () {
     console.log('This cronjob runs every day at 22:30 PM');
     console.log('INICIO DEL CRONJOB');
-    // Aquí puedes llamar a la función que deseas ejecutar
-    // Por ejemplo, deleteInactiveGuests();
     await deleteInactiveGuests();
     console.log('FIN DEL CRONJOB');
 });
