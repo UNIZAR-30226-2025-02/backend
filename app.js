@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/login.js';
-import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarPartida, getUserInfo, buscarAmigos } from './db_requests.js/db_requests.js';
+import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos } from './db_requests.js/db_requests.js';
 
 export const app = express()
 
@@ -75,6 +75,11 @@ app.get('/buscarPartidasDeUsuario', async (req, res) => {
 app.get('/buscarUlt5PartidasDeUsuario', async (req, res) => {
     await buscarUlt5PartidasDeUsuario(req, res);
 });
+
+app.get('/buscarUlt5PartidasDeUsuarioPorModo', async (req, res) => {
+    await buscarUlt5PartidasDeUsuarioPorModo(req, res);
+});
+
 
 app.get('/buscarPartida', async (req, res) => {
     await buscarPartida(req, res);
