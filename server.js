@@ -1,25 +1,28 @@
 import './dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
+import schedule from 'node-schedule';
 import { app } from './app.js';
 import { authenticate } from './login/login.js';
-import { saveMessage, fetchMessages } from './chat/chat.js';
-import { db } from './db/db.js';
-import { or, lt, eq, and } from 'drizzle-orm';
-import schedule from 'node-schedule';
-import { usuario, mensaje, partida } from './db/schemas/schemas.js';
 
+// Funciones del módulo de chat
+import { saveMessage, fetchMessages } from './chat/chat.js';
+
+// Funciones del módulo de cronjobs
+import { deleteInactiveGuests } from './cronjobs/cronjobs.js';
+
+// Funciones del módulo de partidas
 import {
     findGame, manejarMovimiento, cancelarBusquedaPartida,
     manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
 } from './rooms/rooms.js';
 
+// Funciones del módulo de amistad
 import {
     addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
     rejectFriendRequest,
     deleteChallenge
 } from './friendship/friends.js';
-
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();
@@ -45,55 +48,19 @@ server.listen(PORT, () => {
     console.log(`Servidor corriendo en la direccion http://localhost:${PORT}`);
 });
 
-// Schedule a job to run every day at 2:30 PM
-//const job = schedule.scheduleJob('30 14 * * *', async function () {
-const job = schedule.scheduleJob('* * * * *', async function () {
-
-    // Buscar en la base de datos todos los usuarios con estadoUser = "readyToDelete"
-    // Borrar todos los mensajes procedentes de estos usuarios
-    // Borrar todas las partidas jugadas por estos usuarios
-    // Borrar todos estos usuarios
-
-    const timeStampActual = Math.floor(Date.now() / 1000);
-    console.log('This job runs every day at 2:30 PM.');
-    console.log('Buscando usuarios inactivos...');
-    const usersToDelete = await db.select({
-        mensajeId: mensaje.Id_mensaje,
-        partidaId: partida.id,
-        usuarioId: usuario.id,
-    }).from(usuario)
-        .leftJoin(mensaje, eq(usuario.id, mensaje.Id_usuario))
-        .leftJoin(partida, or(eq(usuario.id, partida.JugadorW), eq(usuario.id, partida.JugadorB)))
-        .where(and(lt(usuario.lastOnline, (timeStampActual - 60)), eq(usuario.estadoUser, "guest"))).run();
-
-    console.log('Usuarios inactivos encontrados: ' + usersToDelete.length);
-    console.log(usersToDelete);
-
-    const messageIds = usersToDelete.map(user => user.mensajeId).filter(id => id !== null);
-    const gameIds = usersToDelete.map(user => user.partidaId).filter(id => id !== null);
-    const userIds = usersToDelete.map(user => user.usuarioId);
-
-    // Borrar mensajes de los usuarios
-    if (messageIds.length > 0) {
-        await db.delete(mensaje).where(mensaje.Id_mensaje.in(messageIds)).run();
-    }
-
-    // Borrar partidas de los usuarios
-    if (gameIds.length > 0) {
-        await db.delete(partida).where(partida.id.in(gameIds)).run();
-    }
-
-    // Borrar usuarios
-    if (userIds.length > 0) {
-        await db.delete(usuario).where(usuario.id.in(userIds)).run();
-    }
-
-    console.log('Usuarios inactivos borrados: ' + userIds.length);
-    console.log('Mensajes borrados: ' + messageIds.length);
-    console.log('Partidas borradas: ' + gameIds.length);
-    console.log('FIN DEL BORRADO');
+// -----------------------------------------------------------------------------------------------
+// Borrado de guests inactivos
+// Se ejecuta cada día a las 14:30 (2:30 PM)
+// -----------------------------------------------------------------------------------------------
+schedule.scheduleJob('* * * * *', async function () {
+    console.log('This cronjob runs every day at 2:30 PM');
+    console.log('INICIO DEL CRONJOB');
+    // Aquí puedes llamar a la función que deseas ejecutar
+    // Por ejemplo, deleteInactiveGuests();
+    await deleteInactiveGuests();
+    console.log('FIN DEL CRONJOB');
 });
-
+// -----------------------------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------------------------
 // Función que se ejecuta cada vez que un nuevo cliente se conecta al servidor
