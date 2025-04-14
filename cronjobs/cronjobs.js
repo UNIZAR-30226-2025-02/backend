@@ -18,7 +18,7 @@ export async function deleteInactiveGuests() {
         .where(
             and
             (   
-                lt(usuario.lastOnline, (timeStampActual - 60)),
+                lt(usuario.lastOnline, (timeStampActual - 86400)),
                 eq(usuario.estadoUser, "guest")
             )
         );
