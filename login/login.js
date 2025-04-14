@@ -480,9 +480,13 @@ export async function borrarInvitado(req, res) {
             res.status(400).json({ error: 'Invitado no encontrado' });
             return;
         }
+        console.log("Invitado encontrado:", usuarios[0]);
+        // Se actualiza el lastOnline del invitado a la fecha actual
+        let fechaActual = Math.floor(Date.now() / 1000); // Convertir a segundos desde la época Unix
+        await db.update(usuario).set({ lastOnline: fechaActual }).where(eq(usuario.id, id));
 
 
-        await db.delete(usuario).where(eq(usuario.id, id));
+        // await db.delete(usuario).where(eq(usuario.id, id));
         res.send('Invitado eliminado correctamente');
     } catch (error) {
         res.status(500).json({ error: 'Error al eliminar el invitado' });
