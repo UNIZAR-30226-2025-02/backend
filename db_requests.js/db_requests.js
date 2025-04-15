@@ -25,15 +25,15 @@ export async function getUserInfo(req, res) {
             return;
         }
         const user = usuarios[0];
-        // Comprobar si el correo del usuario ha sido verificado y el usuario está logueado
-        if (user.correoVerificado === 'no') {
-            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
-            return;
-        }
+        // Comprobar si el usuario está logueadoha y ha verificado su correo 
         if (user.estadoUser === 'unlogged') {
             res.status(400).json({ error: 'Usuario no logueado. Inicie sesión para ver su información' });
             return;
+        } else if (user.correoVerificado === 'no' && user.estadoUser === 'logged') {
+            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
+            return;
         }
+
         const { Contrasena, tokenPasswd, tokenVerificacion, ...publicUser } = user;
         res.send(publicUser);
     } catch (error) {
