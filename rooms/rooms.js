@@ -692,7 +692,28 @@ export async function manejarRendicion(data, socket) {
         .where(eq(usuario.id, game.header()['Black']))
         .run();
 
+    // Actualizar rachas y numero de partidas
+    const winner = oponente;
+    const loser = idJugador;
+    
+    await db.update(usuario)
+        .set({
+            maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+            actualStreak: sql`actualStreak + 1`,
+            totalWins: sql`totalWins + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, winner))
+        .run();
 
+    await db.update(usuario)
+        .set({
+            actualStreak: 0,
+            totalLosses: sql`totalLosses + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, loser))
+        .run();
 
     // Actualizar la base de datos con el ganador
     await db.update(partida)
@@ -798,6 +819,25 @@ export async function aceptarTablas(data, socket) {
         .where(or(
             eq(usuario.id, game.header()['White']),
             eq(usuario.id, game.header()['Black'])))
+        .run();
+
+    // Actualizar rachas y numero de partidas
+    await db.update(usuario)
+    .set({
+        [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
+        totalDraws: sql`totalDraws + 1`,
+        totalGames: sql`totalGames + 1`
+    })
+    .where(eq(usuario.id, game.header()['White']))
+    .run();
+
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
+            totalDraws: sql`totalDraws + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, game.header()['Black']))
         .run();
 
     // Eliminar la partida de memoria
