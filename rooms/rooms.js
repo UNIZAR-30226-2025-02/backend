@@ -890,6 +890,13 @@ export async function gestionarDesconexion(socket) {
         }
     }
 
+    // Si no se encuentra la partida activa, el jugador no está en ninguna partida y puede 
+    // desconectarse sin problemas
+    if (!idPartida) {
+        console.log("El jugador no está en ninguna partida activa.");
+        return;
+    }
+
     // Verificar si la partida existe y el jugador está en ella
     io.to(idPartida).emit('opponent-disconnected', { userID });
     activeSockets.delete(userID);
