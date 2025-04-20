@@ -872,8 +872,8 @@ export async function gestionarDesconexion(socket) {
         }
     });
 
-    // Si no se encuentra el userID, no se puede gestionar la desconexión (algo ha ido mal, había
-    // un socket activo que no estaba en activeSockets)
+    // Si no se encuentra el userID, no se puede gestionar la desconexión (ya se ha desconectado
+    // por medio del logout)
     if (!userID) {
         console.log("No se pudo encontrar el userID asociado al socket.");
         return;
@@ -881,7 +881,7 @@ export async function gestionarDesconexion(socket) {
     
     console.log("Gestión de desconexión del jugador: ", userID);
     activeSockets.delete(userID);
-    
+
     // Buscar la partida activa del jugador
     let idPartida;
     for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
