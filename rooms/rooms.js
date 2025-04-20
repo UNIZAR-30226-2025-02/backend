@@ -880,7 +880,8 @@ export async function gestionarDesconexion(socket) {
     }
     
     console.log("Gestión de desconexión del jugador: ", userID);
-
+    activeSockets.delete(userID);
+    
     // Buscar la partida activa del jugador
     let idPartida;
     for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
@@ -899,7 +900,6 @@ export async function gestionarDesconexion(socket) {
 
     // Verificar si la partida existe y el jugador está en ella
     io.to(idPartida).emit('opponent-disconnected', { userID });
-    activeSockets.delete(userID);
 
     console.log("Iniciando 15 segundos de cortesía para verificar si el jugador se reconecta...");
 
