@@ -14,7 +14,8 @@ import { deleteInactiveGuests } from './cronjobs/cronjobs.js';
 // Funciones del módulo de partidas
 import {
     findGame, manejarMovimiento, cancelarBusquedaPartida,
-    manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas
+    manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas,
+    gestionarDesconexion
 } from './rooms/rooms.js';
 
 // Funciones del módulo de amistad
