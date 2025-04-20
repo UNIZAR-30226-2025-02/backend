@@ -84,12 +84,16 @@ async function newConnection(socket) {
     });
 
     // ------------------------------------------------------------------------------------------
-
-    socket.on('disconnect', () => {
+    // Desconexión del cliente
+    // ------------------------------------------------------------------------------------------
+    socket.on('disconnect', async () => {
         console.log("Usuario desconectado")
+        await gestionarDesconexion(socket);
     });
 
-    // Petición para recuperar toda la conversación entre los jugadores de una partida
+    // ------------------------------------------------------------------------------------------
+    // Eventos de chat
+    // ------------------------------------------------------------------------------------------
     socket.on('fetch-msgs', async (data) => {
         await fetchMessages(data, socket);
     });
@@ -99,7 +103,9 @@ async function newConnection(socket) {
         await saveMessage(data, socket);
     });
 
-    //peticion para salir de una partida
+    // ------------------------------------------------------------------------------------------
+    // Eventos de partidas
+    // ------------------------------------------------------------------------------------------
     socket.on('find-game', async (data) => {
         console.log("Recibido evento find-game...");
         await findGame(data, socket);
@@ -135,8 +141,9 @@ async function newConnection(socket) {
         await rechazarTablas(data, socket);
     });
 
-    //AMIGOS
-
+    // ------------------------------------------------------------------------------------------
+    // Eventos de amistad
+    // ------------------------------------------------------------------------------------------
     socket.on('add-friend', async (data) => {
         console.log("Recibido evento add-friend...");
         //imprimimos el data para ver que todo esta bien
@@ -173,8 +180,9 @@ async function newConnection(socket) {
         console.log("Recibido evento reject-challenge...");
         await deleteChallenge(data, socket);
     });
+    // ------------------------------------------------------------------------------------------
 
 }
-// -----------------------------------------------------------------------------------------------
+
 // Escuchar eventos de conexión al servidor
 io.on('connection', newConnection);

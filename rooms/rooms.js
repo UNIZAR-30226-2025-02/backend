@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 // Tenemos que crear un objeto que mantenga las partidas activas en memoria
 let ActiveXObjects = {};
-
+import { activeSockets } from '../server.js';
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
  */
@@ -582,6 +582,8 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
                 // necesaria para retomarla
                 console.log("Enviando datos de la partida activa al cliente...");
                 socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB, gameMode, miElo, eloRival, nombreRival });
+
+                break;
             }
         }
         // ---------------------------------------------------------------------------------------
@@ -860,3 +862,58 @@ export async function rechazarTablas(data, socket) {
     socket.to(idPartida).emit('draw-declined', { idJugador });
 }
 // -----------------------------------------------------------------------------------------------
+
+export async function gestionarDesconexion(socket) {
+    // Recuperar el id del usuario cuyo socket se está desconectando (por motivo ajeno a logout)
+    let userID;
+    activeSockets.forEach((value, key) => {
+        if (value.id === socket.id) {
+            userID = key;
+        }
+    });
+
+    // Si no se encuentra el userID, no se puede gestionar la desconexión (algo ha ido mal, había
+    // un socket activo que no estaba en activeSockets)
+    if (!userID) {
+        console.log("No se pudo encontrar el userID asociado al socket.");
+        return;
+    }
+    
+    console.log("Gestión de desconexión del jugador: ", userID);
+
+    // Buscar la partida activa del jugador
+    let idPartida;
+    for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+        if (gameData.players.includes(userID)) {
+            idPartida = gameID;
+            break;
+        }
+    }
+
+    // Verificar si la partida existe y el jugador está en ella
+    io.to(idPartida).emit('opponent-disconnected', { userID });
+    activeSockets.delete(userID);
+
+    console.log("Iniciando 15 segundos de cortesía para verificar si el jugador se reconecta...");
+
+    setTimeout(() => {
+        // Si el jugador no se ha reconectado, se considera que ha abandonado la partida
+        if (!activeSockets.has(userID)) {
+            console.log("El jugador no se ha reconectado, se considera que ha abandonado la partida.");
+
+            // Verificar si la partida sigue activa o ha terminado ya por otro motivo
+            // (tiempo, jaque mate, etc.)
+            if (!ActiveXObjects[idPartida]) {
+                console.log("La partida ya ha finalizado por otro motivo.");
+                return;
+            } else {
+                console.log("Considerando abandono como rendición, dando la victoria al rival...");
+
+                // Aquí puedes manejar la lógica de abandono de partida (rendición, etc.)
+                manejarRendicion({ idPartida: idPartida, idJugador: userID }, socket);
+            }
+        } else {
+            console.log("El jugador se ha reconectado antes de los 15 segundos.");
+        }
+    }, 15000); // 15 segundos
+}
