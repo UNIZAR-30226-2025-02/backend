@@ -149,6 +149,8 @@ export async function loadGame(idPartida, idJugador, socket) {
         const jugadorNegras = await db.select().from(usuario).where(eq(usuario.id, idNegras)).get();
         const nombreBlancas = jugadorBlancas.NombreUser;
         const nombreNegras = jugadorNegras.NombreUser;
+        const fotoBlancas = jugadorBlancas.FotoPerfil;
+        const fotoNegras = jugadorNegras.FotoPerfil;
 
         // Obtener el elo de los jugadores
         const eloBlancas = Math.trunc(existingGame.header()['White Elo']);
@@ -164,8 +166,8 @@ export async function loadGame(idPartida, idJugador, socket) {
         // Pasarles el ID del usuario tambien ? o solo eso
         io.to(idPartida).emit('color', {
             jugadores: [
-                { id: idBlancas, nombreW: nombreBlancas, eloW: eloBlancas, color: 'white' },
-                { id: idNegras, nombreB: nombreNegras, eloB: eloNegras, color: 'black' }
+                { id: idBlancas, nombreW: nombreBlancas, eloW: eloBlancas, color: 'white', fotoBlancas: fotoBlancas },
+                { id: idNegras, nombreB: nombreNegras, eloB: eloNegras, color: 'black', fotoNegras: fotoNegras }
             ]
         });
 
@@ -564,11 +566,11 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
 
                 // Recuperar el color del jugador en la partida
                 const color = headers['White'] === userID ? 'white' : 'black';
-                
+
                 const miElo = color === 'white' ? Math.trunc(headers['White Elo']) : Math.trunc(headers['Black Elo']);
                 const eloRival = color === 'white' ? Math.trunc(headers['Black Elo']) : Math.trunc(headers['White Elo']);
                 const idRival = color === 'white' ? headers['Black'] : headers['White'];
-                
+
                 console.log("Mi elo:", miElo);
                 console.log("Elo rival:", eloRival);
                 console.log('id rival:', idRival);
@@ -577,12 +579,12 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
                 const rival = await db.select().from(usuario).where(eq(usuario.id, idRival)).get()
                 const nombreRival = rival.NombreUser;
                 console.log("Nombre del rival:", nombreRival);
+                const foto_rival = rival.FotoPerfil;
 
                 // Notificar al cliente que estaba en una partida activa, proporcionando la info
                 // necesaria para retomarla
                 console.log("Enviando datos de la partida activa al cliente...");
-                socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB, gameMode, miElo, eloRival, nombreRival });
-
+                socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB, gameMode, miElo, eloRival, nombreRival, foto_rival });
                 break;
             }
         }

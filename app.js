@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/login.js';
-import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos } from './db_requests.js/db_requests.js';
+import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos, rankingPorModo, rankingUserPorModo } from './db_requests.js/db_requests.js';
 
 export const app = express()
 
@@ -91,5 +91,13 @@ app.get('/getUserInfo', async (req, res) => {
 
 app.get('/buscarAmigos', async (req, res) => {
     await buscarAmigos(req, res);
+});
+
+app.get(('/rankingPorModo'), async (req, res) => {
+    await rankingPorModo(req, res);
+});
+
+app.get(('/rankingUserPorModo'), async (req, res) => {
+    await rankingUserPorModo(req, res);
 });
 

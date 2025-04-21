@@ -1,5 +1,5 @@
 import { db } from '../db/db.js';
-import { eq, like, or, desc, and, ne } from 'drizzle-orm';
+import { eq, like, or, desc, and, ne, sql } from 'drizzle-orm';
 import { usuario, partida, amistad } from '../db/schemas/schemas.js';
 
 export async function buscarUsuarioPorUser(req, res) {
@@ -125,5 +125,98 @@ export async function buscarAmigos(req, res) {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al buscar los amigos' });
+    }
+}
+
+export async function rankingPorModo(req, res) {
+    const modo = req.query.modo;    // Modo de juego (Punt_3, Punt_5, etc.)
+    const numTop = 10; // Número de usuarios a devolver, por defecto 10
+
+    const columnMap = {
+        'Punt_3': usuario.Punt_3,
+        'Punt_5': usuario.Punt_5,
+        'Punt_10': usuario.Punt_10,
+        'Punt_30': usuario.Punt_30,
+        'Punt_3_2': usuario.Punt_3_2,
+        'Punt_5_10': usuario.Punt_5_10
+    };
+
+    try {
+        const ranking = await db
+            .select({
+                rank: sql`ROW_NUMBER() OVER (ORDER BY ${columnMap[modo]} DESC)`.as('rank'), // Calcular el ranking
+                id: usuario.id,
+                nombre: usuario.NombreUser,
+                foto: usuario.FotoPerfil,
+                victorias: usuario.totalWins,
+                derrotas: usuario.totalLosses,
+                empates: usuario.totalDraws,
+                rachaActual: usuario.actualStreak,
+                rachaMaxima: usuario.maxStreak,
+                puntuacion: columnMap[modo] // Usar el modo de puntuación correcto
+
+            })
+            .from(usuario)
+            .where(ne(usuario.estadoUser, 'guest'))
+            .orderBy(desc(columnMap[modo])) // Ordenar por puntuación en el modo especificado
+            .limit(numTop); // Limitar a los primeros numTop resultados
+
+        console.log("Consulta ranking: ", ranking)
+        if (ranking.length === 0) {
+            res.status(400).json({ error: 'No hay usuarios en el ranking' });
+            return;
+        }
+        res.json(ranking); // Devolver el ranking
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener el ranking' });
+    }
+}
+
+
+export async function rankingUserPorModo(req, res) {
+    const modo = req.query.modo;    // Modo de juego (Punt_3, Punt_5, etc.)
+    const user = req.query.user;    // Nombre de usuario
+
+    const columnMap = {
+        'Punt_3': usuario.Punt_3,
+        'Punt_5': usuario.Punt_5,
+        'Punt_10': usuario.Punt_10,
+        'Punt_30': usuario.Punt_30,
+        'Punt_3_2': usuario.Punt_3_2,
+        'Punt_5_10': usuario.Punt_5_10
+    };
+
+    try {
+        const ranking = await db
+            .select({
+                rank: sql`ROW_NUMBER() OVER (ORDER BY ${columnMap[modo]} DESC)`.as('rank'), // Calcular el ranking
+                id: usuario.id,
+                nombre: usuario.NombreUser,
+                puntuacion: columnMap[modo] // Usar el modo de puntuación correcto
+
+            })
+            .from(usuario)
+            .where(ne(usuario.estadoUser, 'guest'))
+            .orderBy(desc(columnMap[modo])) // Ordenar por puntuación en el modo especificado
+
+        console.log("Consulta ranking: ", ranking)
+        if (ranking.length === 0) {
+            res.status(400).json({ error: 'No ha encotrado al usuario' });
+            return;
+        }
+        // Buscar el ranking del usuario específico
+        const userRanking = ranking.find(userRank => userRank.nombre === user);
+        if (!userRanking) {
+            res.status(400).json({ error: 'Usuario no encontrado en el ranking' });
+            return;
+        }
+
+        res.json(userRanking); // Devolver el ranking
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener el ranking' });
     }
 }
