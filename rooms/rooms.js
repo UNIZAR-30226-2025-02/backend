@@ -6,7 +6,7 @@ import { io } from '../server.js';
 import crypto from 'crypto';
 
 // Tenemos que crear un objeto que mantenga las partidas activas en memoria
-let ActiveXObjects = {};
+export let ActiveXObjects = {};
 import { activeSockets } from '../server.js';
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
