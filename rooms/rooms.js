@@ -6,8 +6,8 @@ import { io } from '../server.js';
 import crypto from 'crypto';
 
 // Tenemos que crear un objeto que mantenga las partidas activas en memoria
-let ActiveXObjects = {};
-
+export let ActiveXObjects = {};
+import { activeSockets } from '../server.js';
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
  */
@@ -585,6 +585,7 @@ export async function buscarPartidaActiva(userID, socket, timeLeftW, timeLeftB, 
                 // necesaria para retomarla
                 console.log("Enviando datos de la partida activa al cliente...");
                 socket.emit('existing-game', { gameID, pgn, color, timeLeftW, timeLeftB, gameMode, miElo, eloRival, nombreRival, foto_rival });
+                break;
             }
         }
         // ---------------------------------------------------------------------------------------
@@ -695,7 +696,28 @@ export async function manejarRendicion(data, socket) {
         .where(eq(usuario.id, game.header()['Black']))
         .run();
 
+    // Actualizar rachas y numero de partidas
+    const winner = oponente;
+    const loser = idJugador;
+    
+    await db.update(usuario)
+        .set({
+            maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+            actualStreak: sql`actualStreak + 1`,
+            totalWins: sql`totalWins + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, winner))
+        .run();
 
+    await db.update(usuario)
+        .set({
+            actualStreak: 0,
+            totalLosses: sql`totalLosses + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, loser))
+        .run();
 
     // Actualizar la base de datos con el ganador
     await db.update(partida)
@@ -803,6 +825,25 @@ export async function aceptarTablas(data, socket) {
             eq(usuario.id, game.header()['Black'])))
         .run();
 
+    // Actualizar rachas y numero de partidas
+    await db.update(usuario)
+    .set({
+        [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
+        totalDraws: sql`totalDraws + 1`,
+        totalGames: sql`totalGames + 1`
+    })
+    .where(eq(usuario.id, game.header()['White']))
+    .run();
+
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
+            totalDraws: sql`totalDraws + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, game.header()['Black']))
+        .run();
+
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
     console.log("La partida ha terminado en tablas por decisión mutua");
@@ -823,3 +864,65 @@ export async function rechazarTablas(data, socket) {
     socket.to(idPartida).emit('draw-declined', { idJugador });
 }
 // -----------------------------------------------------------------------------------------------
+
+export async function gestionarDesconexion(socket) {
+    // Recuperar el id del usuario cuyo socket se está desconectando (por motivo ajeno a logout)
+    let userID;
+    activeSockets.forEach((value, key) => {
+        if (value.id === socket.id) {
+            userID = key;
+        }
+    });
+
+    // Si no se encuentra el userID, no se puede gestionar la desconexión (ya se ha desconectado
+    // por medio del logout)
+    if (!userID) {
+        console.log("No se pudo encontrar el userID asociado al socket.");
+        return;
+    }
+    
+    console.log("Gestión de desconexión del jugador: ", userID);
+    activeSockets.delete(userID);
+
+    // Buscar la partida activa del jugador
+    let idPartida;
+    for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+        if (gameData.players.includes(userID)) {
+            idPartida = gameID;
+            break;
+        }
+    }
+
+    // Si no se encuentra la partida activa, el jugador no está en ninguna partida y puede 
+    // desconectarse sin problemas
+    if (!idPartida) {
+        console.log("El jugador no está en ninguna partida activa.");
+        return;
+    }
+
+    // Verificar si la partida existe y el jugador está en ella
+    io.to(idPartida).emit('opponent-disconnected', { userID });
+
+    console.log("Iniciando 15 segundos de cortesía para verificar si el jugador se reconecta...");
+
+    setTimeout(() => {
+        // Si el jugador no se ha reconectado, se considera que ha abandonado la partida
+        if (!activeSockets.has(userID)) {
+            console.log("El jugador no se ha reconectado, se considera que ha abandonado la partida.");
+
+            // Verificar si la partida sigue activa o ha terminado ya por otro motivo
+            // (tiempo, jaque mate, etc.)
+            if (!ActiveXObjects[idPartida]) {
+                console.log("La partida ya ha finalizado por otro motivo.");
+                return;
+            } else {
+                console.log("Considerando abandono como rendición, dando la victoria al rival...");
+
+                // Aquí puedes manejar la lógica de abandono de partida (rendición, etc.)
+                manejarRendicion({ idPartida: idPartida, idJugador: userID }, socket);
+            }
+        } else {
+            console.log("El jugador se ha reconectado antes de los 15 segundos.");
+        }
+    }, 15000); // 15 segundos
+}

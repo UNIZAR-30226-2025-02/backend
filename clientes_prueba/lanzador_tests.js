@@ -246,7 +246,7 @@ async function Test3Base() {
             client2.stderr.on('data', (data) => {
                 logError(`Client2 Error: ${data}`);
             });
-        }, 3000);
+        }, 1000);
 
         setTimeout(async () => {
             try {
@@ -417,7 +417,7 @@ async function Test5Base() {
                 logError(`NEW Client1 Error: ${data}`);
             });
         }
-            , 14000);
+            , 15250);
 
         setTimeout(async () => {
             try {
