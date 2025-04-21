@@ -725,7 +725,7 @@ export async function manejarRendicion(data, socket) {
 
     // Actualizar la base de datos con el ganador
     await db.update(partida)
-        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB, })
+        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
         .where(eq(partida.id, idPartida))
         .run();
     // Emitir el evento de fin de partida al oponente
