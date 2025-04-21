@@ -31,9 +31,11 @@ export async function createNewGame(idJugador, mode, socket) {
         if (randomColor === 'white') {
             chess.setHeader('White', idJugador);
             chess.setHeader('White Elo', puntuacionModo);
+            chess.setHeader('White Alias', jugador.NombreUser);
         } else {
             chess.setHeader('Black', idJugador);
             chess.setHeader('Black Elo', puntuacionModo);
+            chess.setHeader('Black Alias', jugador.NombreUser);
         }
         // Crear una nueva partida en la base de datos
         await db.insert(partida).values({
@@ -115,11 +117,13 @@ export async function loadGame(idPartida, idJugador, socket) {
             //puntuacionOponente = headers['Black Elo'];
             existingGame.setHeader('White', idJugador);
             existingGame.setHeader('White Elo', puntuacionModo);
+            existingGame.setHeader('White Alias', nuevoJugador.NombreUser);
         } else {
             // Si el jugador se une como Black, la puntuación del oponente está en 'White Elo'
             //puntuacionOponente = headers['White Elo'];
             existingGame.setHeader('Black', idJugador);
             existingGame.setHeader('Black Elo', puntuacionModo);
+            existingGame.setHeader('Black Alias', nuevoJugador.NombreUser);
         }
 
         // Guardar el nuevo PGN con el header actualizado
