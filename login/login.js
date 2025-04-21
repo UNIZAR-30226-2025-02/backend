@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 import { sendVerificationEmail, sendChangePasswdEmail } from './tokenSender.js';
 import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviables.js';
 import { activeSockets } from '../server.js';
-import { buscarPartidaActiva } from '../rooms/rooms.js';
+import { ActiveXObjects, buscarPartidaActiva } from '../rooms/rooms.js';
 
 const generateVerificationToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -247,6 +247,52 @@ export async function authenticate(socket) {
                     oldSocket.disconnect();
                 }
             }, 5000);
+        } else {
+            console.log(`Usuario ${userId} no tiene una sesión activa.`);
+            console.log("Buscando si el usuario tiene una partida activa...");
+
+            let rivalID, idPartida;
+            // Buscamos si el usuario tiene una partida activa
+            for (const [gameID, gameData] of Object.entries(ActiveXObjects)) {
+                if (gameData.players.includes(userId)) {
+                    rivalID = gameData.players.find(player => player !== userId);
+                    idPartida = gameID;
+                    break;
+                }
+            }
+            
+            // Si no se encuentra una partida activa, se finaliza la autenticación del socket
+            if (!rivalID || !idPartida) {
+                console.log(`Usuario ${userId} no tiene una partida activa.`);
+
+                // Almacenar el nuevo socket
+                activeSockets.set(userId, socket);
+                console.log(`Usuario ${userId} autenticado con socket ${socket.id}`);
+                return;
+            }
+
+            // Si se encuentra una partida activa, se consulta el estado de la partida al socket
+            // del rival
+            const rivalSocket = activeSockets.get(rivalID);
+            if (!rivalSocket) {
+                console.log(`No se encontró el socket del rival ${rivalID}.`);
+                return;
+            }
+
+            rivalSocket.emit('get-game-status');
+            // ------------------------------------------------------------------------------------
+            ({ timeLeftW, timeLeftB, estadoPartida, gameMode } = await new Promise((resolve) => {
+                rivalSocket.once('game-status', (data) => {
+                    resolve({
+                        timeLeftW: data.timeLeftW,
+                        timeLeftB: data.timeLeftB,
+                        estadoPartida: data.estadoPartida,
+                        gameMode: data.gameMode
+                    });
+                });
+            }));
+            // ------------------------------------------------------------------------------------
+    
         }
         // Almacenar el nuevo socket
         activeSockets.set(userId, socket);
