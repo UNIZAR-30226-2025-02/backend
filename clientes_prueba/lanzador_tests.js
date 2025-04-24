@@ -1,8 +1,7 @@
 import { spawn } from 'child_process';
-import { db } from '../db/db.js';
-import { partida, mensaje } from '../db/schemas/schemas.js';
+import { db } from '../src/db/db.js';
+import { partida, mensaje } from '../src/db/schemas/schemas.js';
 import { eq, or, and, desc } from 'drizzle-orm';
-import { log } from 'console';
 
 const serverPath = './server.js';
 const clientPath = './clientes_prueba/client.js';

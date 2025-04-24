@@ -1,4 +1,4 @@
-import '../dotenv-config.js'
+import '../../config/dotenv-config.js'
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
 import * as amistad from './schemas/schemas.js'

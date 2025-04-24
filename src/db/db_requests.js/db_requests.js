@@ -1,6 +1,6 @@
-import { db } from '../db/db.js';
+import { db } from '../db.js';
 import { eq, like, or, desc, and, ne, sql } from 'drizzle-orm';
-import { usuario, partida, amistad } from '../db/schemas/schemas.js';
+import { usuario, partida, amistad } from '../schemas/schemas.js';
 
 export async function buscarUsuarioPorUser(req, res) {
     const user = req.query.NombreUser;
