@@ -1,29 +1,29 @@
-import './dotenv-config.js';
+import './config/dotenv-config.js';
 import { Server } from 'socket.io';
 import http from 'http';
 import schedule from 'node-schedule';
 import { app } from './app.js';
-import { authenticate } from './login/login.js';
+import { authenticate } from './src/login/login.js';
 
 // Funciones del módulo de chat
-import { saveMessage, fetchMessages } from './chat/chat.js';
+import { saveMessage, fetchMessages } from './src/chat/chat.js';
 
 // Funciones del módulo de cronjobs
-import { deleteInactiveGuests } from './cronjobs/cronjobs.js';
+import { deleteInactiveGuests } from './src/cronjobs/cronjobs.js';
 
 // Funciones del módulo de partidas
 import {
     findGame, manejarMovimiento, cancelarBusquedaPartida,
     manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas,
     gestionarDesconexion
-} from './rooms/rooms.js';
+} from './src/rooms/rooms.js';
 
 // Funciones del módulo de amistad
 import {
     addFriend, removeFriend, challengeFriend, createDuelGame, acceptFriendRequest,
     rejectFriendRequest,
     deleteChallenge
-} from './friendship/friends.js';
+} from './src/friendship/friends.js';
 
 // Objeto que almacenará los sockets con los usuarios conectados al servidor
 export let activeSockets = new Map();

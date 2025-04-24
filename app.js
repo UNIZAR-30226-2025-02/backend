@@ -1,7 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import { crearUsuario, login, logout, editUser, verifyEmail, resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado } from './login/login.js';
-import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario, buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos, rankingPorModo, rankingUserPorModo } from './db_requests.js/db_requests.js';
+
+// Importar funciones del módulo de autenticación
+import { crearUsuario, login, logout, editUser, verifyEmail,
+         resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado }
+        from './src/login/login.js';
+
+// Importar funciones del módulo de consultas a base de datos
+import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario,
+         buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos,
+         rankingPorModo, rankingUserPorModo }
+        from './src/db/db_requests.js/db_requests.js';
 
 export const app = express()
 

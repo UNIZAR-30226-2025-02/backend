@@ -2,12 +2,12 @@ import { db } from '../db/db.js';
 import { partida, usuario } from '../db/schemas/schemas.js';
 import { Chess } from 'chess.js';
 import { eq, or, and, sql, isNull } from "drizzle-orm";
-import { io } from '../server.js';
+import { io } from '../../server.js';
 import crypto from 'crypto';
 
 // Tenemos que crear un objeto que mantenga las partidas activas en memoria
 export let ActiveXObjects = {};
-import { activeSockets } from '../server.js';
+import { activeSockets } from '../../server.js';
 
 // -----------------------------------------------------------------------------------------------
 // Crea una partida en la base de datos y la almacena en memoria para el jugador que inicia
@@ -75,7 +75,6 @@ export async function createNewGame(idJugador, mode, socket) {
         console.error("Error al crear una nueva partida:", error);
     }
 }
-
 
 // -----------------------------------------------------------------------------------------------
 // Unir a un jugador a una partida existente, a través de su id, en la base de datos y en memoria
