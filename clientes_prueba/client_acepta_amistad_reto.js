@@ -17,8 +17,11 @@ const mode = 'Punt_3';                                  // Modo de juego
 let gameId = '';                                        // Se actualizará una vez emparejado
 let color = '';                                         // Se actualizará una vez emparejado
 
-const idamigo = 'db0b91ac-46a1-4387-a935-bb93ac59d7e1'  //Prueba111
-//const idamigo = '26b206e6-1fef-434e-a229-7cee643cc845'  //Prueba222
+// const idamigo = 'db0b91ac-46a1-4387-a935-bb93ac59d7e1'  //Prueba111
+// const idamigo = '26b206e6-1fef-434e-a229-7cee643cc845'  //Prueba222
+
+//const idamigo = '6ed5bb5b-93c8-4dc6-ab22-db3046153d7b'; // Prueba11
+const idamigo = '51bc4c2c-9918-489a-a29c-a8b2fe035558'; // Prueba22
 
 async function clientLogin(user, password) {
     try {
@@ -60,10 +63,10 @@ function esperar(socket) {
 
     socket.on('connect', () => {
         //Hace un consol log de estoy esperando cada 5 segundos
-        setInterval(() => {
-            console.log("Estoy esperando...")
+        
+        console.log("Estoy esperando...")
            
-        }, 5000);
+
     });
 
     socket.on('friendRequest', (data) => {
@@ -92,6 +95,14 @@ function esperar(socket) {
 
     socket.on('friendRequestRejected', (data) => {
         console.log(`Solicitud de amistad rechazada de ${data.idAmigo} a ${data.idJugador}`);
+    });
+
+    socket.on('game-ready', (data) => {
+        console.log(`Partida lista: ${JSON.stringify(data)}`);
+    });
+
+    socket.on('color', (data) => {
+        console.log(`Partida lista: ${JSON.stringify(data)}`);
     });
 
 }
