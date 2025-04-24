@@ -6,7 +6,7 @@ import { io } from '../server.js';
 import crypto from 'crypto';
 
 // Tenemos que crear un objeto que mantenga las partidas activas en memoria
-let ActiveXObjects = {};
+export let ActiveXObjects = {};
 
 /*
  * Crea una nueva partida activa y la almacena en la base de datos
@@ -390,6 +390,9 @@ export async function ratingVariation(puntuacionW, puntuacionB, resultado, k_fac
 }
 
 async function resultManager(game, idPartida) {
+
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+    
     if (game.isCheckmate()) {
         console.log("Jaque mate");
         // El ganador es el jugador que hizo el último movimiento
@@ -403,13 +406,18 @@ async function resultManager(game, idPartida) {
         } else if (result === 'black') {
             game.setHeader('Result', '0-1');
         }
-        // Calcular variacion de rating de los jugadores
-        const { variacionW, variacionB } = await ratingVariation(
-            game.header()['White Elo'],
-            game.header()['Black Elo'],
-            result,
-            40
-        );
+
+        let variacionW = 0;
+        let variacionB = 0;
+        if (partidaEncontrada.Tipo !== 'reto') {
+            // Calcular variacion de rating de los jugadores
+            variacionW, variacionB = await ratingVariation(
+                game.header()['White Elo'],
+                game.header()['Black Elo'],
+                result,
+                40
+            );
+        }
 
         // Actualizar los datos de la partida en la base de datos
         db.update(partida)
@@ -421,7 +429,6 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
-        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         const eloW = game.header()['White Elo'];
         const eloB = game.header()['Black Elo']
         await db.update(usuario)
@@ -486,13 +493,17 @@ async function resultManager(game, idPartida) {
         const result = "draw";
         game.setHeader('Result', '1/2-1/2');
 
-        // Calcular variacion de rating de los jugadores
-        const { variacionW, variacionB } = await ratingVariation(
-            game.header()['White Elo'],
-            game.header()['Black Elo'],
-            result,
-            40
-        );
+        let variacionW = 0;
+        let variacionB = 0;
+        if (partidaEncontrada.Tipo !== 'reto') {
+            // Calcular variacion de rating de los jugadores
+            variacionW, variacionB = await ratingVariation(
+                game.header()['White Elo'],
+                game.header()['Black Elo'],
+                result,
+                40
+            );
+        }
 
         // Actualizar los datos de la partida en la base de datos
         db.update(partida)
@@ -504,7 +515,6 @@ async function resultManager(game, idPartida) {
         console.log("Variación de elo del jugador blanco:", variacionW);
         console.log("Variación de elo del jugador negro:", variacionB);
 
-        const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         const eloW = game.header()['White Elo'];
         const eloB = game.header()['Black Elo']
         await db.update(usuario)
@@ -661,13 +671,18 @@ export async function manejarRendicion(data, socket) {
     // El oponente es el jugador que no se ha rendido
     const oponente = color === 'white' ? headers['Black'] : headers['White'];
     game.setHeader('Result', color === 'black' ? '1-0' : '0-1');
-    //Hay que calcular la variacion de elo
-    const { variacionW, variacionB } = await ratingVariation(
-        game.header()['White Elo'],
-        game.header()['Black Elo'],
-        color === 'white' ? 'black' : 'white',
-        40
-    );
+
+    let variacionW = 0;
+    let variacionB = 0;
+    if (partidaEncontrada.Tipo !== 'reto') {
+        // Calcular variacion de rating de los jugadores
+        variacionW, variacionB = await ratingVariation(
+            game.header()['White Elo'],
+            game.header()['Black Elo'],
+            result,
+            40
+        );
+    }
 
     console.log("Variación de elo del jugador blanco:", variacionW);
     console.log("Variación de elo del jugador negro:", variacionB);
@@ -691,6 +706,9 @@ export async function manejarRendicion(data, socket) {
         })
         .where(eq(usuario.id, game.header()['Black']))
         .run();
+        
+    //cambiar la parte de las rachas del usuario
+    
 
 
 
@@ -752,18 +770,25 @@ export async function aceptarTablas(data, socket) {
         return socket.emit('error', 'No estás en esta partida');
     }
 
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+    
     console.log("El jugador  ha aceptado las tablas");
     const game = ActiveXObjects[idPartida].chess;
     game.setHeader('Result', '1/2-1/2');
-    // Calcular variacion de rating de los jugadores
-    const { variacionW, variacionB } = await ratingVariation(
-        game.header()['White Elo'],
-        game.header()['Black Elo'],
-        "draw",
-        40
-    );
+    
+    let variacionW = 0;
+    let variacionB = 0;
+    if (partidaEncontrada.Tipo !== 'reto') {
+        // Calcular variacion de rating de los jugadores
+        variacionW, variacionB = await ratingVariation(
+            game.header()['White Elo'],
+            game.header()['Black Elo'],
+            result,
+            40
+        );
+    }
 
-    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+    
     //Actualizar la base de datos con empate de tablas
     await db.update(partida)
         .set({ PGN: game.pgn(), Variacion_JW: variacionW, Variacion_JB: variacionB })

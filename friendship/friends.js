@@ -4,7 +4,7 @@ import { Chess } from 'chess.js';
 import { eq, or, and, isNull } from "drizzle-orm";
 import { io } from '../server.js';
 import {activeSockets} from '../server.js';
-
+import { ActiveXObjects } from '../rooms/rooms.js';
 
 //Funcion para añadir un amigo
 //QUE SEA MUTUO ACUERDO
@@ -50,6 +50,7 @@ export async function acceptFriendRequest(data, socket) {
     )
     .get();
 
+    console.log("Amistad existente:", existingFriendship);
     if (existingFriendship) {
         console.log("Ya son amigos");
         return socket.emit('error', "Ya son amigos" );
@@ -236,6 +237,49 @@ export async function createDuelGame(data, socket) {
         // Decidir colores aleatoriamente
         const randomColor = Math.random() < 0.5 ? 'white' : 'black';
 
+        // Asignar colores según randomColor
+        let idBlancas, idNegras;
+        let nombreBlancas, nombreNegras, eloBlancas, eloNegras;
+        if (randomColor === 'white') {
+            idBlancas = idRetador;
+            idNegras = idRetado;
+            
+            chess.header('White', idRetador);
+            chess.header('Black', idRetado);
+        } else {
+            idBlancas = idRetado;
+            idNegras = idRetador;
+            chess.header('White', idRetado);
+            chess.header('Black', idRetador);
+        }
+        
+        const jugadorBlancas = await db.select()
+                                        .from(usuario)
+                                        .where(eq(usuario.id, idBlancas))
+                                        .get();
+                                        
+        const jugadorNegras = await db.select()
+                                        .from(usuario)
+                                        .where(eq(usuario.id, idNegras))
+                                        .get();
+
+        nombreBlancas = jugadorBlancas.NombreUser;
+        nombreNegras = jugadorNegras.NombreUser;
+        eloBlancas = jugadorBlancas[modo];
+        eloNegras = jugadorNegras[modo];
+
+        //poner en el header los elo y los alias
+        chess.header('White Elo', eloBlancas);
+        chess.header('Black Elo', eloNegras);
+        chess.header('White Alias', nombreBlancas);
+        chess.header('Black Alias', nombreNegras);
+
+        console.log("Jugadores encontrados: ", { jugadorBlancas, jugadorNegras });
+        console.log("Nombres de los jugadores: ", { nombreBlancas, nombreNegras });
+        console.log("Elo de los jugadores: ", { eloBlancas, eloNegras });
+        
+        //sacar el elo de cada uno correspondiente al modo
+                
         await db.insert(partida).values({
             id: gameId,
             JugadorW: randomColor === 'white' ? idRetador : idRetado,
@@ -248,6 +292,14 @@ export async function createDuelGame(data, socket) {
             Tipo: "reto",
         });
 
+        console.log("Partida creada en la base de datos con ID:", gameId);
+
+        //Añadir partida a activeXObjects
+        ActiveXObjects[gameId] = {
+            players: [idRetador, idRetado], // Inicializamos el array de jugadores con el primer jugador
+            chess: chess,
+        };
+
         console.log("La partida ha sido creada", partida);
 
         // Marcar el reto como aceptado
@@ -259,9 +311,12 @@ export async function createDuelGame(data, socket) {
         console.log('Reto actualizado')
 
         // Crear sala en socket
-        socket.join(gameId);
+        //socket.join(gameId);
 
         console.log(`Partida creada entre ${idRetador} y ${idRetado}. ID de partida: ${gameId}`);
+        // Transmitir con u io.toIdPartida la info de la partida a los dos jgadores
+        
+
 
         // Emitir evento de partida creada a ambos jugadores
         const socketRetador = activeSockets.get(idRetador); // Obtener el socket del retador
@@ -293,6 +348,26 @@ export async function createDuelGame(data, socket) {
         socketRetador.join(gameId);
         socketRetado.join(gameId);
 
+
+        //Comunicar a los dos jugadores datos de la partida
+        //io.to(gameId).emit('gameCreated', { gameId, idRetador, idRetado, modo, randomColor });
+        //console.log("Partida creada y jugadores añadidos a la sala de juego");
+
+        // Notificar con game-ready a los jugadores que la partida está lista
+        io.to(gameId).emit('game-ready', { gameId });
+
+
+        // // Notificar a cada jugador su color en la partida
+        console.log("ID jugador blanco:", idBlancas);
+        console.log("ID jugador negro:", idNegras);
+
+        // // Pasarles el ID del usuario tambien ? o solo eso
+         io.to(gameId).emit('color', {
+             jugadores: [
+                 { id: idBlancas, nombreW: nombreBlancas, eloW: eloBlancas, color: 'white' },
+                 { id: idNegras, nombreB: nombreNegras, eloB: eloNegras, color: 'black' }
+             ]
+         });
 
         return gameId;
 
