@@ -17,8 +17,11 @@ const mode = 'Punt_3';                                  // Modo de juego
 let gameId = '';                                        // Se actualizará una vez emparejado
 let color = '';                                         // Se actualizará una vez emparejado
 
-const idamigo = 'db0b91ac-46a1-4387-a935-bb93ac59d7e1'  //Prueba111
-//const idamigo = '26b206e6-1fef-434e-a229-7cee643cc845'  //Prueba222
+//const idamigo = 'db0b91ac-46a1-4387-a935-bb93ac59d7e1'  //Prueba11
+//const idamigo = '26b206e6-1fef-434e-a229-7cee643cc845'  //Prueba22
+
+//const idamigo = '6ed5bb5b-93c8-4dc6-ab22-db3046153d7b'; // Prueba11
+const idamigo = '51bc4c2c-9918-489a-a29c-a8b2fe035558'; // Prueba22
 
 async function clientLogin(user, password) {
     try {
@@ -57,7 +60,6 @@ async function clientLogin(user, password) {
 
 function lanzarReto(socket) {
     
-
     socket.on('connect', () => {
         console.log('Conectado al servidor WebSocket con ID de socket:', socket.id);
         
@@ -73,8 +75,13 @@ function lanzarReto(socket) {
         
     });
 
-   
+    socket.on('game-ready', (data) => {
+        console.log(`Partida lista: ${JSON.stringify(data)}`);
+    });
 
+    socket.on('color', (data) => {
+        console.log(`Partida lista: ${JSON.stringify(data)}`);
+    });
 }
 
 // Ejecutar la función de login y luego buscar partida

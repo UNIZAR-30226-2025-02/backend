@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { db } from '../src/db/db.js';
-import { partida, mensaje } from '../src/db/schemas/schemas.js';
+import { partida, mensaje, amistad } from '../src/db/schemas/schemas.js';
 import { eq, or, and, desc } from 'drizzle-orm';
 
 const serverPath = './server.js';
@@ -9,6 +9,10 @@ const client_cancel_pairing_path = './clientes_prueba/client_cancel_pairing.js';
 const client_pide_tablas_path = './clientes_prueba/client_pide_tablas.js';
 const client_acepta_tablas_path = './clientes_prueba/client_acepta_tablas.js';
 const client_rechaza_tablas_path = './clientes_prueba/client_rechaza_tablas.js';
+const client_acepta_amistad_reto_path = './clientes_prueba/client_acepta_amistad_reto.js';
+const client_rechaza_amistad_reto_path = './clientes_prueba/client_rechaza_amistad_reto.js';
+const client_pide_amistad_path = './clientes_prueba/client_pide_amistad.js';
+const client_pide_reto_path = './clientes_prueba/client_pide_reto.js';
 const User1_name = 'Prueba11';
 const User2_name = 'Prueba22';
 const User1_password = '12345a';
@@ -34,6 +38,16 @@ async function borrarPartida(idPartida) {
         console.log('Partida borrada');
     } catch (error) {
         console.error('Error al borrar la partida:', error);
+    }
+}
+
+async function borrarAmistad(idamistad) {
+    try{
+        console.log("idamistad: ", idamistad);
+        await db.delete(amistad).where(eq(amistad.id, idamistad));
+        console.log('Amistad borrada');
+    }catch (error){
+        console.error('Error al encontrar amistad: ', error);
     }
 }
 
@@ -245,7 +259,7 @@ async function Test3Base() {
             client2.stderr.on('data', (data) => {
                 logError(`Client2 Error: ${data}`);
             });
-        }, 1000);
+        }, 3000);
 
         setTimeout(async () => {
             try {
@@ -416,7 +430,7 @@ async function Test5Base() {
                 logError(`NEW Client1 Error: ${data}`);
             });
         }
-            , 15250);
+            , 12000);
 
         setTimeout(async () => {
             try {
@@ -470,6 +484,173 @@ async function Test5Base() {
     }, 10000);
 }
 
+
+//TEST ACEPTAR AMISTAD
+
+async function Test6Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 6 - ACCEPTING FRIENDSHIP  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_pide_amistad_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_acepta_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the match...');
+                console.log("User1_id: ", User1_id);
+                console.log("User2_id: ", User2_id);
+                const result = await db.select().from(amistad).where(
+                    or(
+                        and(eq(amistad.Jugador1, User1_id), eq(amistad.Jugador2, User2_id)),
+                        and(eq(amistad.Jugador1, User2_id), eq(amistad.Jugador2, User1_id))
+                    )
+                )
+
+
+                if (result.length <= 0) {
+                    logWarning('No amistad found in the database.');
+                } else {
+                    logSuccess('🎉 Amistad found in the database!');
+                    console.log(result);
+                   
+                   
+                    //Borrar la amistad después de la validación
+                    //borrarAmistad(result[0].id); // Borrar la partida después de la validación
+                }
+
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
+//TEST ACEPTAR RETO
+
+async function Test7Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 7 - ACCEPTING CHALLENGE  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_pide_reto_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_acepta_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the match...');
+            
+
+                //mirar que haya una partida correspondiente al reto
+                const result = await db.select().from(partida).where(
+                    and(
+                        or(
+                            and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)),
+                            and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))
+                        ),
+                        eq(
+                            partida.Tipo, "reto"
+                        )
+                    )
+                )
+
+
+                if (result.length <= 0) {
+                    logWarning('No challenge found in the database.');
+                } else {
+                    logSuccess('🎉 Challenge found in the database!');
+                    console.log(result);
+                   
+                   
+                    //Borrar la amistad después de la validación
+                    borrarAmistad(result[0].id); // Borrar la partida después de la validación
+                }
+
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
 async function main() {
     logInfo('Starting the tests...');
     await Test1Base();
@@ -487,7 +668,12 @@ async function main() {
     await Test5Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
 
+    await Test6Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
 
+    await Test7Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
     await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
 
     if (HayErrores) {
@@ -498,4 +684,6 @@ async function main() {
 }
 main().catch((error) => {
     logError(`Error in main: ${error}`);
+
+
 });
