@@ -221,10 +221,10 @@ export async function manejarMovimiento(data, socket) {
         socket.broadcast.to(idPartida).emit('new-move', { movimiento, board: game.board() });
 
         // Actualizar el PGN de la partida en la base de datos
-        db.update(partida)
-            .set({ PGN: game.pgn() })
-            .where(eq(partida.id, idPartida))
-            .run();
+        // db.update(partida)
+        //    .set({ PGN: game.pgn() })
+        //    .where(eq(partida.id, idPartida))
+        //    .run();
 
         // Comprobar si la partida ha terminado debido a dicho movimiento (jaque mate, ahogado,
         // regla de los 50 movimientos, etc.)
