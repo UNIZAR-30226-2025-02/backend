@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { db } from '../src/db/db.js';
-import { partida, mensaje, amistad } from '../src/db/schemas/schemas.js';
+import { partida, mensaje, amistad, usuario } from '../src/db/schemas/schemas.js';
 import { eq, or, and, desc } from 'drizzle-orm';
 
 const serverPath = './server.js';
@@ -51,6 +51,34 @@ async function borrarAmistad(idamistad) {
     }
 }
 
+async function resetPlayers() {
+    try {
+        await db.update(usuario)
+                .set({  EstadoPartida: null,
+                        Punt_3: 10000,
+                        Punt_5: 10000,
+                        Punt_10: 10000,
+                        Punt_30: 10000,
+                        Punt_3_2: 10000,
+                        Punt_5_10: 10000 
+                    })
+                .where(eq(usuario.id, User1_id));
+        await db.update(usuario)
+                .set({  EstadoPartida: null,
+                        Punt_3: 10000,
+                        Punt_5: 10000,
+                        Punt_10: 10000,
+                        Punt_30: 10000,
+                        Punt_3_2: 10000,
+                        Punt_5_10: 10000 
+                    })
+                .where(eq(usuario.id, User2_id));
+
+        console.log('Jugadores reseteados');
+    } catch (error) {
+        console.error('Error al resetear jugadores:', error);
+    }
+}
 
 async function Test1Base() {
     logInfo('Starting the server...');
@@ -675,6 +703,8 @@ async function main() {
     await Test7Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
     await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
+
+    await resetPlayers(); // Reset players after all tests
 
     if (HayErrores) {
         logError(' ❌ ❌ ❌ There were errors during the tests. ❌ ❌ ❌');

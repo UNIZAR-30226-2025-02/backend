@@ -755,7 +755,12 @@ export async function manejarRendicion(data, socket) {
     const headers = game.header();
     const color = headers['White'] === idJugador ? 'white' : 'black';
     const oponente = color === 'white' ? headers['Black'] : headers['White'];
+    const result = color === 'black' ? 'white' : 'black';
     game.setHeader('Result', color === 'black' ? '1-0' : '0-1');
+
+    
+    // Actualizar los datos de la partida en la base de datos
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
 
     if (partidaEncontrada.Tipo !== 'reto') {
             // Calcular variacion de rating de los jugadores
@@ -769,9 +774,6 @@ export async function manejarRendicion(data, socket) {
 
     console.log("Variación de elo del jugador blanco:", variacionW);
     console.log("Variación de elo del jugador negro:", variacionB);
-
-    // Actualizar los datos de la partida en la base de datos
-    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
 
     const eloW = game.header()['White Elo'];
     const eloB = game.header()['Black Elo'];
@@ -875,9 +877,9 @@ export async function aceptarTablas(data, socket) {
 
     const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
         
-
     // Gestionar la finalización de la partida por acuerdo mutuo de tablas
     const game = ActiveXObjects[idPartida].chess;
+    const result = "draw";
     game.setHeader('Result', '1/2-1/2');
 
     let variacionW = 0;
