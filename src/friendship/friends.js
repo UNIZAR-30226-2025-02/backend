@@ -275,7 +275,7 @@ export async function createDuelGame(data, socket) {
         chess.header('White Alias', nombreBlancas);
         chess.header('Black Alias', nombreNegras);
 
-        console.log("Jugadores encontrados: ", { jugadorBlancas, jugadorNegras });
+        
         console.log("Nombres de los jugadores: ", { nombreBlancas, nombreNegras });
         console.log("Elo de los jugadores: ", { eloBlancas, eloNegras });
         
@@ -301,7 +301,7 @@ export async function createDuelGame(data, socket) {
             chess: chess,
         };
 
-        console.log("La partida ha sido creada", partida);
+        console.log("La partida ha sido creada");
 
         // Marcar el reto como aceptado
         await db.update(reto)

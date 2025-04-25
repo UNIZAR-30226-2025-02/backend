@@ -10,7 +10,6 @@ const client_pide_tablas_path = './clientes_prueba/client_pide_tablas.js';
 const client_acepta_tablas_path = './clientes_prueba/client_acepta_tablas.js';
 const client_rechaza_tablas_path = './clientes_prueba/client_rechaza_tablas.js';
 const client_acepta_amistad_reto_path = './clientes_prueba/client_acepta_amistad_reto.js';
-const client_rechaza_amistad_reto_path = './clientes_prueba/client_rechaza_amistad_reto.js';
 const client_pide_amistad_path = './clientes_prueba/client_pide_amistad.js';
 const client_pide_reto_path = './clientes_prueba/client_pide_reto.js';
 const User1_name = 'Prueba11';
@@ -48,6 +47,24 @@ async function borrarAmistad(idamistad) {
         console.log('Amistad borrada');
     }catch (error){
         console.error('Error al encontrar amistad: ', error);
+    }
+}
+
+
+async function borrarPartidasReto() {
+    try {
+        await db.delete(partida).where(
+            and(
+                eq(partida.Tipo, "reto"),
+                or(
+                    and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)),
+                    and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))
+                )
+            )
+        );
+        console.log('Partidas de reto borradas');
+    } catch (error) {
+        console.error('Error al borrar partidas de reto:', error);
     }
 }
 
@@ -458,7 +475,7 @@ async function Test5Base() {
                 logError(`NEW Client1 Error: ${data}`);
             });
         }
-            , 12000);
+            , 13000);
 
         setTimeout(async () => {
             try {
@@ -573,10 +590,6 @@ async function Test6Base() {
                 } else {
                     logSuccess('🎉 Amistad found in the database!');
                     console.log(result);
-                   
-                   
-                    //Borrar la amistad después de la validación
-                    //borrarAmistad(result[0].id); // Borrar la partida después de la validación
                 }
 
             } catch (error) {
@@ -659,10 +672,11 @@ async function Test7Base() {
                 } else {
                     logSuccess('🎉 Challenge found in the database!');
                     console.log(result);
-                   
-                   
+                    
+                    await borrarPartidasReto(); // Borrar la partida después de la validación
+
                     //Borrar la amistad después de la validación
-                    borrarAmistad(result[0].id); // Borrar la partida después de la validación
+                    await borrarAmistad(result[0].id); // Borrar la partida después de la validación
                 }
 
             } catch (error) {

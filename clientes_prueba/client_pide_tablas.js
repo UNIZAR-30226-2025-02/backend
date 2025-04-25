@@ -54,7 +54,7 @@ async function realizarMovimientos(socket, color, gameId) {
     console.log('Realizando movimientos...');
     socket.on('new-move', (data) => {
         chess.move(data.movimiento);
-        if (chess.history().length >= 6) {
+        if (chess.history().length == 6) {
             console.log('Pidiendo tablas:');
             socket.emit('draw-offer', { idPartida: gameId, idJugador: userId });
         }
