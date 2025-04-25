@@ -762,6 +762,9 @@ export async function manejarRendicion(data, socket) {
     // Actualizar los datos de la partida en la base de datos
     const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
 
+let variacionW = 0;
+let variacionB = 0;
+
     if (partidaEncontrada.Tipo !== 'reto') {
             // Calcular variacion de rating de los jugadores
         variacionW, variacionB = await ratingVariation(
