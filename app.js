@@ -12,7 +12,8 @@ import {
 import {
     buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt10PartidasDeUsuario,
     buscarUlt10PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos,
-    rankingPorModo, rankingUserPorModo
+    rankingPorModo, rankingUserPorModo, buscarUlt5PartidasDeUsuario,
+    buscarUlt5PartidasDeUsuarioPorModo
 }
     from './src/db/db_requests.js/db_requests.js';
 
@@ -91,6 +92,14 @@ app.get('/buscarUlt10PartidasDeUsuario', async (req, res) => {
 
 app.get('/buscarUlt10PartidasDeUsuarioPorModo', async (req, res) => {
     await buscarUlt10PartidasDeUsuarioPorModo(req, res);
+});
+
+app.get('/buscarUlt5PartidasDeUsuario', async (req, res) => {
+    await buscarUlt5PartidasDeUsuario(req, res);
+});
+
+app.get('/buscarUlt5PartidasDeUsuarioPorModo', async (req, res) => {
+    await buscarUlt5PartidasDeUsuarioPorModo(req, res);
 });
 
 

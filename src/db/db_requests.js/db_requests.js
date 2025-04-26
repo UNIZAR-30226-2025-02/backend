@@ -80,6 +80,33 @@ export async function buscarUlt10PartidasDeUsuarioPorModo(req, res) {
     }
 }
 
+export async function buscarUlt5PartidasDeUsuario(req, res) {
+    const id = req.query.id;
+    try {
+        const partidas = await db.select().from(partida)
+            .where(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)))
+            .orderBy(desc(partida.created_at))
+            .limit(5);
+        res.json(partidas); // Devolver las últimas 5 partidas
+    } catch (error) {
+        res.status(500).json({ error: 'Error al buscar las últimas 5 partidas del usuario' });
+    }
+}
+
+export async function buscarUlt5PartidasDeUsuarioPorModo(req, res) {
+    const id = req.query.id;
+    const modo = req.query.modo;
+    try {
+        const partidas = await db.select().from(partida)
+            .where(and(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)), eq(partida.Modo, modo)))
+            .orderBy(desc(partida.created_at))
+            .limit(5);
+        res.json(partidas); // Devolver las últimas 5 partidas
+    } catch (error) {
+        res.status(500).json({ error: 'Error al buscar las últimas 5 partidas del usuario' });
+    }
+}
+
 export async function buscarPartida(req, res) {
     const id = req.query.id;
     try {
