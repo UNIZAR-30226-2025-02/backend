@@ -2,15 +2,19 @@ import express from 'express';
 import cors from 'cors';
 
 // Importar funciones del módulo de autenticación
-import { crearUsuario, login, logout, editUser, verifyEmail,
-         resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado }
-        from './src/login/login.js';
+import {
+    crearUsuario, login, logout, editUser, verifyEmail,
+    resendVerificationEmail, sendPasswdReset, resetPasswd, crearInvitado, borrarInvitado
+}
+    from './src/login/login.js';
 
 // Importar funciones del módulo de consultas a base de datos
-import { buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt5PartidasDeUsuario,
-         buscarUlt5PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos,
-         rankingPorModo, rankingUserPorModo }
-        from './src/db/db_requests.js/db_requests.js';
+import {
+    buscarUsuarioPorUser, buscarPartidasDeUsuario, buscarUlt10PartidasDeUsuario,
+    buscarUlt10PartidasDeUsuarioPorModo, buscarPartida, getUserInfo, buscarAmigos,
+    rankingPorModo, rankingUserPorModo
+}
+    from './src/db/db_requests.js/db_requests.js';
 
 export const app = express()
 
@@ -81,12 +85,12 @@ app.get('/buscarPartidasDeUsuario', async (req, res) => {
     await buscarPartidasDeUsuario(req, res);
 });
 
-app.get('/buscarUlt5PartidasDeUsuario', async (req, res) => {
-    await buscarUlt5PartidasDeUsuario(req, res);
+app.get('/buscarUlt10PartidasDeUsuario', async (req, res) => {
+    await buscarUlt10PartidasDeUsuario(req, res);
 });
 
-app.get('/buscarUlt5PartidasDeUsuarioPorModo', async (req, res) => {
-    await buscarUlt5PartidasDeUsuarioPorModo(req, res);
+app.get('/buscarUlt10PartidasDeUsuarioPorModo', async (req, res) => {
+    await buscarUlt10PartidasDeUsuarioPorModo(req, res);
 });
 
 
