@@ -26,11 +26,8 @@ export async function getUserInfo(req, res) {
         }
         const user = usuarios[0];
         // Comprobar si el usuario está logueadoha y ha verificado su correo 
-        if (user.estadoUser === 'unlogged') {
-            res.status(400).json({ error: 'Usuario no logueado. Inicie sesión para ver su información' });
-            return;
-        } else if (user.correoVerificado === 'no' && user.estadoUser === 'logged') {
-            res.status(400).json({ error: 'Correo no verificado. Por favor, verifica tu correo antes de iniciar sesión' });
+        if (user.correoVerificado === 'no') {
+            res.status(400).json({ error: 'Usuario con correo no verificado. No es posible acceder a su información hasta que complete el registro' });
             return;
         }
 
