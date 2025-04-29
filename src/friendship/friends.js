@@ -81,7 +81,7 @@ export async function acceptFriendRequest(data, socket) {
     }
     
     await db.update(usuario)
-            .set({ Amistad: sql`${usuario.Amistades} + 1` }) // Incrementar el contador de amistades
+            .set({ Amistades: sql`Amistades + 1` }) // Incrementar el contador de amistades
             .where(or(eq(usuario.id, idJugador), eq(usuario.id, idAmigo)))
             .run();
 
@@ -136,7 +136,7 @@ export async function removeFriend(data, socket) {
     io.to(socketAmigo.id).emit('friendRemoved' , { idJugador, idAmigo });
 
     await db.update(usuario)
-            .set({ Amistad: sql`${usuario.Amistades} - 1` }) // Decrementar el contador de amistades
+            .set({ Amistades: sql`Amistades - 1` }) // Incrementar el contador de amistades
             .where(or(eq(usuario.id, idJugador), eq(usuario.id, idAmigo)))
             .run();
 
