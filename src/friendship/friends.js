@@ -67,7 +67,6 @@ export async function acceptFriendRequest(data, socket) {
         id: newFriendshipId,
         Jugador1: idJugador,
         Jugador2: idAmigo,
-        
         Retos: 0
     });
 
@@ -81,6 +80,11 @@ export async function acceptFriendRequest(data, socket) {
         return socket.emit('errorMessage', "El jugador no está conectado.");
     }
     
+    await db.update(usuario)
+            .set({ Amistad: sql`${usuario.Amistades} + 1` }) // Incrementar el contador de amistades
+            .where(or(eq(usuario.id, idJugador), eq(usuario.id, idAmigo)))
+            .run();
+
     io.to(socketJugador.id).emit('friendRequestAccepted', { idJugador, idAmigo });
     console.log(`Solicitud de amistad aceptada de ${idAmigo} a ${idJugador}`);
 }
@@ -130,6 +134,12 @@ export async function removeFriend(data, socket) {
 
     //Mandar evento de que se ha elimnado la amistad al socket del amigo
     io.to(socketAmigo.id).emit('friendRemoved' , { idJugador, idAmigo });
+
+    await db.update(usuario)
+            .set({ Amistad: sql`${usuario.Amistades} - 1` }) // Decrementar el contador de amistades
+            .where(or(eq(usuario.id, idJugador), eq(usuario.id, idAmigo)))
+            .run();
+
     console.log("Eliminación de la amistad de ", data.idJugador,  "a " , data.idAmigo);
 }
 
