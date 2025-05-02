@@ -197,6 +197,7 @@ export async function challengeFriend(data, socket) {
         // Emitir evento al jugador
 
         const socketRetado = activeSockets.get(idRetado); // Obtener el socket del amigo
+        console.log("Este es el mapa:", activeSockets);
 
         if (!socketRetado) {
             console.log("La persona retada no está conectado.");
