@@ -74,4 +74,4 @@ await clientLogin(username, password);
 
 setTimeout(() => {
   clientLogout(username);
-}, 10000);  // Desconectar después de 5 segundos
+}, 10000);  // Desconectar después de 10 segundos
