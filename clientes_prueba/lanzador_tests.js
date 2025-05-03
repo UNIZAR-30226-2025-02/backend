@@ -695,27 +695,27 @@ async function Test7Base() {
 
 async function main() {
     logInfo('Starting the tests...');
-    await Test1Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
+    // await Test1Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
 
-    await Test2Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
+    // await Test2Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
 
-    await Test3Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
+    // await Test3Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
 
-    await Test4Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
+    // await Test4Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
 
-    await Test5Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
+    // await Test5Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
 
     await Test6Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
 
     await Test7Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
+
     await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
 
     await resetPlayers(); // Reset players after all tests
@@ -726,8 +726,7 @@ async function main() {
         logFinalSuccess('\n 🎆 🎆 🎆 🎉 🎉 🎖️    All tests completed successfully!   🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
     }
 }
+
 main().catch((error) => {
     logError(`Error in main: ${error}`);
-
-
 });

@@ -47,6 +47,7 @@ export async function acceptFriendRequest(data, socket) {
 
     // Si la amistad ya existe en BBDD, emitir mensaje de error
     if (existingFriendship) {
+        console.log("Los jugadores ya son amigos.");
         return socket.emit('errorMessage', "Ya son amigos." );
     }
 
@@ -350,21 +351,16 @@ export async function createDuelGame(data, socket) {
             .where(eq(reto.id, challenge.id))
             .run();
         
-        console.log('Reto actualizado')
+        console.log('Reto actualizado');
         console.log(`Partida creada entre ${idRetador} y ${idRetado}. ID de partida: ${gameId}`);
         
         // Borrar el reto de BBDD antes de entrar a partida
-        const result = await db.delete(reto)
-                                .where(
-                                    eq(reto.Retador, idRetador) && eq(reto.Retado, idRetado)
-                                )
-                                .run();
+        await db.delete(reto)
+                .where(
+                    eq(reto.id, challenge.id))
+                .run();
 
-        if (result.changes > 0) {
-            console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
-        } else {
-            console.log(`ERROR: No se encontró un reto entre ${data.idRetador} y ${data.idRetado}.`);
-        }
+        console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
 
         // Notificar con game-ready a los jugadores que la partida está lista
         io.to(gameId).emit('game-ready', { gameId });
