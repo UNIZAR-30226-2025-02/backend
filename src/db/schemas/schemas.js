@@ -40,8 +40,8 @@ export const userInsertSchema = createInsertSchema(usuario).partial()
 export const amistad = sqliteTable('amistad', {
     id: text('id').primaryKey(),
     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-    Jugador1: integer('Jugador1').references(() => usuario.id).notNull(),
-    Jugador2: integer('Jugador2').references(() => usuario.id).notNull(),
+    Jugador1: text('Jugador1').references(() => usuario.id).notNull(),
+    Jugador2: text('Jugador2').references(() => usuario.id).notNull(),
     HistorialAmistad: text('HistorialAmistad'),
     Retos: integer('Retos')
 })
@@ -81,17 +81,17 @@ export const partida = sqliteTable('partida', {
 export const partidaSelectSchema = createSelectSchema(partida).partial()
 export const partidaInsertSchema = createInsertSchema(partida).partial()
 
-// RANKING
-export const ranking = sqliteTable('ranking', {
-    id: text('id').primaryKey(),
-    created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-    Modo: text('Modo').notNull(),
-    Puntuacion: integer('Puntuacion').notNull(),
-    Posicion: integer('Posicion').notNull()
-})
+// // RANKING
+// export const ranking = sqliteTable('ranking', {
+//     id: text('id').primaryKey(),
+//     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+//     Modo: text('Modo').notNull(),
+//     Puntuacion: integer('Puntuacion').notNull(),
+//     Posicion: integer('Posicion').notNull()
+// })
 
-export const rankingSelectSchema = createSelectSchema(ranking).partial()
-export const rankingInsertSchema = createInsertSchema(ranking).partial()
+// export const rankingSelectSchema = createSelectSchema(ranking).partial()
+// export const rankingInsertSchema = createInsertSchema(ranking).partial()
 
 // MENSAJE
 export const mensaje = sqliteTable('mensaje', {
@@ -106,13 +106,13 @@ export const mensaje = sqliteTable('mensaje', {
 export const mensajeSelectSchema = createSelectSchema(mensaje).partial()
 export const mensajeInsertSchema = createInsertSchema(mensaje).partial()
 
-// APERTURA
-export const apertura = sqliteTable('apertura', {
-    id: text('id').primaryKey(),
-    created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-    Nombre_Aper: text('Nombre_Aper').notNull().unique(),
-    PGN: text('PGN'),
-})
+// // APERTURA
+// export const apertura = sqliteTable('apertura', {
+//     id: text('id').primaryKey(),
+//     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+//     Nombre_Aper: text('Nombre_Aper').notNull().unique(),
+//     PGN: text('PGN'),
+// })
 
-export const aperturaSelectSchema = createSelectSchema(apertura).partial()
-export const aperturaInsertSchema = createInsertSchema(apertura).partial()
+// export const aperturaSelectSchema = createSelectSchema(apertura).partial()
+// export const aperturaInsertSchema = createInsertSchema(apertura).partial()
