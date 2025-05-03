@@ -147,8 +147,6 @@ async function newConnection(socket) {
     // ------------------------------------------------------------------------------------------
     socket.on('add-friend', async (data) => {
         console.log("Recibido evento add-friend...");
-        //imprimimos el data para ver que todo esta bien
-        console.log("data de evento add-friend: ", data);
         await addFriend(data, socket);
     });
 
