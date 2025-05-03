@@ -41,20 +41,6 @@ async function borrarPartida(idPartida) {
     }
 }
 
-async function borrarAmistad() {
-    try{
-        await db.delete(amistad)
-                .where(
-                    or(
-                        and(eq(amistad.Jugador1, User1_id), eq(amistad.Jugador2, User2_id)),
-                        and(eq(amistad.Jugador1, User2_id), eq(amistad.Jugador2, User1_id))
-                    )
-                );
-    } catch (error){
-        console.error('Error al encontrar amistad: ', error);
-    }
-}
-
 async function borrarPartidasReto() {
     try {
         await db.delete(partida).where(
@@ -942,20 +928,20 @@ async function Test10Base() {
 
 async function main() {
     logInfo('Starting the tests...');
-    // await Test1Base();
-    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
+    await Test1Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test1Base to fully complete
 
-    // await Test2Base();
-    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
+    await Test2Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test2Base to fully complete
 
-    // await Test3Base();
-    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
+    await Test3Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test3Base to fully complete
 
-    // await Test4Base();
-    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
+    await Test4Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test4Base to fully complete
 
-    // await Test5Base();
-    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
+    await Test5Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
 
     await Test6Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test6Base to fully complete
@@ -973,20 +959,16 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
 
     // ----------------------------------------------------------------------------------------- //
-    // ----------------------------------------------------------------------------------------- //
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     await resetPlayers();   // Reset players after all tests
-    await borrarAmistad();  // Delete friendship after all tests
 
     if (HayErrores) {
         logError(' ❌ ❌ ❌ There were errors during the tests. ❌ ❌ ❌');
     } else {
         logFinalSuccess
-        ('\n 🎆 🎆 🎆 🎉 🎉 🎖️    All tests completed successfully!   🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
+        ('\n 🎆 🎆 🎆 🎉 🎉 🎖️  All tests completed successfully!  🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
     }
-
-    // ----------------------------------------------------------------------------------------- //
     // ----------------------------------------------------------------------------------------- //
 }
 
