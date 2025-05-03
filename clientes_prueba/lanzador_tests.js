@@ -691,7 +691,85 @@ async function Test8Base() {
     });
 
     setTimeout(() => {
-        logInfo('📋 📋 📋 TEST 8 - ACCEPTING CHALLENGE  📋 📋 📋');
+        logInfo('📋 📋 📋 TEST 8 - REJECTING CHALLENGE  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_pide_reto_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_rechaza_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the match...');
+            
+
+                //mirar que haya una partida correspondiente al reto
+                const result = await db.select().from(partida).where(
+                    and(
+                        or(
+                            and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)),
+                            and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))
+                        ),
+                        eq(
+                            partida.Tipo, "reto"
+                        )
+                    )
+                )
+
+                if (result.length <= 0) {
+                    logSuccess('🎉 NO Challenge found in the database! It was successfully rejected');
+                } else {
+                    logWarning('Challenge was found in the database although it was rejected.');
+                }
+
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
+async function Test9Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 9 - ACCEPTING CHALLENGE  📋 📋 📋');
         logInfo('Starting Client 1...');
         const client1 = spawn('node', [client_pide_reto_path, User1_name, User1_password, "rand"]);
 
@@ -784,6 +862,9 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test7Base to fully complete
 
     await Test8Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
+
+    await Test9Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
 
     // ----------------------------------------------------------------------------------------- //
