@@ -66,7 +66,6 @@ async function borrarPartidasReto() {
                 )
             )
         );
-        console.log('Partidas de reto borradas');
     } catch (error) {
         console.error('Error al borrar partidas de reto:', error);
     }
@@ -95,7 +94,6 @@ async function resetPlayers() {
                     })
                 .where(eq(usuario.id, User2_id));
 
-        console.log('Jugadores reseteados');
     } catch (error) {
         console.error('Error al resetear jugadores:', error);
     }
