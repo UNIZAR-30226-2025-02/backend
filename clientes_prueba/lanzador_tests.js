@@ -10,8 +10,10 @@ const client_pide_tablas_path = './clientes_prueba/client_pide_tablas.js';
 const client_acepta_tablas_path = './clientes_prueba/client_acepta_tablas.js';
 const client_rechaza_tablas_path = './clientes_prueba/client_rechaza_tablas.js';
 const client_acepta_amistad_reto_path = './clientes_prueba/client_acepta_amistad_reto.js';
+const client_rechaza_amistad_reto_path = './clientes_prueba/client_rechaza_amistad_reto.js';
 const client_pide_amistad_path = './clientes_prueba/client_pide_amistad.js';
 const client_pide_reto_path = './clientes_prueba/client_pide_reto.js';
+const client_borra_amistad_path = './clientes_prueba/client_borra_amistad.js';
 const User1_name = 'Prueba11';
 const User2_name = 'Prueba22';
 const User1_password = '12345a';
@@ -34,22 +36,10 @@ async function borrarPartida(idPartida) {
     try {
         await db.delete(mensaje).where(eq(mensaje.Id_partida, idPartida));
         await db.delete(partida).where(eq(partida.id, idPartida));
-        console.log('Partida borrada');
     } catch (error) {
         console.error('Error al borrar la partida:', error);
     }
 }
-
-async function borrarAmistad(idamistad) {
-    try{
-        console.log("idamistad: ", idamistad);
-        await db.delete(amistad).where(eq(amistad.id, idamistad));
-        console.log('Amistad borrada');
-    }catch (error){
-        console.error('Error al encontrar amistad: ', error);
-    }
-}
-
 
 async function borrarPartidasReto() {
     try {
@@ -62,7 +52,6 @@ async function borrarPartidasReto() {
                 )
             )
         );
-        console.log('Partidas de reto borradas');
     } catch (error) {
         console.error('Error al borrar partidas de reto:', error);
     }
@@ -91,12 +80,14 @@ async function resetPlayers() {
                     })
                 .where(eq(usuario.id, User2_id));
 
-        console.log('Jugadores reseteados');
     } catch (error) {
         console.error('Error al resetear jugadores:', error);
     }
 }
 
+// --------------------------------------------------------------------------------------------- //
+// TEST 1: NORMAL GAME                                                                           //
+// --------------------------------------------------------------------------------------------- //
 async function Test1Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -177,6 +168,9 @@ async function Test1Base() {
     }, 3000);
 }
 
+// --------------------------------------------------------------------------------------------- //
+// TEST 2: ACCORDED DRAW GAME                                                                    //
+// --------------------------------------------------------------------------------------------- //
 async function Test2Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -266,7 +260,9 @@ async function Test2Base() {
     }, 10000);
 }
 
-
+// --------------------------------------------------------------------------------------------- //
+// TEST 3: RESIGN IN GAME                                                                        //
+// --------------------------------------------------------------------------------------------- //
 async function Test3Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -280,7 +276,7 @@ async function Test3Base() {
     });
 
     setTimeout(() => {
-        logInfo('📋 📋 📋 TEST 3 - ABANDONED GAME REJECTED 📋 📋 📋');
+        logInfo('📋 📋 📋 TEST 3 - RESIGN IN GAME 📋 📋 📋');
         logInfo('Starting Client 1...');
         const client1 = spawn('node', [client_pide_tablas_path, User1_name, User1_password]);
 
@@ -351,6 +347,9 @@ async function Test3Base() {
     }, 10000);
 }
 
+// --------------------------------------------------------------------------------------------- //
+// TEST 4: CANCEL PAIRING FINDING                                                                //
+// --------------------------------------------------------------------------------------------- //
 async function Test4Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -364,7 +363,7 @@ async function Test4Base() {
     });
 
     setTimeout(() => {
-        logInfo('📋 📋 📋 TEST 4 - ABANDONED GAME CANCELED 📋 📋 📋');
+        logInfo('📋 📋 📋 TEST 4 - CANCEL PAIRING FINDING 📋 📋 📋');
         logInfo('Starting Client 1...');
         const client1 = spawn('node', [client_cancel_pairing_path, User1_name, User1_password]);
 
@@ -425,6 +424,9 @@ async function Test4Base() {
     }, 10000);
 }
 
+// --------------------------------------------------------------------------------------------- //
+// TEST 5: DEVICE CHANGING MID GAME                                                              //
+// --------------------------------------------------------------------------------------------- //
 async function Test5Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -529,9 +531,9 @@ async function Test5Base() {
     }, 10000);
 }
 
-
-//TEST ACEPTAR AMISTAD
-
+// --------------------------------------------------------------------------------------------- //
+// TEST 6: REJECTING FRIENDSHIP                                                                  //
+// --------------------------------------------------------------------------------------------- //
 async function Test6Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
@@ -545,7 +547,83 @@ async function Test6Base() {
     });
 
     setTimeout(() => {
-        logInfo('📋 📋 📋 TEST 6 - ACCEPTING FRIENDSHIP  📋 📋 📋');
+        logInfo('📋 📋 📋 TEST 6 - REJECTING FRIENDSHIP  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_pide_amistad_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_rechaza_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the friendship...');
+                console.log("User1_id: ", User1_id);
+                console.log("User2_id: ", User2_id);
+                const result = await db.select().from(amistad).where(
+                    or(
+                        and(eq(amistad.Jugador1, User1_id), eq(amistad.Jugador2, User2_id)),
+                        and(eq(amistad.Jugador1, User2_id), eq(amistad.Jugador2, User1_id))
+                    )
+                )
+
+
+                if (result.length <= 0) {
+                    logSuccess('🎉 NO Amistad found in the database!');
+                } else {
+                    logWarning('Amistad was found in the database although it was rejected.');
+                }
+
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
+// --------------------------------------------------------------------------------------------- //
+// TEST 7: ACCEPCTING FRIENDSHIP                                                                 //
+// --------------------------------------------------------------------------------------------- //
+async function Test7Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 7 - ACCEPTING FRIENDSHIP  📋 📋 📋');
         logInfo('Starting Client 1...');
         const client1 = spawn('node', [client_pide_amistad_path, User1_name, User1_password, "rand"]);
 
@@ -606,9 +684,10 @@ async function Test6Base() {
     }, 10000);
 }
 
-//TEST ACEPTAR RETO
-
-async function Test7Base() {
+// --------------------------------------------------------------------------------------------- //
+// TEST 8: REJECTING CHALLENGE                                                                   //
+// --------------------------------------------------------------------------------------------- //
+async function Test8Base() {
     logInfo('Starting the server...');
     const server = spawn('node', [serverPath]);
 
@@ -621,7 +700,88 @@ async function Test7Base() {
     });
 
     setTimeout(() => {
-        logInfo('📋 📋 📋 TEST 7 - ACCEPTING CHALLENGE  📋 📋 📋');
+        logInfo('📋 📋 📋 TEST 8 - REJECTING CHALLENGE  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_pide_reto_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_rechaza_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the match...');
+            
+
+                //mirar que haya una partida correspondiente al reto
+                const result = await db.select().from(partida).where(
+                    and(
+                        or(
+                            and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)),
+                            and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))
+                        ),
+                        eq(
+                            partida.Tipo, "reto"
+                        )
+                    )
+                )
+
+                if (result.length <= 0) {
+                    logSuccess('🎉 NO Challenge found in the database! It was successfully rejected');
+                } else {
+                    logWarning('Challenge was found in the database although it was rejected.');
+                }
+
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
+// --------------------------------------------------------------------------------------------- //
+// TEST 9: ACCEPTING CHALLENGE                                                                   //
+// --------------------------------------------------------------------------------------------- //
+async function Test9Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 9 - ACCEPTING CHALLENGE  📋 📋 📋');
         logInfo('Starting Client 1...');
         const client1 = spawn('node', [client_pide_reto_path, User1_name, User1_password, "rand"]);
 
@@ -674,9 +834,82 @@ async function Test7Base() {
                     console.log(result);
                     
                     await borrarPartidasReto(); // Borrar la partida después de la validación
+                }
 
-                    //Borrar la amistad después de la validación
-                    await borrarAmistad(result[0].id); // Borrar la partida después de la validación
+            } catch (error) {
+                logError(`Error checking the database: ${error}`);
+            } finally {
+                logInfo('Stopping clients...');
+                client1.kill();
+                client2.kill();
+
+                logInfo('Stopping server...');
+                server.kill();
+            }
+        }, 30000);
+    }, 10000);
+}
+
+// --------------------------------------------------------------------------------------------- //
+// TEST 10: REMOVING FRIENDSHIP                                                                  //
+// --------------------------------------------------------------------------------------------- //
+async function Test10Base() {
+    logInfo('Starting the server...');
+    const server = spawn('node', [serverPath]);
+
+    server.stdout.on('data', (data) => {
+        console.log(`🖥️   Server: ${data}`);
+    });
+
+    server.stderr.on('data', (data) => {
+        logError(`Server Error: ${data}`);
+    });
+
+    setTimeout(() => {
+        logInfo('📋 📋 📋 TEST 10 - REMOVING FRIENDSHIP  📋 📋 📋');
+        logInfo('Starting Client 1...');
+        const client1 = spawn('node', [client_borra_amistad_path, User1_name, User1_password, "rand"]);
+
+        client1.stdout.on('data', (data) => {
+            console.log(`👤 Client1: ${data}`);
+        });
+
+        client1.stderr.on('data', (data) => {
+            logError(`Client1 Error: ${data}`);
+        });
+
+        let client2 = null;
+        setTimeout(() => {
+            logInfo('Starting Client 2...');
+            client2 = spawn('node', [client_rechaza_amistad_reto_path, User2_name, User2_password, "rand"]);
+
+            client2.stdout.on('data', (data) => {
+                console.log(`👤 Client2: ${data}`);
+            });
+
+            client2.stderr.on('data', (data) => {
+                logError(`Client2 Error: ${data}`);
+            });
+        }, 3000);
+
+       
+        setTimeout(async () => {
+            try {
+                logInfo('Checking the database for the friendship...');
+                console.log("User1_id: ", User1_id);
+                console.log("User2_id: ", User2_id);
+                const result = await db.select().from(amistad).where(
+                    or(
+                        and(eq(amistad.Jugador1, User1_id), eq(amistad.Jugador2, User2_id)),
+                        and(eq(amistad.Jugador1, User2_id), eq(amistad.Jugador2, User1_id))
+                    )
+                )
+
+
+                if (result.length <= 0) {
+                    logSuccess('🎉 NO Amistad found in the database! It was successfully deleted');
+                } else {
+                    logWarning('Amistad was found in the database although it was requested to delete.');
                 }
 
             } catch (error) {
@@ -711,23 +944,34 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
 
     await Test6Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test6Base to fully complete
 
     await Test7Base();
-    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test5Base to fully complete
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay to ensure all logs are printed
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test7Base to fully complete
 
-    await resetPlayers(); // Reset players after all tests
+    await Test8Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
+
+    await Test9Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
+
+    await Test10Base();
+    await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
+
+    // ----------------------------------------------------------------------------------------- //
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await resetPlayers();   // Reset players after all tests
 
     if (HayErrores) {
         logError(' ❌ ❌ ❌ There were errors during the tests. ❌ ❌ ❌');
     } else {
-        logFinalSuccess('\n 🎆 🎆 🎆 🎉 🎉 🎖️    All tests completed successfully!   🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
+        logFinalSuccess
+        ('\n 🎆 🎆 🎆 🎉 🎉 🎖️  All tests completed successfully!  🎖️ 🎉 🎉 🎆 🎆 🎆  \n');
     }
+    // ----------------------------------------------------------------------------------------- //
 }
+
 main().catch((error) => {
     logError(`Error in main: ${error}`);
-
-
 });

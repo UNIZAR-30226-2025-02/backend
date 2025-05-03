@@ -60,6 +60,9 @@ async function clientLogin(user, password) {
 
 function esperar(socket) {
     
+    setTimeout(() => {
+        socket.emit('remove-friend', { idJugador: userId, idAmigo: idamigo });
+    }, 5000);  // Enviar solicitud al server para borrar amistad tras 5 seg
 
     socket.on('connect', () => {
         //Hace un consol log de estoy esperando cada 5 segundos

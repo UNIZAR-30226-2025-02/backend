@@ -1000,7 +1000,8 @@ export async function gestionarDesconexion(socket) {
     // Si no se encuentra el userID, no se puede gestionar la desconexión (ya se ha desconectado
     // por medio del logout)
     if (!userID) {
-        console.log("No se pudo encontrar el userID asociado al socket.");
+        console.log("No se pudo encontrar el userID asociado al socket. El usuario cerró sesión" + 
+                    + " de forma controlada.");
         return;
     }
     
