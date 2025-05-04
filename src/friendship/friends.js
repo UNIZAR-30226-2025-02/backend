@@ -363,7 +363,7 @@ export async function createDuelGame(data, socket) {
         console.log(`Reto entre ${idRetador} y ${idRetado} eliminado.`);
 
         // Notificar con game-ready a los jugadores que la partida está lista
-        io.to(gameId).emit('game-ready', { idPartida: gameId });
+        io.to(gameId).emit('game-ready', { idPartida: gameId, tipo: 'reto' });
 
         // Notificar a cada jugador su color en la partida
         console.log("ID jugador blanco:", idBlancas);

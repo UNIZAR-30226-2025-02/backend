@@ -68,7 +68,14 @@ export async function buscarUlt10PartidasDeUsuarioPorModo(req, res) {
     const modo = req.query.modo;
     try {
         const partidas = await db.select().from(partida)
-            .where(and(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)), eq(partida.Modo, modo)))
+            .where( and(
+                and(
+                    or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                    eq(partida.Modo, modo)
+                ),
+                eq(partida.Tipo, "ranked")
+                )
+            )
             .orderBy(desc(partida.created_at))
             .limit(10);
         res.json(partidas); // Devolver las últimas 5 partidas
@@ -95,7 +102,14 @@ export async function buscarUlt5PartidasDeUsuarioPorModo(req, res) {
     const modo = req.query.modo;
     try {
         const partidas = await db.select().from(partida)
-            .where(and(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)), eq(partida.Modo, modo)))
+            .where( and(
+                        and(
+                            or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                            eq(partida.Modo, modo)
+                        ),
+                        eq(partida.Tipo, "ranked")
+                        )
+                    )
             .orderBy(desc(partida.created_at))
             .limit(5);
         res.json(partidas); // Devolver las últimas 5 partidas
