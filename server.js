@@ -15,7 +15,7 @@ import { deleteInactiveGuests } from './src/cronjobs/cronjobs.js';
 import {
     findGame, manejarMovimiento, cancelarBusquedaPartida,
     manejarRendicion, ofertaDeTablas, aceptarTablas, rechazarTablas,
-    gestionarDesconexion
+    gestionarDesconexion, manejarTimeoutPartida
 } from './src/rooms/rooms.js';
 
 // Funciones del módulo de amistad
@@ -140,6 +140,11 @@ async function newConnection(socket) {
     socket.on('draw-declined', async (data) => {
         console.log("Se ha rechazado la oferta de tablas")
         await rechazarTablas(data, socket);
+    });
+
+    socket.on('game-timeout', async (data) => {
+        console.log('El jugador '+ data.idJugador + ' ha perdido por tiempo');
+        await manejarTimeoutPartida(data, socket);
     });
 
     // ------------------------------------------------------------------------------------------

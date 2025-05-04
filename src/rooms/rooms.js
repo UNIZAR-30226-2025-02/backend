@@ -517,7 +517,7 @@ async function resultManager(game, idPartida) {
             .run();
 
         // Notificar a los jugadores que la partida ha terminado y quién es el ganador
-        io.to(idPartida).emit('gameOver', { winner });
+        io.to(idPartida).emit('gameOver', { winner: winner, timeout: 'false' });
         console.log("La partida ha terminado, el ganador es: ", winner);
 
         //Eliminar la partida de memoria
@@ -596,7 +596,7 @@ async function resultManager(game, idPartida) {
             .run();
 
         // Notificar a los jugadores que la partida ha terminado en tablas
-        io.to(idPartida).emit('gameOver', { result });
+        io.to(idPartida).emit('gameOver', { winner: result, timeout: 'false' });
         console.log("La partida ha terminado en tablas");
 
         //Eliminar la partida de memoria
@@ -829,7 +829,114 @@ export async function manejarRendicion(data, socket) {
         .run();
 
     // Notificar a los jugadores que la partida ha terminado y quién es el ganador
-    io.to(idPartida).emit('gameOver', { winner: oponente });
+    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'false'});
+
+    // Poner el estado de partida de los jugadores a 'null' en la bbdd
+    await db.update(usuario)
+        .set({ EstadoPartida: null })
+        .where(or(
+            eq(usuario.id, game.header()['White']),
+            eq(usuario.id, game.header()['Black'])))
+        .run();
+
+    // Eliminar la partida de memoria
+    delete ActiveXObjects[idPartida];
+    console.log("La partida ha terminado, el ganador es: ", oponente);
+}
+
+// -----------------------------------------------------------------------------------------------
+// Función para gestionar la caída de bandera (pérdida de la partida por timeout) de uno de los
+// jugadores
+// -----------------------------------------------------------------------------------------------
+export async function manejarTimeoutPartida(data, socket) {
+    const idPartida = data.idPartida;
+    const idJugador = data.idJugador;
+
+    // Verificar si la partida existe y el jugador está en ella
+    if (!ActiveXObjects[idPartida] || !ActiveXObjects[idPartida].players.includes(idJugador)) {
+        console.log("No estás en esta partida");
+        return socket.emit('errorMessage', 'No estás en esta partida');
+    }
+
+    const game = ActiveXObjects[idPartida].chess;
+    const headers = game.header();
+    const color = headers['White'] === idJugador ? 'white' : 'black';
+    const oponente = color === 'white' ? headers['Black'] : headers['White'];
+    const result = color === 'black' ? 'white' : 'black';
+    game.setHeader('Result', color === 'black' ? '1-0' : '0-1');
+
+    
+    // Actualizar los datos de la partida en la base de datos
+    const partidaEncontrada = await db.select().from(partida).where(eq(partida.id, idPartida)).get();
+
+    let variacionW = 0;
+    let variacionB = 0;
+
+    if (partidaEncontrada.Tipo !== 'reto') {
+            // Calcular variacion de rating de los jugadores
+        ({variacionW, variacionB} = await ratingVariation(
+            game.header()['White Elo'],
+            game.header()['Black Elo'],
+            result,
+            40
+        ));
+    }
+
+    console.log("Variación de elo del jugador blanco:", variacionW);
+    console.log("Variación de elo del jugador negro:", variacionB);
+
+    const eloW = game.header()['White Elo'];
+    const eloB = game.header()['Black Elo'];
+
+    // Actualizar puntuación del blanco en bbdd
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`
+        })
+        .where(eq(usuario.id, game.header()['White']))
+        .run();
+
+    // Actualizar puntuación del negro en bbdd
+    await db.update(usuario)
+        .set({
+            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`
+        })
+        .where(eq(usuario.id, game.header()['Black']))
+        .run();
+
+    // Actualizar rachas y numero de partidas de cada jugador en función del resultado
+    const winner = oponente;
+    const loser = idJugador;
+    
+    // Actualizar estadísticas del ganador
+    await db.update(usuario)
+        .set({
+            maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+            actualStreak: sql`actualStreak + 1`,
+            totalWins: sql`totalWins + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, winner))
+        .run();
+    
+    // Actualizar estadísticas del perdedor
+    await db.update(usuario)
+        .set({
+            actualStreak: 0,
+            totalLosses: sql`totalLosses + 1`,
+            totalGames: sql`totalGames + 1`
+        })
+        .where(eq(usuario.id, loser))
+        .run();
+
+    // Actualizar la partida en base de datos con el ganador
+    await db.update(partida)
+        .set({ Ganador: oponente, Variacion_JW: variacionW, Variacion_JB: variacionB, PGN: game.pgn() })
+        .where(eq(partida.id, idPartida))
+        .run();
+
+    // Notificar a los jugadores que la partida ha terminado y quién es el ganador
+    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'true'});
 
     // Poner el estado de partida de los jugadores a 'null' en la bbdd
     await db.update(usuario)
@@ -928,7 +1035,7 @@ export async function aceptarTablas(data, socket) {
     // Notificar al otro jugador que su oferta de tablas ha sido aceptada, y notificar a ambos
     // que la partida ha terminado
     socket.to(idPartida).emit('draw-accepted', { idJugador });
-    io.to(idPartida).emit('gameOver', { winner: "draw" });
+    io.to(idPartida).emit('gameOver', { winner: "draw", timeout: 'false' });
 
     // Poner el estadoPartida de los jugadores a null en la base de datos
     await db.update(usuario)
