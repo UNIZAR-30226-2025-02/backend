@@ -495,8 +495,10 @@ async function resultManager(game, idPartida) {
             .where(eq(usuario.id, game.header()['Black']))
             .run();
         
-        // Actualizar estadísticas del ganador
-        await db.update(usuario)
+
+        if(partidaEncontrada.Tipo != 'reto') {
+            // Actualizar estadísticas del ganador
+            await db.update(usuario)
             .set({
                 maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
                 actualStreak: sql`actualStreak + 1`,
@@ -506,15 +508,16 @@ async function resultManager(game, idPartida) {
             .where(eq(usuario.id, winner))
             .run();
         
-        // Actualizar estadísticas del perdedor
-        await db.update(usuario)
-            .set({
-                actualStreak: 0,
-                totalLosses: sql`totalLosses + 1`,
-                totalGames: sql`totalGames + 1`
-            })
-            .where(eq(usuario.id, loser))
-            .run();
+            // Actualizar estadísticas del perdedor
+            await db.update(usuario)
+                .set({
+                    actualStreak: 0,
+                    totalLosses: sql`totalLosses + 1`,
+                    totalGames: sql`totalGames + 1`
+                })
+                .where(eq(usuario.id, loser))
+                .run();
+        }
 
         // Notificar a los jugadores que la partida ha terminado y quién es el ganador
         io.to(idPartida).emit('gameOver', { winner: winner, timeout: 'false' });
@@ -575,8 +578,9 @@ async function resultManager(game, idPartida) {
         const eloW = game.header()['White Elo'];
         const eloB = game.header()['Black Elo']
 
-        // Actualizar la puntuación y estadísticas del blanco
-        await db.update(usuario)
+        if(partidaEncontrada.Tipo != 'reto'){
+            // Actualizar la puntuación y estadísticas del blanco
+            await db.update(usuario)
             .set({
                 [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
                 totalDraws: sql`totalDraws + 1`,
@@ -585,8 +589,8 @@ async function resultManager(game, idPartida) {
             .where(eq(usuario.id, game.header()['White']))
             .run();
 
-        // Actualizar la puntuación y estadísticas del negro
-        await db.update(usuario)
+            // Actualizar la puntuación y estadísticas del negro
+            await db.update(usuario)
             .set({
                 [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
                 totalDraws: sql`totalDraws + 1`,
@@ -594,6 +598,7 @@ async function resultManager(game, idPartida) {
             })
             .where(eq(usuario.id, game.header()['Black']))
             .run();
+        }
 
         // Notificar a los jugadores que la partida ha terminado en tablas
         io.to(idPartida).emit('gameOver', { winner: result, timeout: 'false' });
@@ -801,26 +806,28 @@ export async function manejarRendicion(data, socket) {
     const winner = oponente;
     const loser = idJugador;
     
-    // Actualizar estadísticas del ganador
-    await db.update(usuario)
-        .set({
-            maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
-            actualStreak: sql`actualStreak + 1`,
-            totalWins: sql`totalWins + 1`,
-            totalGames: sql`totalGames + 1`
-        })
-        .where(eq(usuario.id, winner))
-        .run();
-    
-    // Actualizar estadísticas del perdedor
-    await db.update(usuario)
-        .set({
-            actualStreak: 0,
-            totalLosses: sql`totalLosses + 1`,
-            totalGames: sql`totalGames + 1`
-        })
-        .where(eq(usuario.id, loser))
-        .run();
+    if(partidaEncontrada.Tipo !='reto') {
+        // Actualizar estadísticas del ganador
+        await db.update(usuario)
+            .set({
+                maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+                actualStreak: sql`actualStreak + 1`,
+                totalWins: sql`totalWins + 1`,
+                totalGames: sql`totalGames + 1`
+            })
+            .where(eq(usuario.id, winner))
+            .run();
+        
+        // Actualizar estadísticas del perdedor
+        await db.update(usuario)
+            .set({
+                actualStreak: 0,
+                totalLosses: sql`totalLosses + 1`,
+                totalGames: sql`totalGames + 1`
+            })
+            .where(eq(usuario.id, loser))
+            .run();
+    }
 
     // Actualizar la partida en base de datos con el ganador
     await db.update(partida)
@@ -908,26 +915,28 @@ export async function manejarTimeoutPartida(data, socket) {
     const winner = oponente;
     const loser = idJugador;
     
-    // Actualizar estadísticas del ganador
-    await db.update(usuario)
-        .set({
-            maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
-            actualStreak: sql`actualStreak + 1`,
-            totalWins: sql`totalWins + 1`,
-            totalGames: sql`totalGames + 1`
-        })
-        .where(eq(usuario.id, winner))
-        .run();
-    
-    // Actualizar estadísticas del perdedor
-    await db.update(usuario)
-        .set({
-            actualStreak: 0,
-            totalLosses: sql`totalLosses + 1`,
-            totalGames: sql`totalGames + 1`
-        })
-        .where(eq(usuario.id, loser))
-        .run();
+    if(partidaEncontrada.Tipo != 'reto') {
+        // Actualizar estadísticas del ganador
+        await db.update(usuario)
+            .set({
+                maxStreak: sql`CASE WHEN actualStreak + 1 > maxStreak THEN actualStreak + 1 ELSE maxStreak END`,
+                actualStreak: sql`actualStreak + 1`,
+                totalWins: sql`totalWins + 1`,
+                totalGames: sql`totalGames + 1`
+            })
+            .where(eq(usuario.id, winner))
+            .run();
+        
+        // Actualizar estadísticas del perdedor
+        await db.update(usuario)
+            .set({
+                actualStreak: 0,
+                totalLosses: sql`totalLosses + 1`,
+                totalGames: sql`totalGames + 1`
+            })
+            .where(eq(usuario.id, loser))
+            .run();
+    }
 
     // Actualizar la partida en base de datos con el ganador
     await db.update(partida)
@@ -1045,25 +1054,27 @@ export async function aceptarTablas(data, socket) {
             eq(usuario.id, game.header()['Black'])))
         .run();
 
-    // Actualizar rachas y numero de partidas del blanco
-    await db.update(usuario)
-    .set({
-        [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
-        totalDraws: sql`totalDraws + 1`,
-        totalGames: sql`totalGames + 1`
-    })
-    .where(eq(usuario.id, game.header()['White']))
-    .run();
-
-    // Actualizar rachas y numero de partidas del negro
-    await db.update(usuario)
+    if(partidaEncontrada.Tipo != 'reto') {
+        // Actualizar rachas y numero de partidas del blanco
+        await db.update(usuario)
         .set({
-            [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
+            [partidaEncontrada.Modo]: sql`${eloW} + ${variacionW}`,
             totalDraws: sql`totalDraws + 1`,
             totalGames: sql`totalGames + 1`
         })
-        .where(eq(usuario.id, game.header()['Black']))
+        .where(eq(usuario.id, game.header()['White']))
         .run();
+
+        // Actualizar rachas y numero de partidas del negro
+        await db.update(usuario)
+            .set({
+                [partidaEncontrada.Modo]: sql`${eloB} + ${variacionB}`,
+                totalDraws: sql`totalDraws + 1`,
+                totalGames: sql`totalGames + 1`
+            })
+            .where(eq(usuario.id, game.header()['Black']))
+            .run();
+    }
 
     // Eliminar la partida de memoria
     delete ActiveXObjects[idPartida];
