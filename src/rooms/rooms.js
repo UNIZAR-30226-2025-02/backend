@@ -520,7 +520,7 @@ async function resultManager(game, idPartida) {
         }
 
         // Notificar a los jugadores que la partida ha terminado y quién es el ganador
-        io.to(idPartida).emit('gameOver', { winner: winner, timeout: 'false' });
+        io.to(idPartida).emit('gameOver', { winner: winner, timeout: 'false', variacionW, variacionB });
         console.log("La partida ha terminado, el ganador es: ", winner);
 
         //Eliminar la partida de memoria
@@ -601,7 +601,7 @@ async function resultManager(game, idPartida) {
         }
 
         // Notificar a los jugadores que la partida ha terminado en tablas
-        io.to(idPartida).emit('gameOver', { winner: result, timeout: 'false' });
+        io.to(idPartida).emit('gameOver', { winner: result, timeout: 'false', variacionW, variacionB });
         console.log("La partida ha terminado en tablas");
 
         //Eliminar la partida de memoria
@@ -836,7 +836,7 @@ export async function manejarRendicion(data, socket) {
         .run();
 
     // Notificar a los jugadores que la partida ha terminado y quién es el ganador
-    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'false'});
+    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'false', variacionW, variacionB });
 
     // Poner el estado de partida de los jugadores a 'null' en la bbdd
     await db.update(usuario)
@@ -945,7 +945,7 @@ export async function manejarTimeoutPartida(data, socket) {
         .run();
 
     // Notificar a los jugadores que la partida ha terminado y quién es el ganador
-    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'true'});
+    io.to(idPartida).emit('gameOver', { winner: oponente, timeout: 'true', variacionW, variacionB });
 
     // Poner el estado de partida de los jugadores a 'null' en la bbdd
     await db.update(usuario)
@@ -1044,7 +1044,7 @@ export async function aceptarTablas(data, socket) {
     // Notificar al otro jugador que su oferta de tablas ha sido aceptada, y notificar a ambos
     // que la partida ha terminado
     socket.to(idPartida).emit('draw-accepted', { idJugador });
-    io.to(idPartida).emit('gameOver', { winner: "draw", timeout: 'false' });
+    io.to(idPartida).emit('gameOver', { winner: "draw", timeout: 'false', variacionW, variacionB });
 
     // Poner el estadoPartida de los jugadores a null en la base de datos
     await db.update(usuario)
