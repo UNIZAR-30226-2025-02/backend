@@ -88,7 +88,11 @@ export async function buscarUlt5PartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
         const partidas = await db.select().from(partida)
-            .where(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)))
+            .where( and(
+                        or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                        eq(partida.Tipo, "ranked")
+                    )
+            )
             .orderBy(desc(partida.created_at))
             .limit(5);
         res.json(partidas); // Devolver las últimas 5 partidas
