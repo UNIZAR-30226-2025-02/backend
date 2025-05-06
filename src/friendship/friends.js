@@ -302,7 +302,9 @@ export async function createDuelGame(data, socket) {
         nombreNegras = jugadorNegras.NombreUser;
         eloBlancas = jugadorBlancas[modo];
         eloNegras = jugadorNegras[modo];
-
+        fotoBlancas = jugadorBlancas.FotoPerfil;
+        fotoNegras = jugadorNegras.FotoPerfil;
+        
         //poner en el header los elo y los alias
         chess.setHeader('White Elo', eloBlancas);
         chess.setHeader('Black Elo', eloNegras);
@@ -371,8 +373,8 @@ export async function createDuelGame(data, socket) {
 
         io.to(gameId).emit('color', {
             jugadores: [
-                { id: idBlancas, nombreW: nombreBlancas, eloW: eloBlancas, color: 'white' },
-                { id: idNegras, nombreB: nombreNegras, eloB: eloNegras, color: 'black' }
+                { id: idBlancas, nombreW: nombreBlancas, eloW: eloBlancas, color: 'white', fotoBlancas: fotoBlancas },
+                { id: idNegras, nombreB: nombreNegras, eloB: eloNegras, color: 'black', fotoNegras: fotoNegras }
             ]
         });
 
