@@ -14,6 +14,12 @@ export async function addFriend(data, socket) {
     const idJugador = data.idJugador;
     const idAmigo = data.idAmigo;
     const socketAmigo = activeSockets.get(idAmigo);
+    const jugador = await db.select()
+        .from(usuario).where(eq(usuario.id, idJugador))
+        .get();
+
+    // Obtener el nombre del jugador que envía la solicitud de amistad (para que el amigo lo vea)
+    const nombreJugador = jugador.NombreUser;
 
     if (!socketAmigo) {
         console.log("Error al enviar solicitud de amistad, el jugador no está conectado.");
@@ -21,7 +27,7 @@ export async function addFriend(data, socket) {
     }
 
     // Enviar la solicitud de amistad al jugador deseado
-    io.to(socketAmigo.id).emit('friendRequest' , { idJugador, idAmigo });
+    io.to(socketAmigo.id).emit('friendRequest' , { idJugador, nombreJugador, idAmigo });
     console.log("Solicitud de amistad enviada de ", data.idJugador,  "a " , data.idAmigo);
    
 }
@@ -174,6 +180,11 @@ export async function challengeFriend(data, socket) {
     const idRetado = data.idRetado;
     const modo = data.modo;
     try {
+        // Obtener el nombre del jugador que envía el reto (para que el amigo lo vea)
+        const retador = await db.select()
+            .from(usuario).where(eq(usuario.id, idRetador))
+            .get();
+        const nombreRetador = retador.NombreUser;
 
         // Verificar si los jugadores son amigos
         const friendship = await db.select()
@@ -230,7 +241,7 @@ export async function challengeFriend(data, socket) {
         });
 
         // Notificar del nuevo reto al amigo retado
-        io.to(socketRetado.id).emit('challengeSent' , { idRetador, idRetado, modo });
+        io.to(socketRetado.id).emit('challengeSent' , { idRetador, idRetado, nombreRetador, modo });
         console.log(`Reto enviado de ${idRetador} a ${idRetado} para jugar partida de ${modo}`);
    
     } catch (error) {
