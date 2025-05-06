@@ -26,7 +26,7 @@ export async function getUserInfo(req, res) {
         }
         const user = usuarios[0];
         // Comprobar si el usuario está logueadoha y ha verificado su correo 
-        if (user.correoVerificado === 'no') {
+        if (user.correoVerificado === 'no' && user.estadoUser !== 'guest') {
             res.status(400).json({ error: 'Usuario con correo no verificado. No es posible acceder a su información hasta que complete el registro' });
             return;
         }
@@ -88,7 +88,11 @@ export async function buscarUlt5PartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
         const partidas = await db.select().from(partida)
-            .where(or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)))
+            .where( and(
+                        or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                        eq(partida.Tipo, "ranked")
+                    )
+            )
             .orderBy(desc(partida.created_at))
             .limit(5);
         res.json(partidas); // Devolver las últimas 5 partidas
