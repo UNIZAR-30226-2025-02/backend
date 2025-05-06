@@ -313,8 +313,8 @@ export async function createDuelGame(data, socket) {
         nombreNegras = jugadorNegras.NombreUser;
         eloBlancas = jugadorBlancas[modo];
         eloNegras = jugadorNegras[modo];
-        fotoBlancas = jugadorBlancas.FotoPerfil;
-        fotoNegras = jugadorNegras.FotoPerfil;
+        const fotoBlancas = jugadorBlancas.FotoPerfil;
+        const fotoNegras = jugadorNegras.FotoPerfil;
         
         //poner en el header los elo y los alias
         chess.setHeader('White Elo', eloBlancas);
