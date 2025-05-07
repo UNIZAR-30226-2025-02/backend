@@ -5,7 +5,7 @@ import schedule from 'node-schedule';
 import { app } from './app.js';
 import { authenticate } from './src/login/login.js';
 
-// Funciones del módulo de chat
+// Funciones del módulo de chats
 import { saveMessage, fetchMessages } from './src/chat/chat.js';
 
 // Funciones del módulo de cronjobs
