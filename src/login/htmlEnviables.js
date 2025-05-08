@@ -1,3 +1,4 @@
+// Página a enseñar al usuario al verificar su correo correctamente. 
 export const httpRespuestaWebPositiva = `
     <html lang="es">
     <head>
@@ -70,7 +71,7 @@ export const httpRespuestaWebPositiva = `
 
     `;
 
-
+// Página a enseñar al usuario si ha habido un error al verificar su correo.
 export const httpRespuestaWebNegativa = `
     <!DOCTYPE html>
     <html lang="es">
@@ -147,7 +148,7 @@ export const httpRespuestaWebNegativa = `
 
 
 
-
+// Mensaje que se envía al usuario al registrarse en la web.
 export const html_correo = (verificationLink) => {
     return `<!DOCTYPE html>
             <html>
@@ -208,6 +209,7 @@ export const html_correo = (verificationLink) => {
             </html>`;
 };
 
+// Mensaje que se envía al usuario al solicitar un cambio de contraseña.
 export const html_cambio_contrasena = (token) => {
     return `<!DOCTYPE html>
             <html lang="es">

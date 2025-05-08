@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { html_correo, html_cambio_contrasena } from './htmlEnviables.js';
 
+// Configuración del transportador de nodemailer
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -9,6 +10,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Función para enviar el correo de verificación
 export const sendVerificationEmail = async (email, token) => {
     const direccion = 'https://checkmatex-gkfda9h5bfb0gsed.spaincentral-01.azurewebsites.net/verificar';
 
@@ -28,7 +30,7 @@ export const sendVerificationEmail = async (email, token) => {
     }
 };
 
-
+// Función para enviar el correo de cambio de contraseña
 export const sendChangePasswdEmail = async (email, token) => {
     const codigo = `${token}`;
     const mailOptions = {
