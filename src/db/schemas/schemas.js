@@ -81,18 +81,6 @@ export const partida = sqliteTable('partida', {
 export const partidaSelectSchema = createSelectSchema(partida).partial()
 export const partidaInsertSchema = createInsertSchema(partida).partial()
 
-// // RANKING
-// export const ranking = sqliteTable('ranking', {
-//     id: text('id').primaryKey(),
-//     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-//     Modo: text('Modo').notNull(),
-//     Puntuacion: integer('Puntuacion').notNull(),
-//     Posicion: integer('Posicion').notNull()
-// })
-
-// export const rankingSelectSchema = createSelectSchema(ranking).partial()
-// export const rankingInsertSchema = createInsertSchema(ranking).partial()
-
 // MENSAJE
 export const mensaje = sqliteTable('mensaje', {
     Id_mensaje: text('id_mensaje').primaryKey(),
@@ -105,14 +93,3 @@ export const mensaje = sqliteTable('mensaje', {
 
 export const mensajeSelectSchema = createSelectSchema(mensaje).partial()
 export const mensajeInsertSchema = createInsertSchema(mensaje).partial()
-
-// // APERTURA
-// export const apertura = sqliteTable('apertura', {
-//     id: text('id').primaryKey(),
-//     created_at: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-//     Nombre_Aper: text('Nombre_Aper').notNull().unique(),
-//     PGN: text('PGN'),
-// })
-
-// export const aperturaSelectSchema = createSelectSchema(apertura).partial()
-// export const aperturaInsertSchema = createInsertSchema(apertura).partial()
