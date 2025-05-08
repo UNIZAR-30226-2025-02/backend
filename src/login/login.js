@@ -10,14 +10,18 @@ import { httpRespuestaWebPositiva, httpRespuestaWebNegativa } from './htmlEnviab
 import { activeSockets } from '../../server.js';
 import { ActiveXObjects, buscarPartidaActiva } from '../rooms/rooms.js';
 
+// Generar un token de verificación para el correo
 const generateVerificationToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
 
+// Generar un token de acceso para el usuario
 const generateAccessToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '15m' });
 };
 
+// Creación de un usuario nuevo y envío de un correo de verificación al correo proporcionado
+// -----------------------------------------------------------------------------------------
 export async function crearUsuario(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
@@ -28,18 +32,14 @@ export async function crearUsuario(req, res) {
             res.status(400).json({ error: 'Faltan campos' });
             return
         }
-        // Verificar si el usuario ya existe
-        // const usuarioExistente = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
-        // if (usuarioExistente.length > 0) {
-        //     res.status(400).json({ error: 'El usuario ya existe' });
-        //     return
-        // }
+
         // Verificar si el correo ya está en uso
         const correoExistente = await db.select().from(usuario).where(eq(usuario.Correo, Correo));
         if (correoExistente.length > 0) {
             res.status(400).json({ error: 'El correo ya está en uso' });
             return
         }
+        // Verificar que los campos tengan al menos 4 caracteres
         if (Contrasena.length < 4) {
             res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres' });
             return
@@ -56,12 +56,10 @@ export async function crearUsuario(req, res) {
         // Crear un token de verificación para el correo 
         const token = generateVerificationToken(id)
 
-        var varMessage = "Antes de hacer el insert";
-
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
             id: id,
-            FotoPerfil: "none",
+            FotoPerfil: "torre_azul.webp",
             NombreUser: NombreUser,
             Correo: Correo,
             Contrasena: hashedPassword,
@@ -69,8 +67,6 @@ export async function crearUsuario(req, res) {
             correoVerificado: "no",
             tokenVerificacion: token
         });
-
-        varMessage = "Después de hacer el insert";
 
         // Enviar correo de verificación
         await sendVerificationEmail(Correo, token);
@@ -83,6 +79,8 @@ export async function crearUsuario(req, res) {
     }
 }
 
+// Reenviar el correo de verificación al usuario
+// -----------------------------------------------------------------------------------------
 export async function resendVerificationEmail(req, res) {
     try {
         const Correo = req.body.Correo;
@@ -113,7 +111,8 @@ export async function resendVerificationEmail(req, res) {
     }
 }
 
-
+// Verificar el token de verificación del correo
+// -----------------------------------------------------------------------------------------
 export async function verifyEmail(req, res) {
     const token = req.query.token;
     const tokenString = String(token);
@@ -138,7 +137,8 @@ export async function verifyEmail(req, res) {
     }
 };
 
-
+// Iniciar sesión con el usuario y verificar la contraseña
+// -----------------------------------------------------------------------------------------
 export async function login(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
@@ -226,7 +226,6 @@ export async function authenticate(socket) {
 
             // Eliminar el socket antiguo del mapa de conexiones activas
             activeSockets.delete(userId);
-            // -----------------------------------------------------------------------------------------------
             ({ timeLeftW, timeLeftB, estadoPartida, gameMode } = await new Promise((resolve) => {
                 oldSocket.once('game-status', (data) => {
                     resolve({
@@ -237,7 +236,6 @@ export async function authenticate(socket) {
                     });
                 });
             }));
-            // -----------------------------------------------------------------------------------------------
 
             // Se supone que lo desconectarán ellos, aquí nos aseguramos de que se desconecte
             // tras 5 segundos si no lo hacen
@@ -260,7 +258,7 @@ export async function authenticate(socket) {
                     break;
                 }
             }
-            
+
             // Si no se encuentra una partida activa, se finaliza la autenticación del socket
             if (!rivalID || !idPartida) {
                 console.log(`Usuario ${userId} no tiene una partida activa.`);
@@ -280,7 +278,6 @@ export async function authenticate(socket) {
             }
 
             rivalSocket.emit('get-game-status');
-            // ------------------------------------------------------------------------------------
             ({ timeLeftW, timeLeftB, estadoPartida, gameMode } = await new Promise((resolve) => {
                 rivalSocket.once('game-status', (data) => {
                     resolve({
@@ -291,8 +288,7 @@ export async function authenticate(socket) {
                     });
                 });
             }));
-            // ------------------------------------------------------------------------------------
-    
+
         }
         // Almacenar el nuevo socket
         activeSockets.set(userId, socket);
@@ -305,8 +301,9 @@ export async function authenticate(socket) {
         socket.disconnect();
     }
 }
-// -----------------------------------------------------------------------------------------------
 
+// Cerrar sesión del usuario y eliminar el socket activo
+// -----------------------------------------------------------------------------------------
 export async function logout(req, res) {
     try {
         const NombreUser = req.body.NombreUser;
@@ -335,6 +332,8 @@ export async function logout(req, res) {
     }
 }
 
+// Editar el perfil del usuario
+// -----------------------------------------------------------------------------------------
 export async function editUser(req, res) {
     try {
         const id = req.body.id;
@@ -350,6 +349,7 @@ export async function editUser(req, res) {
             return;
         }
 
+        // Verificar que los campos tengan al menos 4 caracteres
         if (NombreUser.length < 4) {
             res.status(400).json({ error: 'El nombre de usuario debe tener al menos 4 caracteres' });
             return;
@@ -375,6 +375,7 @@ export async function editUser(req, res) {
             return;
         }
 
+        // Modificar el usuario en la base de datos
         await db.update(usuario)
             .set({
                 NombreUser: NombreUser,
@@ -390,6 +391,8 @@ export async function editUser(req, res) {
     }
 }
 
+// Enviar un correo de restablecimiento de contraseña
+// -----------------------------------------------------------------------------------------
 export async function sendPasswdReset(req, res) {
     try {
         const Correo = req.body.Correo;
@@ -418,6 +421,8 @@ export async function sendPasswdReset(req, res) {
     }
 }
 
+// Restablecer la contraseña del usuario
+// -----------------------------------------------------------------------------------------
 export async function resetPasswd(req, res) {
     try {
         const token = req.body.token;
@@ -456,6 +461,9 @@ export async function resetPasswd(req, res) {
 }
 
 // ################################# INVITADOS #################################
+
+// Crear un invitado y devolver el token de acceso
+// -----------------------------------------------------------------------------------------
 export async function crearInvitado(req, res) {
     try {
         const baseName = "guest";
@@ -467,7 +475,7 @@ export async function crearInvitado(req, res) {
 
         let nombreUnico = false;
 
-        // COMPROBAR QUE NO EXISTA UN USUARIO CON EL MISMO NOMBRE
+        // Comprobar que no exista un usuario con el mismo nombre de usuario
         while (!nombreUnico) {
             const usuarios = await db.select().from(usuario).where(eq(usuario.NombreUser, NombreUser));
             if (usuarios.length > 0) {
@@ -513,6 +521,8 @@ export async function crearInvitado(req, res) {
     }
 }
 
+// Esta función se utiliza para crear un invitado y devolver el token de acceso al cliente
+// -----------------------------------------------------------------------------------------
 export async function borrarInvitado(req, res) {
     try {
         const id = req.body.id;

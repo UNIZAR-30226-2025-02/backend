@@ -1,3 +1,6 @@
+// Importar datos de un CSV a la tabla "usuario" en la base de datos de LibSQL
+// Este script lee un archivo CSV (copia de seguridad normalmente) y lo inserta en la base de datos utilizando la biblioteca @libsql/client.
+
 import { createClient } from '@libsql/client';
 import fs from 'fs';
 
