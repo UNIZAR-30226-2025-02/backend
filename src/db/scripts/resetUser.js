@@ -1,3 +1,5 @@
+// Script para resetear los usuarios de la base de datos utilizando en el ámbito de las pruebas no automatizadas.
+
 import { usuario } from '../schemas/schemas.js';
 import { partida } from '../schemas/schemas.js';
 import { db } from '../db.js';
