@@ -2,6 +2,9 @@ import { db } from '../db.js';
 import { eq, like, or, desc, and, ne, sql } from 'drizzle-orm';
 import { usuario, partida, amistad } from '../schemas/schemas.js';
 
+// Consulta para buscar un usuario por si nombre de usuario
+// Entrada : Nombre de usuario
+// Salida : Datos de los usuario encontrados que coincidan con el fragmento de nombre introducido
 export async function buscarUsuarioPorUser(req, res) {
     const user = req.query.NombreUser;
     try {
@@ -12,6 +15,9 @@ export async function buscarUsuarioPorUser(req, res) {
     }
 }
 
+// Consulta para buscar un usuario por su id
+// Entrada : id de usuario
+// Salida : Datos del usuario encontrado
 export async function getUserInfo(req, res) {
     try {
         const userId = req.query.id;
@@ -38,6 +44,9 @@ export async function getUserInfo(req, res) {
     }
 }
 
+// Consulta para buscar todas las partidas jugadas por un usuario
+// Entrada : id de usuario
+// Salida : Datos de las partidas jugadas por el usuario (todas)
 export async function buscarPartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
@@ -50,6 +59,9 @@ export async function buscarPartidasDeUsuario(req, res) {
     }
 }
 
+// Consulta para buscar las últimas 10 partidas jugadas por un usuario
+// Entrada : id de usuario
+// Salida : Datos de las últimas 10 partidas jugadas por el usuario
 export async function buscarUlt10PartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
@@ -63,18 +75,22 @@ export async function buscarUlt10PartidasDeUsuario(req, res) {
     }
 }
 
+
+// Consulta para buscar las últimas 10 partidas jugadas por un usuario en un modo específico
+// Entrada : id de usuario y modo de juego
+// Salida : Datos de las últimas 10 partidas jugadas por el usuario en el modo especificado
 export async function buscarUlt10PartidasDeUsuarioPorModo(req, res) {
     const id = req.query.id;
     const modo = req.query.modo;
     try {
         const partidas = await db.select().from(partida)
-            .where( and(
+            .where(and(
                 and(
                     or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
                     eq(partida.Modo, modo)
                 ),
                 eq(partida.Tipo, "ranked")
-                )
+            )
             )
             .orderBy(desc(partida.created_at))
             .limit(10);
@@ -84,14 +100,18 @@ export async function buscarUlt10PartidasDeUsuarioPorModo(req, res) {
     }
 }
 
+
+// Consulta para buscar las últimas 5 partidas jugadas por un usuario
+// Entrada : id de usuario
+// Salida : Datos de las últimas 5 partidas jugadas por el usuario
 export async function buscarUlt5PartidasDeUsuario(req, res) {
     const id = req.query.id;
     try {
         const partidas = await db.select().from(partida)
-            .where( and(
-                        or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
-                        eq(partida.Tipo, "ranked")
-                    )
+            .where(and(
+                or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                eq(partida.Tipo, "ranked")
+            )
             )
             .orderBy(desc(partida.created_at))
             .limit(5);
@@ -101,19 +121,23 @@ export async function buscarUlt5PartidasDeUsuario(req, res) {
     }
 }
 
+
+// Consulta para buscar las últimas 5 partidas jugadas por un usuario en un modo específico
+// Entrada : id de usuario y modo de juego
+// Salida : Datos de las últimas 5 partidas jugadas por el usuario en el modo especificado
 export async function buscarUlt5PartidasDeUsuarioPorModo(req, res) {
     const id = req.query.id;
     const modo = req.query.modo;
     try {
         const partidas = await db.select().from(partida)
-            .where( and(
-                        and(
-                            or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
-                            eq(partida.Modo, modo)
-                        ),
-                        eq(partida.Tipo, "ranked")
-                        )
-                    )
+            .where(and(
+                and(
+                    or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
+                    eq(partida.Modo, modo)
+                ),
+                eq(partida.Tipo, "ranked")
+            )
+            )
             .orderBy(desc(partida.created_at))
             .limit(5);
         res.json(partidas); // Devolver las últimas 5 partidas
@@ -122,6 +146,10 @@ export async function buscarUlt5PartidasDeUsuarioPorModo(req, res) {
     }
 }
 
+
+// Consulta para buscar una partida por su id
+// Entrada : id de partida
+// Salida : Datos de la partida encontrada
 export async function buscarPartida(req, res) {
     const id = req.query.id;
     try {
@@ -133,6 +161,9 @@ export async function buscarPartida(req, res) {
 }
 
 
+// Esta consulta se utiliza para obtener los amigos de un usuario específico
+// Entrada : id del usuario que quiere ver sus amigos
+// Salida : Datos de las amistades encontradas
 export async function buscarAmigos(req, res) {
     const id = req.query.id;
     try {
@@ -170,6 +201,10 @@ export async function buscarAmigos(req, res) {
     }
 }
 
+
+// Esta consulta se utiliza para obtener los 10 mejores jugadores de un modo específico
+// Entrada : modo de juego (Punt_3, Punt_5, etc.)
+// Salida : Datos de los 10 mejores jugadores en el modo especificado y sus estadísticas
 export async function rankingPorModo(req, res) {
     const modo = req.query.modo;    // Modo de juego (Punt_3, Punt_5, etc.)
     const numTop = 10; // Número de usuarios a devolver, por defecto 10
@@ -217,6 +252,9 @@ export async function rankingPorModo(req, res) {
 }
 
 
+// Esta consulta se utiliza para obtener el ranking de un usuario específico en un modo específico
+// Entrada : id del usuario y modo de juego (Punt_3, Punt_5, etc.)
+// Salida : Datos del usuario y su posición en el ranking
 export async function rankingUserPorModo(req, res) {
     const modo = req.query.modo;    // Modo de juego (Punt_3, Punt_5, etc.)
     const user = req.query.user;    // Nombre de usuario
