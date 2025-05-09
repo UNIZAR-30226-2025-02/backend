@@ -495,7 +495,7 @@ export async function crearInvitado(req, res) {
         // Insertar el usuario en la base de datos
         await db.insert(usuario).values({
             id: id,
-            FotoPerfil: "none",
+            FotoPerfil: "torre_azul.webp",
             NombreUser: NombreUser,
             Correo: NombreUser,
             Contrasena: "none",
