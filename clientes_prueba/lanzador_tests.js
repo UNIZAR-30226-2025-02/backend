@@ -14,6 +14,8 @@ const client_rechaza_amistad_reto_path = './clientes_prueba/client_rechaza_amist
 const client_pide_amistad_path = './clientes_prueba/client_pide_amistad.js';
 const client_pide_reto_path = './clientes_prueba/client_pide_reto.js';
 const client_borra_amistad_path = './clientes_prueba/client_borra_amistad.js';
+const client_rendicion_path = './clientes_prueba/client_rendicion.js';
+
 const User1_name = 'Prueba11';
 const User2_name = 'Prueba22';
 const User1_password = '12345a';
@@ -926,6 +928,115 @@ async function Test10Base() {
     }, 10000);
 }
 
+// --------------------------------------------------------------------------------------------- //
+// TEST 11: MANAGE STREAK                                                                                 //
+// --------------------------------------------------------------------------------------------- //
+
+// async function Test11Base() {
+//     logInfo('Starting the server...');
+//     const server = spawn('node', [serverPath]);
+
+//     server.stdout.on('data', (data) => {
+//         console.log(`🖥️  Server: ${data}`);
+//     });
+
+//     server.stderr.on('data', (data) => {
+//         logError(`Server Error: ${data}`);
+//     });
+
+//     // Esperar a que el servidor arranque
+//     setTimeout(async () => {
+//         logInfo('📋 📋 📋 TEST 11 - MANAGE STREAK 📋 📋 📋');
+
+//          // 🔄 Reiniciar racha antes del test
+//         try {
+//             await db.update(usuario)
+//                 .set({ actualStreak: 0 })
+//                 .where(eq(usuario.id, User2_id));
+//             logInfo(`🔄 Se reinició la racha de ${User2_name} a 0`);
+//         } catch (error) {
+//             logError(`Error al reiniciar la racha: ${error}`);
+//         }
+
+//         const partidas = [];
+
+//         for (let i = 1; i <= 3; i++) {
+//             logInfo(`🚀 Iniciando partida ${i}...`);
+
+//             const client1 = spawn('node', [client_rendicion_path, User1_name, User1_password]);
+//             const client2 = spawn('node', [clientPath, User2_name, User2_password]);
+
+//             client1.stdout.on('data', (data) => console.log(`👤 Client1: ${data}`));
+//             client1.stderr.on('data', (data) => logError(`Client1 Error: ${data}`));
+
+//             client2.stdout.on('data', (data) => console.log(`👤 Client2: ${data}`));
+//             client2.stderr.on('data', (data) => logError(`Client2 Error: ${data}`));
+
+//             // Esperar a que la partida termine (suficiente tiempo para jugar y rendirse)
+//             //Esperar 30 segundos para que la partida termine
+//             await new Promise(resolve => setTimeout(resolve, 30000)); // Espera 30 segundos
+
+//             // Comprobar la base de datos para ver si la partida se ha guardado correctamente
+//             logInfo(`Comprobando la base de datos para la partida ${i}...`);
+
+//             try {
+//                 const result = await db.select().from(partida).where(
+//                     or(
+//                         and(eq(partida.JugadorW, User1_id), eq(partida.JugadorB, User2_id)),
+//                         and(eq(partida.JugadorW, User2_id), eq(partida.JugadorB, User1_id))
+//                     )
+//                 ).orderBy(desc(partida.created_at)).limit(1);
+
+//                 if (result.length <= 0) {
+//                     logWarning('No partida found in the database.');
+//                 } else {
+//                     logSuccess(`🎯 Partida ${i} encontrada en la base de datos`);
+//                     partidas.push(result[0]);
+
+//                     if (result[0].Ganador !== User2_id) {
+//                         logError(`Partida ${i}: Ganador incorrecto (esperado User2).`);
+//                     } else {
+//                         logSuccess(`Partida ${i}: Ganador correcto (User2).`);
+//                     }
+
+//                     borrarPartida(result[0].id);
+//                 }
+//             } catch (error) {
+//                 logError(`Error comprobando la base de datos: ${error}`);
+//             }
+
+//             client1.kill();
+//             client2.kill();
+//             // descanso entre partidas de 5 segundos
+//             //time.sleep(5000);
+//             await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos
+//         }
+
+//     try {
+            
+//         const user2Data = await db.select().from(usuario).where(eq(usuario.id, User2_id)).limit(1);
+
+//         if (user2Data.length > 0) {
+//             const actualStreak = user2Data[0].actualStreak;
+//             console.log(`🔥 Racha actual de ${User2_name}: ${actualStreak}`);
+//             if (actualStreak === 3) {
+//                 logSuccess('✅ La racha de 3 victorias se ha registrado correctamente.');
+//             } else {
+//                 logError(`❌ La racha no es correcta. Valor actual: ${actualStreak}`);
+//             }
+//         } else {
+//             logError('No se encontró el usuario en la base de datos.');
+//         }
+//     } catch (error) {
+//         logError(`Error al comprobar la racha: ${error}`);
+//     }
+//         // Cerrar servidor
+//         logInfo('🛑 Finalizando servidor...');
+//         server.kill();
+
+//     }, 10000); // Esperar a que arranque el servidor
+// }
+
 async function main() {
     logInfo('Starting the tests...');
     await Test1Base();
@@ -958,6 +1069,8 @@ async function main() {
     await Test10Base();
     await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
 
+    // await Test11Base();
+    // await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for Test8Base to fully complete
     // ----------------------------------------------------------------------------------------- //
     await new Promise(resolve => setTimeout(resolve, 1000));
 
