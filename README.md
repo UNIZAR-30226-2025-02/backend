@@ -2,6 +2,8 @@
 Este repositorio contiene el backend del proyecto de ajedrez en línea, desarrollado con Node.js, Express y WebSockets mediante socket.io.
 
 ## Project Structure
+
+```text
 backend/
 ├── app.js                         # Configura middlewares y define rutas HTTP principales
 ├── server.js                      # Inicia el servidor y gestiona los sockets
@@ -14,8 +16,8 @@ backend/
     ├── rooms/                     # Lógica de partidas en tiempo real 
     ├── chat/                      # Chat entre usuarios
     ├── friendship/                # Sistema de amigos y desafíos
-    └── cronjobs/                  # Tareas programadas 
-
+    └── cronjobs/                  # Tareas programadas
+```
 ## Convenciones de Código
 Se usa JavaScript moderno.
 
