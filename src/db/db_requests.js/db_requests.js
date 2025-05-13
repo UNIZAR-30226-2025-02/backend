@@ -110,7 +110,7 @@ export async function buscarUlt5PartidasDeUsuario(req, res) {
         const partidas = await db.select().from(partida)
             .where(and(
                 or(eq(partida.JugadorW, id), eq(partida.JugadorB, id)),
-                eq(partida.Tipo, "ranked")
+                or(eq(partida.Tipo, "ranked"), eq(partida.Tipo, "guest"))
             )
             )
             .orderBy(desc(partida.created_at))
