@@ -81,7 +81,7 @@ async function newConnection(socket) {
     }, 1000);
 
     socket.on('pong', (data) => {
-        console.log('Pong recibido!' + data.message);
+        // console.log('Pong recibido!' + data.message);
     });
 
     // ------------------------------------------------------------------------------------------
