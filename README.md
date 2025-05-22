@@ -1,81 +1,96 @@
-# Backend – Chess Online API
-Este repositorio contiene el backend del proyecto de ajedrez en línea, desarrollado con Node.js, Express y WebSockets mediante socket.io.
+# ♟️ Backend – Chess Online API
 
-## Project Structure
+This repository contains the backend of the online chess project, developed using **Node.js**, **Express**, and **WebSockets** via **socket.io**.
+
+---
+
+## 📁 Project Structure
 
 ```text
 backend/
-├── app.js                         # Configura middlewares y define rutas HTTP principales
-├── server.js                      # Inicia el servidor y gestiona los sockets
-├── package.json                   # Dependencias 
-├── .env                           # Variables de entorno 
-├── LICENSE                        # Licencia del proyecto
+├── app.js                         # Sets up middlewares and defines main HTTP routes
+├── server.js                      # Starts the server and manages socket connections
+├── package.json                   # Project dependencies
+├── .env                           # Environment variables
+├── LICENSE                        # Project license
 └── src/
-    ├── login/                     # Autenticación y gestión de usuarios
-    ├── db/db_requests.js/         # Consultas a base de datos 
-    ├── rooms/                     # Lógica de partidas en tiempo real 
-    ├── chat/                      # Chat entre usuarios
-    ├── friendship/                # Sistema de amigos y desafíos
-    └── cronjobs/                  # Tareas programadas
+    ├── login/                     # User authentication and management
+    ├── db/db_requests.js/         # Database queries
+    ├── rooms/                     # Real-time game logic
+    ├── chat/                      # User chat
+    ├── friendship/                # Friends and challenge system
+    └── cronjobs/                  # Scheduled tasks
 ```
-## Convenciones de Código
-Se usa JavaScript moderno.
 
-El proyecto está modularizado en subdirectorios por funcionalidad (login, chat, rooms, etc.).
 
-Se sigue el patrón MVC de forma flexible.
+---
 
-Nombres de archivos, funciones y variables están en inglés para mantener consistencia.
-Comentarios y explicaciones están en español.
+## ✍️ Code Conventions
 
-## Dependencias
-Las dependencias principales incluyen:
+- Uses modern JavaScript (ES6+).
+- Project is modularized into subdirectories by functionality (`login/`, `chat/`, `rooms/`, etc.).
+- Follows a flexible MVC pattern.
+- File, function, and variable names are in **English** for consistency.
+- Comments and documentation are written in **Spanish**.
 
-express – Framework HTTP
+---
 
-socket.io – Comunicación en tiempo real con WebSockets
+## 📦 Dependencies
 
-cors, dotenv, node-schedule – Middleware, configuración y cron jobs
+Main dependencies include:
 
-Instala las dependencias con:
+- `express` – HTTP framework  
+- `socket.io` – Real-time communication using WebSockets  
+- `cors`, `dotenv`, `node-schedule` – Middleware, configuration, and scheduled tasks
+
+Install dependencies with:
+
+```bash
 
 npm install
 
-## Cómo Ejecutar el Servidor
-Asegúrate de tener Node.js instalado.
+```
 
-Clona el repositorio y navega al directorio backend/.
+## ▶️ How to Run the Server
 
-Crea y configura tu archivo .env (ver sección siguiente).
+Make sure you have Node.js installed.
 
-Ejecuta el servidor:
+Clone the repository and navigate to the backend/ directory.
+
+Create and configure your .env file (see next section).
+
+Start the server with:
+
+```bash
 
 node server.js
 
-## Configuración del Entorno
-Este backend depende de un archivo .env para definir variables como el puerto y la conexión a base de datos. 
-El archivo .env no está incluido por razones de seguridad. Solicita uno al equipo si lo necesitas.
+```
 
-## WebSockets
-El backend implementa comunicación en tiempo real con socket.io. Algunas funcionalidades cubiertas:
+## ⚙️ Environment Configuration
+This backend depends on a .env file to define variables such as the server port and database connection.
 
-Buscar o crear partidas en vivo
+Note: The .env file is not included for security reasons. Please request it from the team if needed.
 
-Mover piezas y rendirse
+## 🔌 WebSockets
+The backend supports real-time communication with socket.io. Features include:
 
-Solicitar o aceptar tablas
+Searching or creating live games
 
-Gestión de desconexiones
+Making moves and resigning
 
-Chat entre usuarios durante la partida
+Requesting or accepting draws
 
-Desafíos entre amigos
+Handling disconnections
 
-## Cron Jobs
-Se ejecutan tareas automatizadas mediante node-schedule, como:
+In-game chat between users
 
-Eliminar usuarios invitados inactivos
+Challenges between friends
 
-## Licencia
-Este proyecto está licenciado bajo los términos especificados en el archivo LICENSE.
+## ⏰ Cron Jobs
+Automated tasks are handled using node-schedule, such as:
 
+Deleting inactive guest users
+
+## 📝 License
+This project is licensed under the terms specified in the LICENSE file.
